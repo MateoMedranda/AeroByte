@@ -1,0 +1,387 @@
+Documento de Diseño:
+
+Simulador de avión
+“Ostras amigos, a todo gas”
+
+Escrito por Grupo 7
+Version 1.00
+
+5 de mayo de 2026
+
+This work is licensed under a Creative Commons Attribution 2.5 License.
+
+Copyright (C) 2026 Aerobyte– All rights reserved – Run away!
+
+Table of Contents
+SIMULADOR DE AVIÓN ______________________________________________________________ 1
+DISEÑO DE LA HISTORIA ____________________________________________________________ 2
+El Trasfondo del Protagonista ________________________________________________________ 2
+Estructura de "Misión-Relato" ________________________________________________________ 2
+El Conflicto: El Clima como Antagonista _______________________________________________ 2
+Personalización con Significado_______________________________________________________ 2
+INFORMACIÓN GENERAL DEL JUEGO _______________________________________________ 3
+FILOSOFÍA DEL JUEGO _________________________________________________________________ 4
+PREGUNTAS COMUNES _________________________________________________________________ 4
+CONJUNTO DE CARACTERÍSTICAS __________________________________________________ 4
+CARACTERÍSTICAS GENERALES __________________________________________________________ 5
+CARACTERÍSTICAS MULTIPLAYER ________________________________________________________ 5
+¿CÓMO SE JUEGA? ____________________________________________________________________ 5
+PERSONAJES DEL JUEGO____________________________________________________________ 6
+VISIÓN GENERAL _____________________________________________________________________ 7
+CREAR UN PERSONAJE _________________________________________________________________ 7
+“ENEMIGOS Y MONSTRUOS” ____________________________________________________________ 7
+INTERFAZ DE USUARIO _____________________________________________________________ 7
+VISIÓN GENERAL _____________________________________________________________________ 8
+INTERFAZ DE USUARIO #1 (HUD) ________________________________________________________ 8
+INTERFAZ DE USUARIO #2 (MENÚ PRINCIPAL Y SELECCIÓN) ____________________________________ 8
+ARMAS O HERRAMIENTAS __________________________________________________________ 8
+VISIÓN GENERAL _____________________________________________________________________ 9
+DETALLES #1 INSTRUMENTOS DE NAVEGACIÓN Y VUELO (EL HUD Y MFDS) _____________________ 9
+DETALLES #2 SISTEMAS DE MISIÓN Y CONTRAMEDIDAS AMBIENTALES __________________________ 9
+PARTITURAS MUSICALES Y EFECTOS DE SONIDO ___________________________________ 10
+VISIÓN GENERAL ____________________________________________________________________ 10
+INFORMACIÓN ACERCA DEL AUDIO ______________________________________________________ 10
+SONIDO 3D ________________________________________________________________________ 10
+DISEÑO DEL SONIDO _________________________________________________________________ 10
+
+Evaluación Diseño 1
+5/5/2026
+
+Page 2
+
+Copyright (C) 2026 Aerobyte– All rights reserved – Run away!
+
+Diseño de la Historia
+El Trasfondo del Protagonista
+En lugar de ser solo un dueño de garaje, el personaje puede ser un piloto independiente en una región donde
+el transporte aéreo es vital pero arriesgado debido al clima "monstruoso".
+•
+•
+
+Motivación: Heredaste un hangar en ruinas y tu objetivo es restaurar el prestigio de la aerolínea
+familiar mediante el cumplimiento de contratos logísticos y de investigación.
+Crecimiento: Empiezas con una avioneta básica (Type 3: Small Agile Plane) realizando entregas
+locales para ganar el capital necesario y desbloquear jets de alta velocidad.
+
+Estructura de "Misión-Relato"
+La historia puede avanzar a través de los diferentes escenarios mencionados en el diseño:
+•
+•
+•
+
+Arco del Océano/Playa: Misiones de patrullaje y búsqueda. Aquí aprendes a manejar los
+instrumentos básicos y el radar meteorológico.
+Arco de la Ciudad/Suburbios: Vuelos de precisión entre rascacielos para entregar suministros
+médicos o balizas en zonas de difícil acceso.
+Arco del Desierto y Bosque: Desafíos de supervivencia donde las tormentas de arena o incendios
+(niebla espesa) te obligan a usar bengalas de iluminación (Flares) para no perder la orientación.
+
+El Conflicto: El Clima como Antagonista
+El documento define al clima extremo como un "jefe" o enemigo colosal. Para que la historia sea más
+inmersiva:
+•
+•
+
+Eventos Narrativos: Cada escenario puede culminar en una "Tormenta Legendaria". Por ejemplo,
+en el desierto, una megatormenta de arena que deforma el manejo de la aeronave y pone a prueba si
+has mejorado tus sistemas de navegación.
+Consecuencias: Fallar en estas misiones no solo es un error técnico, sino que afecta tu reputación
+y tu capacidad para mantener el hangar.
+
+Personalización con Significado
+La personalización del piloto y el avión puede reflejar tus logros en la historia:
+•
+•
+
+Logros Visuales: Desbloquear el casco de "As de la Tormenta" tras sobrevivir a una turbulencia
+severa o parches de aerolínea que muestran tu progreso.
+Easter Eggs: Como menciona el diseño, incluir aviones secretos o esquemas de color especiales
+(como el Desert Camo) que solo se obtienen al explorar rincones remotos de los mapas.
+
+Evaluación Diseño 1
+5/5/2026
+
+Page 3
+
+Copyright (C) 2026 Aerobyte– All rights reserved – Run away!
+
+Información general del juego
+Filosofía del juego
+El proyecto busca un equilibrio entre realismo y accesibilidad técnica:
+•
+•
+
+Objetivo de Innovación: El desarrollo intenta utilizar un motor gráfico existente combinado con
+arte nuevo para sorprender al usuario.
+Requerimientos Técnicos: Se especifica que el juego está diseñado para ejecutarse en
+computadoras tipo Workstation debido a las tendencias actuales del mercado.
+
+Preguntas comunes
+•
+•
+
+•
+•
+•
+•
+
+¿De qué se trata? Es una simulación de vuelo simplificada y accesible donde el jugador debe
+gestionar fases de despegue, navegación y aterrizaje.
+¿Por qué crear este juego? Se justifica mediante la implementación de una simulación técnica
+viable, el uso de gráficos low poly para optimizar el rendimiento y un sistema de progresión que
+incentiva la continuidad del jugador.
+¿En qué lugar ocurre? El mundo está compuesto por mapas independientes (océano, bosque,
+desierto y ciudad) diseñados para facilitar la optimización del juego.
+¿Qué controla el jugador? El jugador está al mando de una aeronave (y su piloto), controlando
+variables como potencia, inclinación (pitch), alabeo (roll) y guiñada (yaw).
+¿Cuál es el enfoque principal? Lograr vuelos exitosos mientras se gestionan variables de
+velocidad, altitud y estabilidad, adaptándose a condiciones climáticas adversas como turbulencias.
+¿Qué lo hace diferente? Su enfoque en una experiencia individual estable, con una curva de
+aprendizaje progresiva que no requiere conocimientos avanzados de aviación, pero mantiene una
+lógica de simulación coherente.
+
+Evaluación Diseño 1
+5/5/2026
+
+Page 4
+
+Copyright (C) 2026 Aerobyte– All rights reserved – Run away!
+
+Conjunto de características
+Características generales
+•
+
+•
+•
+•
+•
+•
+•
+•
+•
+
+Escenarios delimitados por entorno: El juego contará con varios escenarios independientes
+(océano, bosque, desierto y ciudad) diseñados como mapas separados para facilitar su desarrollo y
+optimización.
+Simulación de vuelo simplificada: Se implementará un sistema de control basado en los ejes
+principales del vuelo (pitch, roll, yaw y potencia) utilizando cálculos simplificados.
+Gráficos 3D estilo low poly: Los modelos y escenarios utilizarán geometría simple y materiales
+básicos para optimizar el rendimiento y facilitar su implementación.
+Sistema básico de progresión: El jugador obtendrá recompensas económicas al completar
+vuelos, las cuales se almacenarán para su uso dentro del juego.
+Desbloqueo de aeronaves por progreso: Los aviones estarán definidos con distintos parámetros
+y se desbloquearán conforme el jugador avance en el juego.
+Personalización visual básica: Se permitirá modificar el color de la aeronave mediante cambios
+de material sin afectar la jugabilidad.
+Sistema de clima simplificado: Se implementarán condiciones como viento o turbulencia
+mediante la aplicación de fuerzas que afecten el comportamiento del avión.
+Controles adaptados a teclado y mouse: El sistema de entrada utilizará mapeo de teclas para
+controlar potencia, inclinación y dirección de forma directa.
+Física de vuelo basada en fuerzas básicas: El movimiento de la aeronave se gestionará mediante
+un sistema físico simplificado aplicando fuerzas y rotaciones controladas.
+
+Características Multiplayer
+En la versión actual del proyecto, no se contempla la implementación de funcionalidades multijugador.
+El enfoque del desarrollo está centrado en una experiencia individual, priorizando la estabilidad del
+sistema, la jugabilidad y la correcta implementación de las mecánicas principales de simulación de vuelo.
+
+¿Cómo se juega?
+El jugador controlará una aeronave desde una perspectiva en primera persona, utilizando teclado y mouse
+para gestionar la potencia, inclinación y dirección del avión mediante un sistema de control simplificado
+basado en los ejes de vuelo. La experiencia estará centrada en la ejecución de vuelos dentro de distintos
+escenarios, donde el jugador deberá completar correctamente las fases de despegue, navegación y
+aterrizaje.
+Durante el desarrollo del juego, se plantea que el jugador interactúe con los siguientes elementos clave:
+-
+
+Control de la aeronave mediante teclado y mouse (potencia, pitch, roll y yaw).
+Ejecución de maniobras básicas de vuelo como despegue, control en el aire y aterrizaje.
+Gestión de variables como velocidad, altitud, dirección y estabilidad.
+Uso de un HUD para visualizar información relevante del vuelo en tiempo real.
+Adaptación a condiciones climáticas como viento y turbulencia que afectarán el comportamiento
+del avión.
+
+Evaluación Diseño 1
+5/5/2026
+
+Page 5
+
+Copyright (C) 2026 Aerobyte– All rights reserved – Run away!
+El sistema de juego estará diseñado para ofrecer una experiencia accesible, permitiendo que el jugador
+aprenda progresivamente a controlar la aeronave sin requerir conocimientos avanzados de aviación,
+manteniendo una lógica de simulación coherente.
+El desarrollo del juego se justifica por los siguientes aspectos:
+-
+
+Implementación de una simulación de vuelo simplificada y viable a nivel técnico.
+Uso de gráficos 3D low poly que facilitarán el desarrollo y optimizarán el rendimiento.
+Inclusión de un sistema de progresión que incentivará la continuidad del jugador.
+Diferenciación de aeronaves mediante parámetros que influirán en su comportamiento.
+
+En este contexto, el juego se plantea como un proyecto viable, con una propuesta clara basada en la
+simulación de vuelo accesible y progresiva.
+
+Evaluación Diseño 1
+5/5/2026
+
+Page 6
+
+Copyright (C) 2026 Aerobyte– All rights reserved – Run away!
+
+Personajes del juego
+Visión general
+En el simulador de vuelo que se va a construir, el verdadero protagonista es el binomio entre el
+piloto y la aeronave algo atractivo y esencial para un simulador de vuelo (avión). Los personajes no son
+simples avatares estáticos; son entidades dinámicas cuyas animaciones y respuestas físicas están
+intrínsecamente ligadas a las físicas de vuelo. Dentro del juego el timón del avión se moverá dependiendo
+del movimiento del avión, algo que permitirá optimizar la experiencia y ahorrará trabajo en la animación de
+manos.
+
+Crear un personaje
+El sistema de personalización abarcará los modelos de los aviones, permitiendo cambiar aspectos
+como el color o el tipo de avión dependiendo del nivel, como requisito de baja prioridad se propone
+cambiar aspectos como el casco del piloto, pero solo se realizará el requisito de personalización del piloto,
+si la parte principal de personalización de las aeronaves es completada con éxito.
+•
+•
+
+•
+
+El Piloto: Los jugadores podrán elegir entre diferentes tipos de cascos para el piloto, pero esto será
+solo en la pantalla principal, además de un parche o bandera para la aerolínea.
+La Aeronave: El jugador podrá personalizar el fuselaje cambiando el color de este. Se aplicará
+también diferentes opciones para elegir entre aviones, que vendrán de diferentes formas y
+tamaños, incluyendo Easter Eggs.
+Como personajes no editables, pero también importantes, se encuentran los operadores y
+trabajadores del aeropuerto, con el fin de asistir en el despegue y aterrizaje del avión
+
+“Enemigos y monstruos”
+Monstruos Ambientales (El Clima): El clima extremo actúa como un "jefe" o enemigo colosal. El jugador
+deberá navegar a través de tormentas o turbulencias de aire claro, vientos cruzados extremos y
+engelamiento en las alas. Estos fenómenos deformarán dinámicamente el manejo de la aeronave y pondrán
+a prueba los sistemas de navegación.
+
+Evaluación Diseño 1
+5/5/2026
+
+Page 7
+
+Copyright (C) 2026 Aerobyte– All rights reserved – Run away!
+
+Interfaz de usuario
+Visión general
+La interfaz de usuario estará diseñada para proporcionar al jugador la información esencial necesaria
+durante el vuelo, manteniendo un equilibrio entre claridad visual y coherencia con el concepto de
+simulación. Se plantea una interfaz basada principalmente en un HUD integrado a la cabina de la aeronave,
+donde los elementos visuales estarán orientados a mostrar datos relevantes sin sobrecargar la pantalla.
+El diseño priorizará la legibilidad y la accesibilidad, utilizando indicadores simples y organizados que
+permitan al jugador interpretar rápidamente el estado de la aeronave. Asimismo, la interfaz mantendrá
+coherencia con el estilo gráfico low poly del juego, evitando elementos excesivamente complejos.
+La interfaz se dividirá en componentes funcionales que acompañan al jugador tanto durante el vuelo como
+en la navegación por menús.
+
+Interfaz de usuario #1 (HUD)
+El HUD de vuelo será el componente principal de la interfaz durante la partida, mostrando información en
+tiempo real necesaria para el control de la aeronave. Este incluirá indicadores básicos como velocidad,
+altitud y dirección, los cuales estarán sincronizados con el sistema de vuelo.
+También se considerará la inclusión de alertas visuales simples en caso de condiciones adversas, como
+pérdida de estabilidad o presencia de turbulencia.
+• Los elementos estarán ubicados estratégicamente en pantalla para no interferir con la visibilidad
+del entorno, permitiendo una experiencia de juego fluida.
+
+Interfaz de usuario #2 (Menú principal y selección)
+El sistema de menús permitirá al jugador navegar entre las opciones principales del juego, incluyendo
+inicio de partida, selección de escenario y selección de aeronave. Se plantea un diseño simple y
+estructurado, con opciones claramente identificables.
+•
+•
+
+Dentro de este componente también se incluirá la personalización básica de la aeronave,
+permitiendo al jugador modificar aspectos visuales como el color.
+Además, se mostrará información relacionada con el progreso del jugador, como aeronaves
+disponibles y estado general dentro del juego.
+
+Evaluación Diseño 1
+5/5/2026
+
+Page 8
+
+Copyright (C) 2026 Aerobyte– All rights reserved – Run away!
+
+Armas o Herramientas
+Visión general
+La interacción principal del jugador será a través de una cabina. Para asegurar un desarrollo fluido y
+realista en tiempos, la interacción no requerirá presionar físicamente cada botón 3D con un cursor libre,
+sino que las funciones vitales estarán mapeadas al controlador/teclado, reflejando su activación visualmente
+en las pantallas de la cabina. Esto mantiene el equilibrio entre inmersión simulada y una jugabilidad ágil.
+
+Detalles #1 Instrumentos de Navegación y Vuelo (El HUD y MFDs)
+•
+
+Head-Up Display (HUD) Dinámico: El Head-Up Display actuará como la principal interfaz
+visual entre el piloto y el entorno, proyectando telemetría de vuelo como altitud, velocidad
+aerodinámica, horizonte artificial y el vector de dirección directamente sobre el cristal frontal de la
+aeronave.
+
+•
+
+Multi-Function Displays (MFDs): Las Pantallas Multifunción conformarán el núcleo táctico del
+"Glass Cockpit", integrándose directamente en el panel de instrumentos frontal para que el jugador
+gestione la misión sin romper la inmersión en primera persona. Estas consolas digitales albergarán
+los monitores de estado de la aeronave, utilizando indicadores visuales dinámicos para informar
+sobre el nivel de combustible y la temperatura del motor. Además, proporcionarán acceso al radar
+meteorológico y táctico, el cual ofrecerá una vista para el rastreo de puntos de control.
+
+Detalles #2 Sistemas de Misión y Contramedidas Ambientales
+•
+
+Sistemas de Despliegue Logístico y Balizas: Dado que las misiones se centran en la asistencia
+táctica y la investigación, la aeronave estará equipada con un sistema de despliegue de precisión.
+El jugador deberá calcular aproximaciones a baja altitud para lanzar suministros de emergencia o
+balizas meteorológicas en zonas de difícil acceso o bajo condiciones climáticas adversas. Este
+sistema exigirá una alineación perfecta con los objetivos terrestres; el piloto tendrá que leer sus
+instrumentos para compensar la velocidad, la altitud y la inercia
+
+Evaluación Diseño 1
+5/5/2026
+
+Page 9
+
+Copyright (C) 2026 Aerobyte– All rights reserved – Run away!
+
+Partituras Musicales y Efectos de Sonido
+Visión general
+El audio es el 50% de la inmersión en un simulador de vuelo. Nuestro objetivo es crear un paisaje sonoro
+denso e hiperrealista donde el jugador pueda "sentir" la aeronave a través del sonido, complementado por
+una banda sonora que eleve la tensión en los momentos críticos sin opacar las señales acústicas de los
+instrumentos.
+
+Información acerca del audio
+La banda sonora será dinámica (Dynamic Music System).
+Track 1 (Crucero - "Cielos Abiertos"): Música ambiental sutil, rítmica y electrónica, de aproximadamente 4
+minutos, que suena cuando las condiciones son estables.
+Track 2 (Alerta Táctica - "Punto de Intercepción"): Ritmos acelerados e intensos que se activan por eventos
+(ej. cuando se detecta un misil enemigo o se ingresa a una tormenta severa).
+
+Sonido 3D
+Implementaremos un motor de espacialización de audio (Audio Spatializer) en nuestro motor de desarrollo
+(por ejemplo, aprovechando las capacidades de Unity o integrando FMOD/Wwise). Esto permitirá:
+Efecto Doppler: El sonido de otros aviones al pasar a altas velocidades cambiará de tono de manera
+realista.
+Atenuación Direccional: El jugador podrá identificar exactamente de dónde provienen los disparos, el
+viento golpeando un ala específica o el fallo de un motor a su izquierda.
+
+Diseño del sonido
+En esta etapa inicial, el diseño de sonido se enfocará en grabar o sintetizar audios de alta fidelidad para:
+Sistemas de Alerta (GPWS): Voces de cabina sintéticas y alarmas icónicas de la aviación ("Pull up!",
+"Terrain!", "Stall warning", pitidos del radar de fijación).
+Físicas Sonoras: El rugido de las turbinas variará según la potencia del acelerador y la altitud (el aire menos
+denso atenúa el sonido). Los trenes de aterrizaje generarán sonidos mecánicos pesados y resistencia
+aerodinámica audible al desplegarse.
+
+Evaluación Diseño 1
+5/5/2026
+
+Page 10
+
+
