@@ -1,0 +1,11 @@
+Airspeed A.S.57 Ambassador 2
+----------------------------
+
+Author  : BARANGER Emmanuel (helijah)
+tools   : Blender 2.79b and The Gimp 2.10.34
+Use     : For FlightGear
+
+--------
+BARANGER Emmanuel
+http://helijah.free.fr
+http://embaranger.free.fr
