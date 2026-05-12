@@ -20,10 +20,12 @@ public class PlaneInputManager : MonoBehaviour
     private void OnEnable()
     {
         controles.Enable();
+        controles.Vuelo.ToggleFlaps.performed += OnFlapsInput;
     }
 
     private void OnDisable()
     {
+        controles.Vuelo.ToggleFlaps.performed -= OnFlapsInput;
         controles.Disable();
     }
 
@@ -49,5 +51,13 @@ public class PlaneInputManager : MonoBehaviour
 
         // Ejemplo para los Flaps (puedes crear un botón 'ToggleFlaps' en tu Input System)
         // if (Keyboard.current.fKey.wasPressedThisFrame) avion.ToggleFlaps();
+    }
+
+    public void OnFlapsInput(InputAction.CallbackContext context) {
+        if (avion == null) return;
+
+        if (context.phase == InputActionPhase.Performed) {
+            avion.ToggleFlaps();
+        }
     }
 }

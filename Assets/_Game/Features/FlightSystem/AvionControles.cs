@@ -127,6 +127,15 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""ToggleFlaps"",
+                    ""type"": ""Button"",
+                    ""id"": ""d7099629-747e-419d-a0ae-5611cfec551b"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -261,6 +270,17 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                     ""action"": ""PitchRoll"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d92db04e-e3a4-403b-bc15-3531e5d523ba"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleFlaps"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -273,6 +293,7 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         m_Vuelo_Yaw = m_Vuelo.FindAction("Yaw", throwIfNotFound: true);
         m_Vuelo_MouseLook = m_Vuelo.FindAction("MouseLook", throwIfNotFound: true);
         m_Vuelo_PitchRoll = m_Vuelo.FindAction("PitchRoll", throwIfNotFound: true);
+        m_Vuelo_ToggleFlaps = m_Vuelo.FindAction("ToggleFlaps", throwIfNotFound: true);
     }
 
     ~@AvionControles()
@@ -357,6 +378,7 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
     private readonly InputAction m_Vuelo_Yaw;
     private readonly InputAction m_Vuelo_MouseLook;
     private readonly InputAction m_Vuelo_PitchRoll;
+    private readonly InputAction m_Vuelo_ToggleFlaps;
     /// <summary>
     /// Provides access to input actions defined in input action map "Vuelo".
     /// </summary>
@@ -384,6 +406,10 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Vuelo/PitchRoll".
         /// </summary>
         public InputAction @PitchRoll => m_Wrapper.m_Vuelo_PitchRoll;
+        /// <summary>
+        /// Provides access to the underlying input action "Vuelo/ToggleFlaps".
+        /// </summary>
+        public InputAction @ToggleFlaps => m_Wrapper.m_Vuelo_ToggleFlaps;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -422,6 +448,9 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
             @PitchRoll.started += instance.OnPitchRoll;
             @PitchRoll.performed += instance.OnPitchRoll;
             @PitchRoll.canceled += instance.OnPitchRoll;
+            @ToggleFlaps.started += instance.OnToggleFlaps;
+            @ToggleFlaps.performed += instance.OnToggleFlaps;
+            @ToggleFlaps.canceled += instance.OnToggleFlaps;
         }
 
         /// <summary>
@@ -445,6 +474,9 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
             @PitchRoll.started -= instance.OnPitchRoll;
             @PitchRoll.performed -= instance.OnPitchRoll;
             @PitchRoll.canceled -= instance.OnPitchRoll;
+            @ToggleFlaps.started -= instance.OnToggleFlaps;
+            @ToggleFlaps.performed -= instance.OnToggleFlaps;
+            @ToggleFlaps.canceled -= instance.OnToggleFlaps;
         }
 
         /// <summary>
@@ -513,5 +545,12 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnPitchRoll(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ToggleFlaps" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleFlaps(InputAction.CallbackContext context);
     }
 }
