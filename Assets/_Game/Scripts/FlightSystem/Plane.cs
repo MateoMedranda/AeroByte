@@ -27,6 +27,26 @@ public class Plane : MonoBehaviour {
     [SerializeField]
     AnimationCurve steeringCurve; // Curva que modula la capacidad de maniobra del avión en función de su velocidad, generalmente va de 0 a 1, donde 0 significa sin capacidad de maniobra y 1 significa maniobra completa
 
+    [Header("Aerodinámica y Estabilidad")]
+    [SerializeField, Tooltip("Fuerza con la que la nariz busca alinearse verticalmente con el viento")]
+    float pitchStability = 5f;
+    [SerializeField, Tooltip("Fuerza con la que la nariz busca alinearse horizontalmente con el viento, clave para giros en Roll")]
+    float yawStability = 15f;
+    [SerializeField, Tooltip("Ángulo en grados a partir del cual el avión empieza a picar automáticamente por pérdida")]
+    float stallAngle = 18f;
+    [SerializeField, Tooltip("Fuerza que empuja la nariz hacia abajo en pérdida")]
+    float stallTorque = 3000f;
+
+    [Header("Movimiento en Tierra")]
+    [SerializeField] LayerMask groundMask;
+    [SerializeField, Tooltip("Distancia del Raycast desde el centro del avión hacia abajo")] 
+    float groundCheckDistance = 2f; 
+    [SerializeField, Tooltip("Velocidad de giro al estar en el suelo (grados por segundo)")] 
+    float groundSteeringSpeed = 40f; 
+    [SerializeField, Tooltip("Desaceleración en m/s al frenar en tierra")]
+    float groundBrakeDeceleration = 15f; 
+    public bool IsGrounded { get; private set; }
+
     [Header("Flaps")]
     [SerializeField]
     bool flapsDeployed; // Variable para rastrear el estado de los flaps, se controla a través del método ToggleFlaps()
@@ -58,6 +78,24 @@ public class Plane : MonoBehaviour {
     [SerializeField]
     float flapsRetractSpeed; // Velocidad a la que los flaps se retraen automáticamente, si la velocidad del avión supera este valor, los flaps se retraen para reducir el arrastre y permitir velocidades más altas
 
+    [Header("Arrastre")]
+    [SerializeField]
+    AnimationCurve dragForward;
+    [SerializeField]
+    AnimationCurve dragBack;
+    [SerializeField]
+    AnimationCurve dragLeft;
+    [SerializeField]
+    AnimationCurve dragRight;
+    [SerializeField]
+    AnimationCurve dragTop;
+    [SerializeField]
+    AnimationCurve dragBottom;
+    [SerializeField]
+    Vector3 angularDrag;
+    [SerializeField]
+    float airbrakeDrag;
+
     [SerializeField]
     Transform Propeller;
     [SerializeField]
@@ -74,6 +112,15 @@ public class Plane : MonoBehaviour {
     Transform RightSpoiler;
     [SerializeField]
     Transform Rudder;
+
+    [SerializeField]
+    Transform AirBrake1;
+    [SerializeField]
+    Transform AirBrake2;
+    [SerializeField]
+    Transform AirBrake3;
+    [SerializeField]
+    Transform AirBrake4;
 
     [Header("Superficies de Control Visuales")]
     [SerializeField, Tooltip("Ángulo máximo de deflexión de los elevadores en grados (positivo: arriba, negativo: abajo)")]
@@ -106,6 +153,10 @@ public class Plane : MonoBehaviour {
     private Quaternion rightFlapStartRotation;
     private Quaternion leftSpoilerStartRotation;
     private Quaternion rightSpoilerStartRotation;
+    private Quaternion airBrake1StartRotation;
+    private Quaternion airBrake2StartRotation;  
+    private Quaternion airBrake3StartRotation;
+    private Quaternion airBrake4StartRotation;
     
 
     // FlapsDeployed es una propiedad que controla el estado de los flaps del avión. Se puede cambiar a través del método ToggleFlaps(), que alterna entre desplegado y retraído. Además, los flaps se retraen automáticamente si la velocidad del avión supera el valor definido en flapsRetractSpeed, lo que ayuda a reducir el arrastre a altas velocidades.
@@ -124,10 +175,16 @@ public class Plane : MonoBehaviour {
         if (RightFlaps != null) rightFlapStartRotation = RightFlaps.localRotation;
         if (LeftSpoiler != null) leftSpoilerStartRotation = LeftSpoiler.localRotation;
         if (RightSpoiler != null) rightSpoilerStartRotation = RightSpoiler.localRotation;
+        if (AirBrake1 != null) airBrake1StartRotation = AirBrake1.localRotation;
+        if (AirBrake2 != null) airBrake2StartRotation = AirBrake2.localRotation;
+        if (AirBrake3 != null) airBrake3StartRotation = AirBrake3.localRotation;
+        if (AirBrake4 != null) airBrake4StartRotation = AirBrake4.localRotation;
     }
     
     private void FixedUpdate() {
         float dt = Time.fixedDeltaTime;
+
+        CheckGrounded();
 
         Debug.Log($"Delta Time: {dt:F4} s");
         
@@ -143,11 +200,70 @@ public class Plane : MonoBehaviour {
 
         UpdateSteering(dt);
 
+        UpdateDrag();
+        UpdateAngularDrag();
+
         UpdateElevatorVisual();
         UpdateFlapsVisual();
         UpdateSpoilersVisual();
         UpdateFlaps();
+        UpdateRudderVisual();
+        UpdateAirBrakeVisual();
+        
+        UpdateGroundPhysics(dt);
+
+        CalculatePlaneState(dt);
+
     }
+
+    private void CheckGrounded() {
+        IsGrounded = Physics.Raycast(transform.position, -transform.up, groundCheckDistance, groundMask);
+    }
+
+    private void UpdateGroundPhysics(float dt) {
+        if (!IsGrounded) return;
+        
+        Vector3 localVel = LocalVelocity;
+        
+        // 1. Agarre de Llantas (Fricción Lateral): Evita que el avión resbale como si estuviera en hielo.
+        localVel.x = Mathf.Lerp(localVel.x, 0, dt * 10f); // 10f asegura que no derrape.
+        
+        // 2. Frenos agresivos
+        if (AirbrakeDeployed || throttleInput < 0) {
+            if (localVel.z > 0.1f) {
+                localVel.z = Mathf.Max(0, localVel.z - (groundBrakeDeceleration * dt));
+            }
+        }
+        
+        Rb.linearVelocity = transform.TransformDirection(localVel);
+    }
+
+    private Vector3 CalculateAerodynamicStabilityAV() {
+        Vector3 aeroAV = Vector3.zero;
+        if (LocalVelocity.sqrMagnitude > 1f) {
+            float sideSlipAngle = Mathf.Atan2(LocalVelocity.x, LocalVelocity.z) * Mathf.Rad2Deg;
+            float pitchSlipAngle = Mathf.Atan2(-LocalVelocity.y, LocalVelocity.z) * Mathf.Rad2Deg;
+            
+            aeroAV.y = sideSlipAngle * yawStability * 0.1f;
+            aeroAV.x = pitchSlipAngle * pitchStability * 0.1f;
+        }
+        return aeroAV;
+    }
+
+    private Vector3 CalculateStallAV() {
+        Vector3 stallAV = Vector3.zero;
+        float currentAoA = AngleOfAttack * Mathf.Rad2Deg;
+        
+        if (currentAoA > stallAngle) {
+            float stallSeverity = (currentAoA - stallAngle) / 10f; 
+            stallSeverity = Mathf.Clamp01(stallSeverity);
+            
+            // Convertimos la "fuerza" en velocidad de rotación deseada (ej. 3000 * 0.02 = 60 grados por segundo)
+            stallAV.x = stallTorque * stallSeverity * 0.02f; 
+        }
+        return stallAV;
+    }
+
     // Rota el elevador visualmente según el input de pitch, incluso en tierra
     // Variables para interpolación suave de elevadores
     private float currentElevatorAngle = 0f;
@@ -199,6 +315,19 @@ public class Plane : MonoBehaviour {
         if(Rudder != null) {
             float angle = controlInput.y * maxRudderDeflection;
             Rudder.localRotation = Quaternion.Euler(0f, angle, 0f);
+        }
+    }
+
+    private float currentAirBrakeAngle = 0f;
+    private float airBrakeLerpSpeed = 5f;
+    private void UpdateAirBrakeVisual(){
+        if (AirBrake1 != null && AirBrake2 != null && AirBrake3 != null && AirBrake4 != null) {
+            float targetAngle = AirbrakeDeployed ? maxFlapsDeflection * 1.5f : 0f; // Ángulo mayor (20% más)
+            currentAirBrakeAngle = Mathf.Lerp(currentAirBrakeAngle, targetAngle, Time.fixedDeltaTime * airBrakeLerpSpeed);
+            AirBrake1.localRotation = airBrake1StartRotation * Quaternion.Euler(0f, currentAirBrakeAngle, 0f);
+            AirBrake2.localRotation = airBrake2StartRotation * Quaternion.Euler(0f, -currentAirBrakeAngle, 0f);
+            AirBrake3.localRotation = airBrake3StartRotation * Quaternion.Euler(0f, currentAirBrakeAngle, 0f);
+            AirBrake4.localRotation = airBrake4StartRotation * Quaternion.Euler(0f, -currentAirBrakeAngle, 0f);
         }
     }
 
@@ -259,25 +388,41 @@ public class Plane : MonoBehaviour {
         lastVelocity = Velocity;
     }
 
+    private void UpdateAngularDrag() {
+        var av = LocalAngularVelocity;
+        var drag = av.sqrMagnitude * -av.normalized;    //squared, opposite direction of angular velocity
+        Rb.AddRelativeTorque(Vector3.Scale(drag, angularDrag), ForceMode.Acceleration);  //ignore rigidbody mass
+    }
+
     private void UpdateThrottle(float dt) {
-        float target = 0;
-        if (throttleInput > 0) target = 1;
-        Debug.Log($"[Throttle Debug] Throttle Input: {throttleInput:F2}, Target: {target}, Current Throttle: {Throttle:F2}");
-        Throttle = Utilities.MoveTo(Throttle, target, throttleSpeed * Mathf.Abs(throttleInput), dt);
+        // Estilo Simulador: La palanca se queda en la posición en la que la dejes.
+        // Shift (throttleInput > 0) la empuja hacia adelante. Ctrl (throttleInput < 0) la empuja hacia atrás.
+        Throttle += throttleInput * throttleSpeed * dt;
+        Throttle = Mathf.Clamp01(Throttle);
         
-        // AirbrakeDeployed = Throttle == 0 && throttleInput == -1;
-        
-        /*
-        if (AirbrakeDeployed) {
-            foreach (var lg in landingGear) {
-                lg.sharedMaterial = landingGearBrakesMaterial;
-            }
-        } else {
-            foreach (var lg in landingGear) {
-                lg.sharedMaterial = landingGearDefaultMaterial;
-            }
-        }
-        */
+        // Freno aéreo si presionamos frenar y ya no hay acelerador
+        AirbrakeDeployed = Throttle <= 0.01f && throttleInput < 0;
+    }
+
+    void UpdateDrag() {
+        var lv = LocalVelocity;
+        var lv2 = lv.sqrMagnitude;  //velocity squared
+
+        float airbrakeDrag = AirbrakeDeployed ? this.airbrakeDrag : 0;
+        float flapsDrag = FlapsDeployed ? this.flapsDrag : 0;
+
+        //calculate coefficient of drag depending on direction on velocity
+        var coefficient = Utilities.Scale6(
+            lv.normalized,
+            dragRight.Evaluate(Mathf.Abs(lv.x)), dragLeft.Evaluate(Mathf.Abs(lv.x)),
+            dragTop.Evaluate(Mathf.Abs(lv.y)), dragBottom.Evaluate(Mathf.Abs(lv.y)),
+            dragForward.Evaluate(Mathf.Abs(lv.z)) + airbrakeDrag + flapsDrag,   //include extra drag for forward coefficient
+            dragBack.Evaluate(Mathf.Abs(lv.z))
+        );
+
+        var drag = coefficient.magnitude * lv2 * -lv.normalized;    //drag is opposite direction of velocity
+
+        Rb.AddRelativeForce(drag);
     }
 
     // El método CalculateLift() calcula la fuerza de sustentación y el arrastre inducido que actúan sobre el avión en función del ángulo de ataque, la velocidad local, y las propiedades aerodinámicas definidas por las curvas de sustentación y arrastre. Utiliza la proyección de la velocidad local en el plano perpendicular al eje de rotación para determinar la dirección y magnitud de la sustentación, y también calcula el arrastre inducido que se genera como resultado de la sustentación, lo que simula cómo el avión experimenta resistencia al avance a medida que genera sustentación.
@@ -371,11 +516,23 @@ public class Plane : MonoBehaviour {
         var gForceScaling = CalculateGLimiter(controlInput, turnSpeed * Mathf.Deg2Rad * steeringPower);
 
         var targetAV = Vector3.Scale(controlInput, turnSpeed * steeringPower * gForceScaling);
+        
+        targetAV += CalculateAerodynamicStabilityAV();
+        targetAV += CalculateStallAV();
+
+        float currentYawAccel = turnAcceleration.y * steeringPower;
+        
+        if (IsGrounded) {
+            // Bypass completo de la aerodinámica para el giro en tierra
+            targetAV.y = controlInput.y * groundSteeringSpeed;
+            currentYawAccel = groundSteeringSpeed * 10f; // Aceleración masiva para un giro inmediato (snappy)
+        }
+
         var av = LocalAngularVelocity * Mathf.Rad2Deg;
 
         var correction = new Vector3(
             CalculateSteering(dt, av.x, targetAV.x, turnAcceleration.x * steeringPower),
-            CalculateSteering(dt, av.y, targetAV.y, turnAcceleration.y * steeringPower),
+            CalculateSteering(dt, av.y, targetAV.y, currentYawAccel),
             CalculateSteering(dt, av.z, targetAV.z, turnAcceleration.z * steeringPower)
         );
 
