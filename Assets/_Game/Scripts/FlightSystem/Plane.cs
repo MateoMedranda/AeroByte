@@ -72,6 +72,8 @@ public class Plane : MonoBehaviour {
     Transform LeftSpoiler;
     [SerializeField]
     Transform RightSpoiler;
+    [SerializeField]
+    Transform Rudder;
 
     [Header("Superficies de Control Visuales")]
     [SerializeField, Tooltip("Ángulo máximo de deflexión de los elevadores en grados (positivo: arriba, negativo: abajo)")]
@@ -80,6 +82,8 @@ public class Plane : MonoBehaviour {
     float maxFlapsDeflection = 35f;
     [SerializeField, Tooltip("Ángulo máximo de deflexión de los spoilers en grados (positivo: abajo, negativo: arriba)")]
     float maxSpoilersDeflection = 35f;
+    [SerializeField, Tooltip("Ángulo máximo de deflexión del timón en grados (positivo: derecha, negativo: izquierda)")]
+    float maxRudderDeflection = 35f;
 
     // CONTROLES
     float throttleInput; // Valor de entrada para el acelerador, esperado entre -1 (freno de aire) y 1 (aceleración máxima)
@@ -124,6 +128,8 @@ public class Plane : MonoBehaviour {
     
     private void FixedUpdate() {
         float dt = Time.fixedDeltaTime;
+
+        Debug.Log($"Delta Time: {dt:F4} s");
         
         Debug.Log($"[Plane Debug] Velocidad Local: {LocalVelocity}, Ángulo de Ataque: {AngleOfAttack * Mathf.Rad2Deg:F2}°, Flaps Desplegados: {FlapsDeployed}");
 
@@ -143,47 +149,63 @@ public class Plane : MonoBehaviour {
         UpdateFlaps();
     }
     // Rota el elevador visualmente según el input de pitch, incluso en tierra
+    // Variables para interpolación suave de elevadores
+    private float currentElevatorAngle = 0f;
+    private float elevatorLerpSpeed = 5f; // Puedes ajustar este valor para mayor o menor suavidad
     private void UpdateElevatorVisual()
     {
         if (LeftElevator != null && RightElevator != null)
         {
-            // El input de pitch es controlInput.x (positivo: subir nariz)
-            // El ángulo máximo es maxElevatorDeflection
-            float angle = controlInput.x * maxElevatorDeflection;
-            // Rota en el eje local X (bisagra)
-            LeftElevator.localRotation = Quaternion.Euler(-angle, 0f, 0f);
-            RightElevator.localRotation = Quaternion.Euler(-angle, 0f, 0f);
+            float targetAngle = controlInput.x * maxElevatorDeflection * 1.2f; // Ángulo mayor (20% más)
+            currentElevatorAngle = Mathf.Lerp(currentElevatorAngle, targetAngle, Time.fixedDeltaTime * elevatorLerpSpeed);
+            LeftElevator.localRotation = Quaternion.Euler(-currentElevatorAngle, 0f, 0f);
+            RightElevator.localRotation = Quaternion.Euler(-currentElevatorAngle, 0f, 0f);
         }
     }
 
+    // Variables para interpolación suave de flaps
+    private float currentFlapAngle = 0f;
+    private float flapLerpSpeed = 5f; // Puedes ajustar este valor para mayor o menor suavidad
     private void UpdateFlapsVisual()
     {
         if (LeftFlaps != null && RightFlaps != null)
         {
-            float angle = FlapsDeployed ? maxFlapsDeflection : 0f;
-            
-            // Multiplicamos la base original por la rotación únicamente en el eje Y local
-            LeftFlaps.localRotation = leftFlapStartRotation * Quaternion.Euler(0f, angle, 0f);
-            RightFlaps.localRotation = rightFlapStartRotation * Quaternion.Euler(0f, -angle, 0f);
+            float targetAngle = FlapsDeployed ? maxFlapsDeflection * 1.2f : 0f; // Ángulo mayor (20% más)
+            currentFlapAngle = Mathf.Lerp(currentFlapAngle, targetAngle, Time.fixedDeltaTime * flapLerpSpeed);
+            LeftFlaps.localRotation = leftFlapStartRotation * Quaternion.Euler(0f, currentFlapAngle, 0f);
+            RightFlaps.localRotation = rightFlapStartRotation * Quaternion.Euler(0f, -currentFlapAngle, 0f);
         }
     }
 
+    // Variables para interpolación suave de spoilers
+    private float currentSpoilerAngle = 0f;
+    private float spoilerLerpSpeed = 5f; // Puedes ajustar este valor para mayor o menor suavidad
     private void UpdateSpoilersVisual()
     {
         if (LeftSpoiler != null && RightSpoiler != null)
         {
-            float angle = controlInput.z * maxSpoilersDeflection;
-            
-            // Rotación en el eje Y local partiendo de la posición inicial
-            LeftSpoiler.localRotation = leftSpoilerStartRotation * Quaternion.Euler(0f, angle, 0f);
-            RightSpoiler.localRotation = rightSpoilerStartRotation * Quaternion.Euler(0f, angle, 0f);
+            float targetAngle = controlInput.z * maxSpoilersDeflection * 1.2f; // Ángulo mayor (20% más)
+            currentSpoilerAngle = Mathf.Lerp(currentSpoilerAngle, targetAngle, Time.fixedDeltaTime * spoilerLerpSpeed);
+            LeftSpoiler.localRotation = leftSpoilerStartRotation * Quaternion.Euler(0f, currentSpoilerAngle, 0f);
+            RightSpoiler.localRotation = rightSpoilerStartRotation * Quaternion.Euler(0f, currentSpoilerAngle, 0f);
+        }
+    }
+
+    private void UpdateRudderVisual() {
+        // Similar a los elevadores, pero para el timón de dirección (yaw)
+        // El input de yaw es controlInput.y (positivo: girar a la derecha)
+        // El ángulo máximo es maxRudderDeflection
+        // Rota en el eje local Y (bisagra del timón)
+        if(Rudder != null) {
+            float angle = controlInput.y * maxRudderDeflection;
+            Rudder.localRotation = Quaternion.Euler(0f, angle, 0f);
         }
     }
 
     // El método UpdateThrust() aplica una fuerza de empuje relativa al avión en la dirección hacia adelante (Vector3.forward) multiplicada por el valor actual del acelerador (Throttle) y la potencia máxima de empuje (maxThrust). Esto simula cómo el motor del avión genera empuje para propulsarlo hacia adelante, y el valor de Throttle controla cuánto empuje se aplica en cada momento, permitiendo al avión acelerar o desacelerar según la entrada del jugador.
     private void UpdateThrust() {
         Rb.AddRelativeForce(Throttle * maxThrust * Vector3.forward);
-        Propeller.Rotate(Vector3.up * Throttle * 10f); // Gira la hélice en función del acelerador y la velocidad de giro definida, multiplicado por 10 para hacerla más visible
+        Propeller.Rotate(Vector3.up * Velocity.magnitude * 40f); // Gira la hélice en función del acelerador y la velocidad de giro definida, multiplicado por 10 para hacerla más visible
     }
 
     // El método UpdateFlaps() verifica la velocidad local del avión en el eje Z (hacia adelante) y compara si es mayor que el valor definido en flapsRetractSpeed. Si la velocidad supera ese umbral, los flaps se retraen automáticamente estableciendo FlapsDeployed en false. Esto simula el comportamiento real de los aviones, donde los flaps se utilizan principalmente a bajas velocidades para aumentar la sustentación durante el despegue y aterrizaje, pero se retraen a altas velocidades para reducir el arrastre y permitir un vuelo más eficiente.
@@ -212,12 +234,14 @@ public class Plane : MonoBehaviour {
     // También es importante para calcular el ángulo de ataque, que es crucial para la aerodinámica del avión.
     private void CalculatePlaneState(float dt) {
         var quaternion = Quaternion.Inverse(Rb.rotation);
+        Debug.Log($"[Plane State Debug] Rb.rotation: {Rb.rotation}, Quaternion Inverso: {quaternion}");
         Velocity = Rb.linearVelocity;
         LocalVelocity = quaternion * Velocity; 
         LocalAngularVelocity = quaternion * Rb.angularVelocity; 
     }
 
     private void CalculateAngleOfAttack() {
+        Debug.Log($"[AoA Debug] LocalVelocity: {LocalVelocity.sqrMagnitude:F2} (x: {LocalVelocity.x:F2}, y: {LocalVelocity.y:F2}, z: {LocalVelocity.z:F2})");
         if (LocalVelocity.sqrMagnitude < 0.1f) {
             AngleOfAttack = 0;
             AngleOfAttackYaw = 0;
@@ -238,7 +262,7 @@ public class Plane : MonoBehaviour {
     private void UpdateThrottle(float dt) {
         float target = 0;
         if (throttleInput > 0) target = 1;
-
+        Debug.Log($"[Throttle Debug] Throttle Input: {throttleInput:F2}, Target: {target}, Current Throttle: {Throttle:F2}");
         Throttle = Utilities.MoveTo(Throttle, target, throttleSpeed * Mathf.Abs(throttleInput), dt);
         
         // AirbrakeDeployed = Throttle == 0 && throttleInput == -1;
