@@ -1,0 +1,97 @@
+# Documentación del Sistema Físico y Matemático de Vuelo
+
+Archivos analizados: `AvionControles.cs` y `Plane.cs`
+
+Este documento detalla las bases físicas y matemáticas implementadas en el código para simular el comportamiento de vuelo del avión. El modelo emplea el motor de físicas (`Rigidbody`) aplicando fuerzas como empuje, sustentación, resistencia y torques de dirección de forma procedural, combinando físicas newtonianas con aerodinámica computacional aproximada.
+
+--------------------------------------------------------------------------------
+1. Estado del Avión y Cinemática Local
+--------------------------------------------------------------------------------
+[ Función: CalculatePlaneState ]
+
+- Comportamiento: Transforma la velocidad lineal y la velocidad angular globales al espacio local del avión (relativo a la rotación de la cabina).
+- Fundamento Matemático: Se utiliza el cuaternión inverso de la rotación actual del avión (Q^-1) para rotar los vectores de la inercia global.
+  Fórmulas:
+    Velocidad Local:  v_local = Q^-1 * v_global
+    Velocidad Ang.:   w_local = Q^-1 * w_global
+
+--------------------------------------------------------------------------------
+2. Ángulos de Ataque Aerodinámico (AoA)
+--------------------------------------------------------------------------------
+[ Función: CalculateAngleOfAttack ]
+
+- Comportamiento: Calcula los ángulos en los que el viento incide sobre las alas (Pitch/Cabeceo) y el estabilizador vertical (Yaw/Guiñada).
+- Fundamento Físico: El ángulo de ataque (alpha) es el ángulo entre la cuerda aerodinámica del ala y la dirección del flujo de aire relativo.
+  Fórmulas trigonométricas:
+    AoA Pitch (α) = atan2(-v_local_y, v_local_z)
+    AoA Yaw   (β) = atan2(v_local_x, v_local_z)
+  El uso de "atan2" preserva los cuadrantes y evita divisiones por cero.
+
+--------------------------------------------------------------------------------
+3. Motor y Fuerza de Empuje (Thrust)
+--------------------------------------------------------------------------------
+[ Función: UpdateThrust ]
+
+- Comportamiento: Aplica una fuerza propulsora en el eje Z local (hacia el frente).
+- Fundamento Físico: Basado en la Segunda Ley de Newton (F = m * a). El empuje es proporcional al nivel del acelerador ("Throttle").
+  Fórmula:
+    Fuerza_Empuje = Throttle * MaxThrust * (Vector Hacia Adelante Local)
+    
+--------------------------------------------------------------------------------
+4. Sustentación (Lift) y Resistencia Aerodinámica (Drag)
+--------------------------------------------------------------------------------
+[ Función: CalculateLift ]
+
+- Comportamiento: Calcula la magnitud y dirección de la sustentación y la resistencia inducida generadas por una superficie aerodinámica.
+- Fundamento Físico:
+  En dinámica de fluidos real: L = 0.5 * densidad * v^2 * Area * CoeficienteLift
+  En esta simulación, las constantes estáticas (0.5, densidad, área) se agrupan en una variable ajustable "liftPower". El Coeficiente de Sustentación C_L(α) se evalúa a partir de una curva (aoaCurve) utilizando el ángulo de ataque.
+  
+  Fórmulas:
+    1. Magnitud de la Sustentación:
+       F_lift = |v_proyectada|^2 * C_L(α) * liftPower
+       
+    2. Dirección de Sustentación (Perpendicular al flujo y al ala):
+       Vector_dir = (Flujo Normalizado) x (Eje del Ala)
+       
+    3. Resistencia Inducida (Induced Drag): 
+       La creación de sustentación genera una resistencia cuadráticamente proporcional.
+       F_drag_magnitud = [C_L(α)]^2 * inducedDragPower * C_D(|v_z|) * |v_proyectada|^2
+       Dirección = Opuesta al flujo de aire ( -Flujo Normalizado )
+
+[ Función: UpdateLift ]
+
+- Se aplica el "CalculateLift" a dos ejes principales:
+  1. Alas: Utiliza el AoA Pitch (α). Si los alerones (Flaps) están desplegados, agregan un sesgo positivo artificial al ángulo y potencian el 'liftPower'.
+  2. Timón (Rudder): Utiliza el AoA Yaw (β) para generar fuerza estabilizadora lateral y prevenir que el avión derrape como un coche sobre hielo.
+
+--------------------------------------------------------------------------------
+5. Dinámica de Fuerzas G (Aceleración y Centrifugación)
+--------------------------------------------------------------------------------
+[ Funciones: CalculateGForce y CalculateGLimiter ]
+
+- Comportamiento: Mide las Fuerzas G experimentadas y previene giros excesivamente violentos que quebrarían las alas o causarían G-LOC en el piloto.
+- Fundamento Físico:
+  Fuerza G Traslacional: Aceleración cruda del chasis.
+    a_traslacional = (v_actual - v_anterior) / DeltaTime
+    G_local = Q^-1 * a_traslacional
+  Fuerza G Centrípeta (durante giros):
+    a_centripeta = Vector Angular(w) CRUZ Vector Velocidad(v)
+    
+- Limitador Automático (Fly-by-wire):
+  Si la fuerza centrípeta proyectada supera los "gLimits", la capacidad de giro máxima se escala hacia abajo multiplicando los inputs del jugador.
+  Factor Escalado = Mínimo( 1.0, |G_Limite Max| / |w_max CRUZ v_local| )
+
+--------------------------------------------------------------------------------
+6. Dirección y Maniobrabilidad (Steering)
+--------------------------------------------------------------------------------
+[ Función: UpdateSteering ]
+
+- Comportamiento: Convierte las entradas del jugador en torques dinámicos, emulando un sistema de control electrónico (Fly-By-Wire).
+- Fundamento Matemático:
+  1. Modulación por flujo de aire: Un avión parado en el aire no puede girar sin toberas de vectorización. La maniobrabilidad se modula mediante `steeringCurve(Velocidad_Z)`.
+  2. Torque Corrector: Actúa como un sistema de control P (Proporcional). Calcula el error entre la rotación deseada y la rotación actual:
+     Error = w_deseada - w_actual
+     Impulso_Rotacional = clamp(Error, -Aceleracion_Giro*dt, Aceleracion_Giro*dt)
+  3. Modificador de Inercia: 
+     Se aplica mediante "ForceMode.VelocityChange", lo que obvia la masa estática del Rigidbody, garantizando que el diseño del avión no dependa excesivamente de su peso nominal y responda de manera ágil e inmediata a la corrección angular.
