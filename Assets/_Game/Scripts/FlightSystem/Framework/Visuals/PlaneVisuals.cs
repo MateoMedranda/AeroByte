@@ -19,6 +19,9 @@ namespace FlightSystem.Framework.Visuals
         public Transform AirBrake2;
         public Transform AirBrake3;
         public Transform AirBrake4;
+        public GameObject[] planeLights; // Focos y Conos de luz
+        public TrailRenderer[] wingTrails; // Cintas aerodinámicas de las alas
+        
         public float maxElevatorDeflection = 25f;
         public float maxFlapsDeflection = 35f;
         public float maxSpoilersDeflection = 35f;
@@ -62,12 +65,49 @@ namespace FlightSystem.Framework.Visuals
             PlaneState state = _controller.GetState();
             if (state == null) return;
 
+            UpdateLightsVisual(state);
+            UpdateTrailsVisual(state);
             UpdatePropellerVisual(state);
             UpdateElevatorVisual(state);
             UpdateFlapsVisual(state);
             UpdateSpoilersVisual(state);
             UpdateRudderVisual(state);
             UpdateAirBrakeVisual(state);
+        }
+
+        private void UpdateTrailsVisual(PlaneState state)
+        {
+            if (wingTrails == null || wingTrails.Length == 0) return;
+
+            // Las estelas aparecen si el avión NO está en el suelo y va a cierta velocidad
+            bool isFlying = !state.isGrounded && state.velocity.magnitude > 20f;
+
+            foreach (var trail in wingTrails)
+            {
+                if (trail == null) continue;
+
+                if (isFlying && !trail.emitting)
+                {
+                    trail.emitting = true;
+                }
+                else if (!isFlying && trail.emitting)
+                {
+                    trail.emitting = false;
+                }
+            }
+        }
+
+        private void UpdateLightsVisual(PlaneState state)
+        {
+            if (planeLights == null || planeLights.Length == 0) return;
+
+            foreach (var light in planeLights)
+            {
+                if (light != null && light.activeSelf != state.lightsOn)
+                {
+                    light.SetActive(state.lightsOn);
+                }
+            }
         }
 
         private void UpdatePropellerVisual(PlaneState state)

@@ -9,6 +9,7 @@ namespace FlightSystem.Domain.Entities
         public bool flapsDeployed { get; private set; }
         public bool airbrakeDeployed { get; private set; }
         public bool isGrounded { get; private set; }
+        public bool lightsOn { get; private set; }
 
         // abstract state properties
         public Vector3 velocity { get; private set; }
@@ -53,6 +54,10 @@ namespace FlightSystem.Domain.Entities
             if (localVelocity.z < retractSpeed) {
                 flapsDeployed = !flapsDeployed;
             }
+        }
+
+        public void ToggleLights() {
+            lightsOn = !lightsOn;
         }
 
         public void SyncPhysicsState(Vector3 velocity, Vector3 localVelocity, Vector3 localAngular, Vector3 localGForce)

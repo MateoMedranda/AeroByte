@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 126eed947adcc07408fce2077fe4ba9e, type: 3}
   m_Name: Clima_TormentaFuerte
   m_EditorClassIdentifier: Assembly-CSharp::AeroByte.WeatherSystem.Framework.Config.WeatherStatsConfig
-  constantWindVelocity: {x: 50000, y: 0, z: 0}
-  windGustIntensity: 2000
-  turbulenceTorqueIntensity: 1500
-  noiseScale: 0.5
+  constantWindVelocity: {x: 25000, y: 0, z: 0}
+  windGustIntensity: 25000
+  turbulenceTorqueIntensity: 25000
+  noiseScale: 1

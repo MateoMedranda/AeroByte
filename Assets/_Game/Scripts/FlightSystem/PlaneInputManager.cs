@@ -26,12 +26,16 @@ public class PlaneInputManager : MonoBehaviour
         controles.Enable();
         controles.Vuelo.ToggleFlaps.performed += OnFlapsInput;
         controles.Vuelo.ToggleCamera.performed += CameraToggle;
+        
+        // ¡OJO! Tendrás que crear la acción 'ToggleLights' en tu archivo AvionControles.inputactions
+        controles.Vuelo.ToggleLights.performed += OnLightsInput;
     }
 
     private void OnDisable()
     {
         controles.Vuelo.ToggleFlaps.performed -= OnFlapsInput;
         controles.Vuelo.ToggleCamera.performed -= CameraToggle;
+        controles.Vuelo.ToggleLights.performed -= OnLightsInput;
         controles.Disable();
     }
 
@@ -52,6 +56,14 @@ public class PlaneInputManager : MonoBehaviour
 
         if (context.phase == InputActionPhase.Performed) {
             avion.OnToggleFlaps();
+        }
+    }
+
+    public void OnLightsInput(InputAction.CallbackContext context) {
+        if (avion == null) return;
+
+        if (context.phase == InputActionPhase.Performed) {
+            avion.OnToggleLights();
         }
     }
 
