@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c09fbdbda523e4ce980579ad8cea5801
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 123890
+  packageName: Palm tree
+  packageVersion: 1.0
+  assetPath: Assets/Palm tree/3.materials/palm_tree_tex.mat
+  uploadId: 560404

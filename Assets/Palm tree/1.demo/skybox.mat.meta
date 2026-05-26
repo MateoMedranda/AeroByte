@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 06b2a4f6cf1eb46e3877e0e41ed1fb9f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 123890
+  packageName: Palm tree
+  packageVersion: 1.0
+  assetPath: Assets/Palm tree/1.demo/skybox.mat
+  uploadId: 560404

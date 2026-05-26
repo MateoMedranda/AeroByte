@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 99a17c21e2c114ae7ac1b19504a46423
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 123890
+  packageName: Palm tree
+  packageVersion: 1.0
+  assetPath: Assets/Palm tree/2.prefabs/palm_tree_splitted.prefab
+  uploadId: 560404

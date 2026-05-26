@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b2e5a2f18e4304214a814252d3e90968
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 123890
+  packageName: Palm tree
+  packageVersion: 1.0
+  assetPath: Assets/Palm tree/2.prefabs/palm_tree_leaf.prefab
+  uploadId: 560404
