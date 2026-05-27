@@ -31,6 +31,7 @@ namespace FlightSystem.Adapters
         public void OnControlInput(Vector3 input) => _planeState.SetControlInput(input);
         public void OnThrottleInput(float input) => _planeState.SetThrottleInput(input);
         public void OnToggleFlaps() => _planeState.ToggleFlaps(statsConfig.FlapsRetractSpeed);
+        public void OnToggleLights() => _planeState.ToggleLights();
 
         private void FixedUpdate()
         {

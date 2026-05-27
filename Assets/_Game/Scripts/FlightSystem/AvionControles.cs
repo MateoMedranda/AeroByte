@@ -145,6 +145,15 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ToggleLights"",
+                    ""type"": ""Button"",
+                    ""id"": ""095cd2aa-d831-40cc-851e-3e5635167a42"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -301,6 +310,17 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                     ""action"": ""ToggleCamera"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e84f42aa-0a77-4694-a3fb-c2a6353cde67"",
+                    ""path"": ""<Keyboard>/l"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleLights"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -315,6 +335,7 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         m_Vuelo_PitchRoll = m_Vuelo.FindAction("PitchRoll", throwIfNotFound: true);
         m_Vuelo_ToggleFlaps = m_Vuelo.FindAction("ToggleFlaps", throwIfNotFound: true);
         m_Vuelo_ToggleCamera = m_Vuelo.FindAction("ToggleCamera", throwIfNotFound: true);
+        m_Vuelo_ToggleLights = m_Vuelo.FindAction("ToggleLights", throwIfNotFound: true);
     }
 
     ~@AvionControles()
@@ -401,6 +422,7 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
     private readonly InputAction m_Vuelo_PitchRoll;
     private readonly InputAction m_Vuelo_ToggleFlaps;
     private readonly InputAction m_Vuelo_ToggleCamera;
+    private readonly InputAction m_Vuelo_ToggleLights;
     /// <summary>
     /// Provides access to input actions defined in input action map "Vuelo".
     /// </summary>
@@ -436,6 +458,10 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Vuelo/ToggleCamera".
         /// </summary>
         public InputAction @ToggleCamera => m_Wrapper.m_Vuelo_ToggleCamera;
+        /// <summary>
+        /// Provides access to the underlying input action "Vuelo/ToggleLights".
+        /// </summary>
+        public InputAction @ToggleLights => m_Wrapper.m_Vuelo_ToggleLights;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -480,6 +506,9 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
             @ToggleCamera.started += instance.OnToggleCamera;
             @ToggleCamera.performed += instance.OnToggleCamera;
             @ToggleCamera.canceled += instance.OnToggleCamera;
+            @ToggleLights.started += instance.OnToggleLights;
+            @ToggleLights.performed += instance.OnToggleLights;
+            @ToggleLights.canceled += instance.OnToggleLights;
         }
 
         /// <summary>
@@ -509,6 +538,9 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
             @ToggleCamera.started -= instance.OnToggleCamera;
             @ToggleCamera.performed -= instance.OnToggleCamera;
             @ToggleCamera.canceled -= instance.OnToggleCamera;
+            @ToggleLights.started -= instance.OnToggleLights;
+            @ToggleLights.performed -= instance.OnToggleLights;
+            @ToggleLights.canceled -= instance.OnToggleLights;
         }
 
         /// <summary>
@@ -591,5 +623,12 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleCamera(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ToggleLights" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleLights(InputAction.CallbackContext context);
     }
 }
