@@ -4,12 +4,15 @@ namespace FlightSystem.Domain.Entities
 {
     public class PlaneState
     {
+        public event System.Action<bool> OnLandingGearStateChanged;
+
         // State properties
         public float throttle { get; private set; }
         public bool flapsDeployed { get; private set; }
         public bool airbrakeDeployed { get; private set; }
         public bool isGrounded { get; private set; }
         public bool lightsOn { get; private set; }
+        public bool landingGearDown { get; private set; } = true;
 
         // abstract state properties
         public Vector3 velocity { get; private set; }
@@ -58,6 +61,14 @@ namespace FlightSystem.Domain.Entities
 
         public void ToggleLights() {
             lightsOn = !lightsOn;
+        }
+
+        public void ToggleLandingGear(bool hasRetractableGear) {
+            if (!hasRetractableGear) return;
+            if (landingGearDown && isGrounded) return; // No se puede retraer si está en tierra
+            
+            landingGearDown = !landingGearDown;
+            OnLandingGearStateChanged?.Invoke(landingGearDown);
         }
 
         public void SyncPhysicsState(Vector3 velocity, Vector3 localVelocity, Vector3 localAngular, Vector3 localGForce)

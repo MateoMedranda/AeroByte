@@ -34,12 +34,13 @@ namespace FlightSystem.UseCases
 
             float airbrakeDrag = state.airbrakeDeployed ? _stats.AirbrakeDrag : 0;
             float flapsDrag = state.flapsDeployed ? _stats.FlapsDrag : 0;
+            float landingGearDrag = state.landingGearDown ? _stats.LandingGearDrag : 0;
 
             var coefficient = Utilities.Scale6(
                 lv.normalized,
                 _stats.DragRight.Evaluate(Mathf.Abs(lv.x)), _stats.DragLeft.Evaluate(Mathf.Abs(lv.x)),
                 _stats.DragTop.Evaluate(Mathf.Abs(lv.y)), _stats.DragBottom.Evaluate(Mathf.Abs(lv.y)),
-                _stats.DragForward.Evaluate(Mathf.Abs(lv.z)) + airbrakeDrag + flapsDrag,   
+                _stats.DragForward.Evaluate(Mathf.Abs(lv.z)) + airbrakeDrag + flapsDrag + landingGearDrag,   
                 _stats.DragBack.Evaluate(Mathf.Abs(lv.z))
             );
 

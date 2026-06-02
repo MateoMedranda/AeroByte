@@ -37,8 +37,10 @@ namespace FlightSystem.Domain.Interfaces
         AnimationCurve DragBottom { get; }
         Vector3 AngularDrag { get; }
         float AirbrakeDrag { get; }
+        bool HasRetractableGear { get; }
+        float LandingGearDrag { get; }
 
-        // Aerodynamic properties 
+        // Aerodynamic properties
         float PitchStability { get; }
         float YawStability { get; }
         float StallAngle { get; }

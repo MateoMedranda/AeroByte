@@ -363,6 +363,8 @@ MonoBehaviour:
     m_RotationOrder: 4
   angularDrag: {x: 1, y: 1, z: 1}
   airbrakeDrag: 5
+  hasRetractableGear: 0
+  landingGearDrag: 15
   pitchStability: 5
   yawStability: 15
   stallAngle: 18

@@ -26,12 +26,27 @@ namespace FlightSystem.Adapters
             _rb = GetComponent<Rigidbody>();
             _planeState = new PlaneState(0f); 
             _physicsUseCase = new FlightPhysicsUseCase(this, statsConfig);
+            
+            _planeState.OnLandingGearStateChanged += HandleLandingGearStateChanged;
+        }
+
+        private void OnDestroy() {
+            if (_planeState != null) {
+                _planeState.OnLandingGearStateChanged -= HandleLandingGearStateChanged;
+            }
+        }
+
+        private void HandleLandingGearStateChanged(bool isDown) {
+            Debug.Log($"[PlaneController] Tren de aterrizaje {(isDown ? "Desplegado" : "Retraído")}. Aquí puedes activar tu animación.");
+            // Ejemplo para futura animación (descomentar cuando tengas el Animator configurado):
+            // GetComponent<Animator>().SetBool("GearDown", isDown);
         }
 
         public void OnControlInput(Vector3 input) => _planeState.SetControlInput(input);
         public void OnThrottleInput(float input) => _planeState.SetThrottleInput(input);
         public void OnToggleFlaps() => _planeState.ToggleFlaps(statsConfig.FlapsRetractSpeed);
         public void OnToggleLights() => _planeState.ToggleLights();
+        public void OnToggleLandingGear() => _planeState.ToggleLandingGear(statsConfig.HasRetractableGear);
 
         private void FixedUpdate()
         {
