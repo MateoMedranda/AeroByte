@@ -64,10 +64,18 @@ namespace FlightSystem.Domain.Entities
         }
 
         public void ToggleLandingGear(bool hasRetractableGear) {
-            if (!hasRetractableGear) return;
-            if (landingGearDown && isGrounded) return; // No se puede retraer si está en tierra
+            Debug.Log($"[DEBUG] ToggleLandingGear en PlaneState. hasRetractable: {hasRetractableGear}, landingGearDown: {landingGearDown}, isGrounded: {isGrounded}");
+            if (!hasRetractableGear) {
+                Debug.Log("[DEBUG] Bloqueado: El avión no tiene tren retráctil configurado en sus stats.");
+                return;
+            }
+            if (landingGearDown && isGrounded) {
+                Debug.Log("[DEBUG] Bloqueado: No se puede retraer el tren porque el avión detecta que está en tierra (isGrounded = true).");
+                return; 
+            }
             
             landingGearDown = !landingGearDown;
+            Debug.Log($"[DEBUG] Éxito: Tren cambiado a {landingGearDown}. Disparando evento...");
             OnLandingGearStateChanged?.Invoke(landingGearDown);
         }
 

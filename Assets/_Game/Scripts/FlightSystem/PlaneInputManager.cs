@@ -73,6 +73,7 @@ public class PlaneInputManager : MonoBehaviour
         if (avion == null) return;
 
         if (context.phase == InputActionPhase.Performed) {
+            Debug.Log("[DEBUG] Input de teclado (K) detectado en PlaneInputManager.");
             avion.OnToggleLandingGear();
         }
     }

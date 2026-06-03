@@ -37,16 +37,25 @@ namespace FlightSystem.Adapters
         }
 
         private void HandleLandingGearStateChanged(bool isDown) {
-            Debug.Log($"[PlaneController] Tren de aterrizaje {(isDown ? "Desplegado" : "Retraído")}. Aquí puedes activar tu animación.");
-            // Ejemplo para futura animación (descomentar cuando tengas el Animator configurado):
-            // GetComponent<Animator>().SetBool("GearDown", isDown);
+            Debug.Log($"[PlaneController] Tren de aterrizaje {(isDown ? "Desplegado" : "Retraído")}. Activando animación...");
+            
+            Animator animator = GetComponentInChildren<Animator>();
+            if (animator != null) {
+                animator.SetBool("GearDown", isDown);
+            } else {
+                Debug.LogWarning("[PlaneController] No se encontró componente Animator en el avión para el tren de aterrizaje.");
+            }
         }
 
         public void OnControlInput(Vector3 input) => _planeState.SetControlInput(input);
         public void OnThrottleInput(float input) => _planeState.SetThrottleInput(input);
         public void OnToggleFlaps() => _planeState.ToggleFlaps(statsConfig.FlapsRetractSpeed);
         public void OnToggleLights() => _planeState.ToggleLights();
-        public void OnToggleLandingGear() => _planeState.ToggleLandingGear(statsConfig.HasRetractableGear);
+        
+        public void OnToggleLandingGear() {
+            Debug.Log($"[DEBUG] OnToggleLandingGear llamado en PlaneController. Enviando a PlaneState... HasRetractableGear: {statsConfig.HasRetractableGear}, isGrounded actual: {_planeState.isGrounded}");
+            _planeState.ToggleLandingGear(statsConfig.HasRetractableGear);
+        }
 
         private void FixedUpdate()
         {
