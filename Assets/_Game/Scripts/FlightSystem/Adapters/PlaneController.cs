@@ -70,8 +70,6 @@ namespace FlightSystem.Adapters
             _planeState.ToggleFlaps(statsConfig.FlapsRetractSpeed);
         }
         public void OnToggleLights() => _planeState.ToggleLights();
-
-        public void RegisterWeatherZoneEnter()
         
         public void OnToggleLandingGear() {
             Debug.Log($"[DEBUG] OnToggleLandingGear llamado en PlaneController. Enviando a PlaneState... HasRetractableGear: {statsConfig.HasRetractableGear}, isGrounded actual: {_planeState.isGrounded}");
@@ -79,14 +77,6 @@ namespace FlightSystem.Adapters
         }
 
         public void RegisterWeatherZoneEnter()
-        {
-            _weatherZoneContacts++;
-        }
-
-        public void RegisterWeatherZoneExit()
-        {
-            _weatherZoneContacts = Mathf.Max(0, _weatherZoneContacts - 1);
-        }
         {
             _weatherZoneContacts++;
         }
