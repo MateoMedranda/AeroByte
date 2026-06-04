@@ -28,5 +28,25 @@ namespace WeatherSystem.Adapters
                 _weatherUseCase.ApplyWeather(plane, plane.transform.position, Time.time);
             }
         }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            PlaneController plane = other.GetComponentInParent<PlaneController>();
+
+            if (plane != null)
+            {
+                plane.RegisterWeatherZoneEnter();
+            }
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            PlaneController plane = other.GetComponentInParent<PlaneController>();
+
+            if (plane != null)
+            {
+                plane.RegisterWeatherZoneExit();
+            }
+        }
     }
 }
