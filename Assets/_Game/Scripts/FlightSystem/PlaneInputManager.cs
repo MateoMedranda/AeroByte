@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using FlightSystem.Adapters;
+using MissionSystem.Adapters;
 
 [RequireComponent(typeof(PlaneController))] 
 public class PlaneInputManager : MonoBehaviour
@@ -51,6 +52,16 @@ public class PlaneInputManager : MonoBehaviour
 
         avion.OnControlInput(controlInput);
         avion.OnThrottleInput(throttle);
+
+        // Detect M key to drop cargo box
+        if (Keyboard.current != null && Keyboard.current.mKey.wasPressedThisFrame)
+        {
+            var deliveryController = GetComponent<PlaneDeliveryController>();
+            if (deliveryController != null)
+            {
+                deliveryController.TryDropCargo();
+            }
+        }
     }
 
     public void OnFlapsInput(InputAction.CallbackContext context) {

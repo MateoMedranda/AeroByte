@@ -9,6 +9,7 @@ namespace FlightSystem.Domain.Interfaces
         float ThrottleSpeed { get; }
         float GLimit { get; }
         float GLimitPitch { get; }
+        float CrashVelocityThreshold { get; }
 
         // Steering properties
         Vector3 TurnSpeed { get; }

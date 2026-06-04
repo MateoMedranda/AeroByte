@@ -54,6 +54,9 @@ namespace AeroByte.FlightSystem.Framework.Config
         [SerializeField] private float groundSteeringSpeed = 40f;
         [SerializeField] private float groundBrakeDeceleration = 15f;
 
+        [Header("Colisión y Explosión")]
+        [SerializeField] private float crashVelocityThreshold = 5f;
+
         // Implementación de la interfaz IPlaneStats
         public float MaxThrust => maxThrust;
         public float ThrottleSpeed => throttleSpeed;
@@ -95,5 +98,6 @@ namespace AeroByte.FlightSystem.Framework.Config
 
         public float GroundSteeringSpeed => groundSteeringSpeed;
         public float GroundBrakeDeceleration => groundBrakeDeceleration;
+        public float CrashVelocityThreshold => crashVelocityThreshold;
     }
 }

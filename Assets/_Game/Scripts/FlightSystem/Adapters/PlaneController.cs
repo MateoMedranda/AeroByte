@@ -20,12 +20,22 @@ namespace FlightSystem.Adapters
         private PlaneState _planeState;
         private FlightPhysicsUseCase _physicsUseCase;
         private Vector3 _lastVelocity;
+        
+        private CrashPlaneUseCase _crashUseCase;
+        private IPlaneCrashPresenter _crashPresenter;
 
         private void Awake()
         {
             _rb = GetComponent<Rigidbody>();
             _planeState = new PlaneState(0f); 
             _physicsUseCase = new FlightPhysicsUseCase(this, statsConfig);
+            
+            _crashPresenter = GetComponent<IPlaneCrashPresenter>();
+            if (_crashPresenter == null)
+            {
+                Debug.LogWarning("[PlaneController] No se encontró ningún componente que implemente IPlaneCrashPresenter en este GameObject.");
+            }
+            _crashUseCase = new CrashPlaneUseCase(_crashPresenter);
             
             _planeState.OnLandingGearStateChanged += HandleLandingGearStateChanged;
         }
@@ -81,6 +91,18 @@ namespace FlightSystem.Adapters
         public void ApplyRelativeForce(Vector3 force) => _rb.AddRelativeForce(force);
         public void ApplyRelativeTorque(Vector3 torque, ForceMode mode) => _rb.AddRelativeTorque(torque, mode);
         public void ApplyTransformDirection(Vector3 direction) => _rb.linearVelocity = transform.TransformDirection(direction);
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            if (statsConfig == null) return;
+            
+            // Si el impacto físico excede el umbral de velocidad, el avión explota
+            if (collision.relativeVelocity.magnitude >= statsConfig.CrashVelocityThreshold)
+            {
+                Debug.Log($"[PlaneController] Colisión detectada con {collision.gameObject.name}. Velocidad de impacto: {collision.relativeVelocity.magnitude:F2} m/s (Umbral: {statsConfig.CrashVelocityThreshold} m/s)");
+                _crashUseCase.Execute(_planeState);
+            }
+        }
 
         public PlaneState GetState() => _planeState;
     }

@@ -17,6 +17,8 @@ namespace FlightSystem.UseCases
 
         public void Execute(PlaneState state, float dt)
         {
+            if (state.isCrashed) return;
+
             state.UpdateThrottle(dt, _stats.ThrottleSpeed);
             state.UpdateFlaps(_stats.FlapsRetractSpeed);
             UpdateThrust(state);

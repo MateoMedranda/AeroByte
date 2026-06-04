@@ -13,6 +13,7 @@ namespace FlightSystem.Domain.Entities
         public bool isGrounded { get; private set; }
         public bool lightsOn { get; private set; }
         public bool landingGearDown { get; private set; } = true;
+        public bool isCrashed { get; private set; }
 
         // abstract state properties
         public Vector3 velocity { get; private set; }
@@ -36,9 +37,18 @@ namespace FlightSystem.Domain.Entities
             flapsDeployed = false;
         }
         
-        public void SetThrottleInput(float input) => throttleInput = input;
+        public void SetThrottleInput(float input)
+        {
+            if (isCrashed) return;
+            throttleInput = input;
+        }
         public void SetEffectiveInput(Vector3 input) => effectiveInput = input;
-        public void SetControlInput(Vector3 input) => controlInput = Vector3.ClampMagnitude(input, 1);
+        public void SetControlInput(Vector3 input)
+        {
+            if (isCrashed) return;
+            controlInput = Vector3.ClampMagnitude(input, 1);
+        }
+        public void Crash() => isCrashed = true;
         public void SetGroundedState(bool isGrounded) => this.isGrounded = isGrounded;
 
         public void UpdateThrottle(float dt, float throttleSpeed) {

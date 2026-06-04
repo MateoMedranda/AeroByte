@@ -66,10 +66,10 @@ Material:
     - _PosterizeSteps: 10
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _Shades: 0.001
+    - _Shades: 0.04
     - _Smoothness: 0
     m_Colors:
-    - _Color: {r: 1, g: 0.9442249, b: 0.8349056, a: 1}
+    - _Color: {r: 1, g: 0.9999032, b: 1, a: 1}
     - _Offset: {r: 0, g: 0, b: 0, a: 0}
     - _Tiling: {r: 300, g: 300, b: 0, a: 0}
   m_BuildTextureStacks: []

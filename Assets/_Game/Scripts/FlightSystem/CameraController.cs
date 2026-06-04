@@ -26,4 +26,4 @@ public class CameraController : MonoBehaviour
         Debug.Log("Cambiando cámara...");
         index = (index + 1) % cameraPositions.Length;
     }
-}
+}
