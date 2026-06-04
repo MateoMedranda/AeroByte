@@ -20,6 +20,11 @@ namespace FlightSystem.Adapters
         private PlaneState _planeState;
         private FlightPhysicsUseCase _physicsUseCase;
         private Vector3 _lastVelocity;
+        private int _weatherZoneContacts;
+
+        public Rigidbody Body => _rb;
+        public PlaneState State => _planeState;
+        public bool IsInWeatherZone => _weatherZoneContacts > 0;
 
         private void Awake()
         {
@@ -30,8 +35,22 @@ namespace FlightSystem.Adapters
 
         public void OnControlInput(Vector3 input) => _planeState.SetControlInput(input);
         public void OnThrottleInput(float input) => _planeState.SetThrottleInput(input);
-        public void OnToggleFlaps() => _planeState.ToggleFlaps(statsConfig.FlapsRetractSpeed);
+        public void OnToggleFlaps()
+        {
+            if (statsConfig == null) return;
+            _planeState.ToggleFlaps(statsConfig.FlapsRetractSpeed);
+        }
         public void OnToggleLights() => _planeState.ToggleLights();
+
+        public void RegisterWeatherZoneEnter()
+        {
+            _weatherZoneContacts++;
+        }
+
+        public void RegisterWeatherZoneExit()
+        {
+            _weatherZoneContacts = Mathf.Max(0, _weatherZoneContacts - 1);
+        }
 
         private void FixedUpdate()
         {
