@@ -9,8 +9,19 @@ namespace AeroByte.CheckpointSystem.Framework.Visuals
         [SerializeField] private float radius = 5f;
         [SerializeField] private int segments = 120;
         [SerializeField] private float width = 0.3f;
+        
+        [ColorUsage(true, true)]
+        [Tooltip("Color del círculo. Admite HDR para brillo nativo con Bloom.")]
         [SerializeField] private Color color = Color.red;
+
+        [Tooltip("Intensidad emisiva del color. Valores > 1 aumentan el brillo en postprocesamiento.")]
+        [SerializeField] private float emissionIntensity = 2f;
+
         [SerializeField] private float dashTiling = 20f;
+
+        [Header("Material Personalizado (Opcional)")]
+        [Tooltip("Material base opcional. Si se deja vacío, se generará uno transparente procedural con emisión.")]
+        [SerializeField] private Material customMaterial;
 
         private LineRenderer _lineRenderer;
         private Material _material;
@@ -40,20 +51,32 @@ namespace AeroByte.CheckpointSystem.Framework.Visuals
             }
             texture.Apply();
 
-            // Crear material transparente compatible
-            Shader shader = Shader.Find("Sprites/Default");
-            if (shader == null)
+            if (customMaterial != null)
             {
-                shader = Shader.Find("Legacy Shaders/Particles/Alpha Blended Premultiply");
+                // Si el usuario provee un material personalizado, instanciamos una copia para no alterar el original
+                _material = new Material(customMaterial);
+                if (_material.mainTexture == null)
+                {
+                    _material.mainTexture = texture;
+                }
             }
-            
-            _material = new Material(shader);
-            _material.mainTexture = texture;
+            else
+            {
+                // Crear material transparente compatible por defecto
+                Shader shader = Shader.Find("Sprites/Default");
+                if (shader == null)
+                {
+                    shader = Shader.Find("Legacy Shaders/Particles/Alpha Blended Premultiply");
+                }
+                
+                _material = new Material(shader);
+                _material.mainTexture = texture;
+            }
             
             _lineRenderer.material = _material;
             _lineRenderer.textureMode = LineTextureMode.Tile;
             
-            // Configurar color
+            // Configurar color y emisión
             SetColor(color);
         }
 
@@ -83,17 +106,27 @@ namespace AeroByte.CheckpointSystem.Framework.Visuals
         public void SetColor(Color newColor)
         {
             color = newColor;
-            _originalColor = newColor;
+            
+            // Calcular el color emisivo multiplicando los canales RGB por la intensidad de emisión
+            Color emissiveColor = new Color(newColor.r * emissionIntensity, newColor.g * emissionIntensity, newColor.b * emissionIntensity, newColor.a);
+            _originalColor = emissiveColor;
             
             if (_lineRenderer != null)
             {
-                _lineRenderer.startColor = newColor;
-                _lineRenderer.endColor = newColor;
+                _lineRenderer.startColor = emissiveColor;
+                _lineRenderer.endColor = emissiveColor;
             }
             
             if (_material != null)
             {
-                _material.color = newColor;
+                _material.color = emissiveColor;
+                
+                // Si el material tiene soporte explícito para color de emisión (shaders URP/Standard)
+                if (_material.HasProperty("_EmissionColor"))
+                {
+                    _material.SetColor("_EmissionColor", emissiveColor);
+                    _material.EnableKeyword("_EMISSION");
+                }
             }
         }
 
@@ -110,6 +143,11 @@ namespace AeroByte.CheckpointSystem.Framework.Visuals
             if (_material != null)
             {
                 _material.color = c;
+                
+                if (_material.HasProperty("_EmissionColor"))
+                {
+                    _material.SetColor("_EmissionColor", c);
+                }
             }
         }
 
