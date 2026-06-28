@@ -24,6 +24,7 @@ namespace FlightSystem.Framework.Visuals
         public Transform AirBrake4;
         public GameObject[] planeLights; // Focos y Conos de luz
         public TrailRenderer[] wingTrails; // Cintas aerodinámicas de las alas
+        public Transform[] jetPropulsionCones; // Conos visuales de propulsión
         
         public float maxElevatorDeflection = 25f;
         public float maxFlapsDeflection = 35f;
@@ -51,6 +52,8 @@ namespace FlightSystem.Framework.Visuals
         private float currentSpoilerAngle = 0f;
         private float currentAirBrakeAngle = 0f;
 
+        private Vector3[] initialPropulsionScales;
+
         private PlaneController _controller;
 
         private void Awake()
@@ -75,6 +78,19 @@ namespace FlightSystem.Framework.Visuals
             if (AirBrake2 != null) airBrake2StartRotation = AirBrake2.localRotation;
             if (AirBrake3 != null) airBrake3StartRotation = AirBrake3.localRotation;
             if (AirBrake4 != null) airBrake4StartRotation = AirBrake4.localRotation;
+
+            if (jetPropulsionCones != null && jetPropulsionCones.Length > 0)
+            {
+                initialPropulsionScales = new Vector3[jetPropulsionCones.Length];
+                for (int i = 0; i < jetPropulsionCones.Length; i++)
+                {
+                    if (jetPropulsionCones[i] != null)
+                    {
+                        initialPropulsionScales[i] = jetPropulsionCones[i].localScale;
+                        jetPropulsionCones[i].localScale = Vector3.zero;
+                    }
+                }
+            }
         }
 
         private void Update()
@@ -90,6 +106,7 @@ namespace FlightSystem.Framework.Visuals
             UpdateSpoilersVisual(state);
             UpdateRudderVisual(state);
             UpdateAirBrakeVisual(state);
+            UpdateJetPropulsionVisual(state);
         }
 
         private void UpdateTrailsVisual(PlaneState state)
@@ -190,6 +207,21 @@ namespace FlightSystem.Framework.Visuals
             if (AirBrake2 != null) AirBrake2.localRotation = airBrake2StartRotation * Quaternion.Euler(0f, -currentAirBrakeAngle, 0f);
             if (AirBrake3 != null) AirBrake3.localRotation = airBrake3StartRotation * Quaternion.Euler(0f, -currentAirBrakeAngle, 0f);
             if (AirBrake4 != null) AirBrake4.localRotation = airBrake4StartRotation * Quaternion.Euler(0f, -currentAirBrakeAngle, 0f);
+        }
+
+        private void UpdateJetPropulsionVisual(PlaneState state)
+        {
+            if (jetPropulsionCones != null)
+            {
+                for (int i = 0; i < jetPropulsionCones.Length; i++)
+                {
+                    if (jetPropulsionCones[i] != null)
+                    {
+                        Vector3 targetScale = initialPropulsionScales[i] * Mathf.Max(0f, state.throttle);
+                        jetPropulsionCones[i].localScale = Vector3.Lerp(jetPropulsionCones[i].localScale, targetScale, Time.deltaTime * lerpSpeed);
+                    }
+                }
+            }
         }
     }
 }

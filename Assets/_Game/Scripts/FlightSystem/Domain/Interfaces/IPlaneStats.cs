@@ -50,5 +50,8 @@ namespace FlightSystem.Domain.Interfaces
         // Ground handling properties 
         float GroundSteeringSpeed { get; }
         float GroundBrakeDeceleration { get; }
+
+        // Audio properties
+        AudioClip EngineSoundClip { get; }
     }
 }

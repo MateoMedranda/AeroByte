@@ -57,6 +57,9 @@ namespace AeroByte.FlightSystem.Framework.Config
         [Header("Colisión y Explosión")]
         [SerializeField] private float crashVelocityThreshold = 5f;
 
+        [Header("Audio")]
+        [SerializeField] private AudioClip engineSoundClip;
+
         // Implementación de la interfaz IPlaneStats
         public float MaxThrust => maxThrust;
         public float ThrottleSpeed => throttleSpeed;
@@ -99,5 +102,6 @@ namespace AeroByte.FlightSystem.Framework.Config
         public float GroundSteeringSpeed => groundSteeringSpeed;
         public float GroundBrakeDeceleration => groundBrakeDeceleration;
         public float CrashVelocityThreshold => crashVelocityThreshold;
+        public AudioClip EngineSoundClip => engineSoundClip;
     }
 }

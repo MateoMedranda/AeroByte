@@ -172,6 +172,15 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ToggleMusic"",
+                    ""type"": ""Button"",
+                    ""id"": ""7fe51dcc-dc6d-4754-8d4a-f0d76fa34060"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -361,6 +370,17 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                     ""action"": ""DropCargo"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b417527f-4b0c-4f34-982e-3ae83d0e3bc2"",
+                    ""path"": ""<Keyboard>/p"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleMusic"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -378,6 +398,7 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         m_Vuelo_ToggleLights = m_Vuelo.FindAction("ToggleLights", throwIfNotFound: true);
         m_Vuelo_ToggleLandingGear = m_Vuelo.FindAction("ToggleLandingGear", throwIfNotFound: true);
         m_Vuelo_DropCargo = m_Vuelo.FindAction("DropCargo", throwIfNotFound: true);
+        m_Vuelo_ToggleMusic = m_Vuelo.FindAction("ToggleMusic", throwIfNotFound: true);
     }
 
     ~@AvionControles()
@@ -467,6 +488,7 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
     private readonly InputAction m_Vuelo_ToggleLights;
     private readonly InputAction m_Vuelo_ToggleLandingGear;
     private readonly InputAction m_Vuelo_DropCargo;
+    private readonly InputAction m_Vuelo_ToggleMusic;
     /// <summary>
     /// Provides access to input actions defined in input action map "Vuelo".
     /// </summary>
@@ -514,6 +536,10 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Vuelo/DropCargo".
         /// </summary>
         public InputAction @DropCargo => m_Wrapper.m_Vuelo_DropCargo;
+        /// <summary>
+        /// Provides access to the underlying input action "Vuelo/ToggleMusic".
+        /// </summary>
+        public InputAction @ToggleMusic => m_Wrapper.m_Vuelo_ToggleMusic;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -567,6 +593,9 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
             @DropCargo.started += instance.OnDropCargo;
             @DropCargo.performed += instance.OnDropCargo;
             @DropCargo.canceled += instance.OnDropCargo;
+            @ToggleMusic.started += instance.OnToggleMusic;
+            @ToggleMusic.performed += instance.OnToggleMusic;
+            @ToggleMusic.canceled += instance.OnToggleMusic;
         }
 
         /// <summary>
@@ -605,6 +634,9 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
             @DropCargo.started -= instance.OnDropCargo;
             @DropCargo.performed -= instance.OnDropCargo;
             @DropCargo.canceled -= instance.OnDropCargo;
+            @ToggleMusic.started -= instance.OnToggleMusic;
+            @ToggleMusic.performed -= instance.OnToggleMusic;
+            @ToggleMusic.canceled -= instance.OnToggleMusic;
         }
 
         /// <summary>
@@ -708,5 +740,12 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnDropCargo(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ToggleMusic" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleMusic(InputAction.CallbackContext context);
     }
 }

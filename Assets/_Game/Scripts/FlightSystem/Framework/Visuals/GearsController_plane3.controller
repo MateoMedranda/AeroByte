@@ -33,7 +33,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Deploying
-  m_Speed: 1
+  m_Speed: -1
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 7764307493008853336}
@@ -46,7 +46,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: -623603649343465320, guid: 586e1af4e73e2aa45abdfd397a4f43b6, type: 3}
+  m_Motion: {fileID: -623603649343465320, guid: 1994c57a495ab0d42a293fdb36b5f477, type: 3}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -60,7 +60,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Gear_Down_Idle
-  m_Speed: 100
+  m_Speed: -100
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -6024387215444914865}
@@ -73,7 +73,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: -623603649343465320, guid: 586e1af4e73e2aa45abdfd397a4f43b6, type: 3}
+  m_Motion: {fileID: -623603649343465320, guid: 1994c57a495ab0d42a293fdb36b5f477, type: 3}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -85,7 +85,7 @@ AnimatorController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: GearsController
+  m_Name: GearsController_plane3
   serializedVersion: 5
   m_AnimatorParameters:
   - m_Name: GearDown
@@ -129,7 +129,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Retracting
-  m_Speed: -1
+  m_Speed: 1
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 7243163956820939042}
@@ -142,7 +142,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: -623603649343465320, guid: 586e1af4e73e2aa45abdfd397a4f43b6, type: 3}
+  m_Motion: {fileID: -623603649343465320, guid: 1994c57a495ab0d42a293fdb36b5f477, type: 3}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
