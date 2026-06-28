@@ -17,6 +17,7 @@ namespace FlightSystem.Framework.Visuals
         public Transform LeftSpoiler;
         public Transform RightSpoiler;
         public Transform Rudder;
+        public Transform Rudder2;
         public Transform AirBrake1;
         public Transform AirBrake2;
         public Transform AirBrake3;
@@ -38,6 +39,7 @@ namespace FlightSystem.Framework.Visuals
         private Quaternion leftElevatorStartRotation;
         private Quaternion rightElevatorStartRotation;
         private Quaternion rudderStartRotation;
+        private Quaternion rudder2StartRotation;
         private Quaternion airBrake1StartRotation;
         private Quaternion airBrake2StartRotation;  
         private Quaternion airBrake3StartRotation;
@@ -64,6 +66,7 @@ namespace FlightSystem.Framework.Visuals
             if (RightElevator != null) rightElevatorStartRotation = RightElevator.localRotation;
             
             if (Rudder != null) rudderStartRotation = Rudder.localRotation;
+            if (Rudder2 != null) rudder2StartRotation = Rudder2.localRotation;
 
             if (LeftSpoiler != null) leftSpoilerStartRotation = LeftSpoiler.localRotation;
             if (RightSpoiler != null) rightSpoilerStartRotation = RightSpoiler.localRotation;
@@ -168,21 +171,25 @@ namespace FlightSystem.Framework.Visuals
 
         private void UpdateRudderVisual(PlaneState state) 
         {
+            float angle = state.controlInput.y * maxRudderDeflection;
+
             if(Rudder != null) {
-                float angle = state.controlInput.y * maxRudderDeflection;
                 Rudder.localRotation = rudderStartRotation * Quaternion.Euler(0f, angle, 0f);
+            }
+            if(Rudder2 != null) {
+                Rudder2.localRotation = rudder2StartRotation * Quaternion.Euler(0f, angle, 0f);
             }
         }
 
-        private void UpdateAirBrakeVisual(PlaneState state){
-            if (AirBrake1 != null && AirBrake2 != null && AirBrake3 != null && AirBrake4 != null) {
-                float targetAngle = state.airbrakeDeployed ? maxFlapsDeflection * 1.5f : 0f; // Ángulo mayor (20% más)
-                currentAirBrakeAngle = Mathf.Lerp(currentAirBrakeAngle, targetAngle, Time.fixedDeltaTime * lerpSpeed);
-                AirBrake1.localRotation = airBrake1StartRotation * Quaternion.Euler(0f, -currentAirBrakeAngle, 0f);
-                AirBrake2.localRotation = airBrake2StartRotation * Quaternion.Euler(0f, -currentAirBrakeAngle, 0f);
-                AirBrake3.localRotation = airBrake3StartRotation * Quaternion.Euler(0f, -currentAirBrakeAngle, 0f);
-                AirBrake4.localRotation = airBrake4StartRotation * Quaternion.Euler(0f, -currentAirBrakeAngle, 0f);
-            }
+        private void UpdateAirBrakeVisual(PlaneState state)
+        {
+            float targetAngle = state.airbrakeDeployed ? maxFlapsDeflection * 1.5f : 0f;
+            currentAirBrakeAngle = Mathf.Lerp(currentAirBrakeAngle, targetAngle, Time.fixedDeltaTime * lerpSpeed);
+            
+            if (AirBrake1 != null) AirBrake1.localRotation = airBrake1StartRotation * Quaternion.Euler(0f, -currentAirBrakeAngle, 0f);
+            if (AirBrake2 != null) AirBrake2.localRotation = airBrake2StartRotation * Quaternion.Euler(0f, -currentAirBrakeAngle, 0f);
+            if (AirBrake3 != null) AirBrake3.localRotation = airBrake3StartRotation * Quaternion.Euler(0f, -currentAirBrakeAngle, 0f);
+            if (AirBrake4 != null) AirBrake4.localRotation = airBrake4StartRotation * Quaternion.Euler(0f, -currentAirBrakeAngle, 0f);
         }
     }
 }
