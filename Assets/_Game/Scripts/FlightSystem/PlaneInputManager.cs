@@ -67,19 +67,6 @@ public class PlaneInputManager : MonoBehaviour
                     deliveryController.TryDropCargo();
                 }
             }
-
-            // Radio Controls (Fallback / Hardcoded until added to InputActions)
-            if (Keyboard.current.rKey.wasPressedThisFrame)
-            {
-                var radioManager = GetComponent<RadioManager>();
-                if (radioManager != null) radioManager.ToggleMusic();
-            }
-
-            if (Keyboard.current.tKey.wasPressedThisFrame)
-            {
-                var radioManager = GetComponent<RadioManager>();
-                if (radioManager != null) radioManager.NextTrack();
-            }
         }
     }
 
