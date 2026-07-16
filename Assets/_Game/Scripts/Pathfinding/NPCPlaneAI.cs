@@ -39,6 +39,25 @@ public class NPCPlaneAI : MonoBehaviour
     [Header("Pathfinding")]
     public AStar3D pathfinder;
 
+    [Header("Landing Settings")]
+    [Tooltip("Distancia mínima al punto de fin de pista para considerarse aterrizado")]
+    public float landingStopDistance = 10f;
+    [Tooltip("Altura adicional sobre el punto de fin de pista al aterrizar")]
+    public float landingHeightOffset = 2f;
+
+    [Header("Utility-Based Decision Making")]
+    public bool useUtilityDecisionMaking = true;
+    public float fuel = 100f;
+    public float maxFuel = 100f;
+    public float fuelConsumptionRate = 1.5f;
+    public bool stormActive = false;
+    public bool showDebugUI = true;
+    
+    [HideInInspector] public float patrolUtility;
+    [HideInInspector] public float landingUtility;
+
+    private PlaneState stateBeforeEmergency = PlaneState.FlightPlan;
+
     private List<AirNode> currentPath;
     private int currentWaypointIndex = 0;
     private Vector3 currentTargetPos;
@@ -58,6 +77,39 @@ public class NPCPlaneAI : MonoBehaviour
 
     void Start()
     {
+        fuel = maxFuel; // Asegurar que inicien con tanque lleno al arrancar la simulación
+        
+        // --- AUTO-BUSCAR REFERENCIAS DE PISTA Y PATRULLA SI ESTÁN VACÍAS ---
+        if (runwayStart == null)
+        {
+            GameObject obj = GameObject.Find("RunwayStart");
+            if (obj == null) obj = GameObject.Find("Runway Start");
+            if (obj != null) runwayStart = obj.transform;
+        }
+        if (runwayEnd == null)
+        {
+            GameObject obj = GameObject.Find("RunwayEnd");
+            if (obj == null) obj = GameObject.Find("Runway End");
+            if (obj != null) runwayEnd = obj.transform;
+        }
+        if (circlingCenter == null)
+        {
+            GameObject obj = GameObject.Find("CirclingCenter");
+            if (obj == null) obj = GameObject.Find("Circling Center");
+            if (obj != null) circlingCenter = obj.transform;
+        }
+        // -------------------------------------------------------------------
+
+        // Guardar el estado inicial como estado por defecto para reanudar después
+        if (currentState != PlaneState.Idle && currentState != PlaneState.Takeoff && currentState != PlaneState.Landing)
+        {
+            stateBeforeEmergency = currentState;
+        }
+        else
+        {
+            stateBeforeEmergency = PlaneState.FlightPlan;
+        }
+
         if (pathfinder == null) {
             pathfinder = FindObjectOfType<AStar3D>();
         }
@@ -67,6 +119,9 @@ public class NPCPlaneAI : MonoBehaviour
 
     void InitializeState(PlaneState state)
     {
+        currentPath = null;
+        currentWaypointIndex = 0;
+
         switch (state)
         {
             case PlaneState.Takeoff: StartTakeoff(); break;
@@ -74,7 +129,6 @@ public class NPCPlaneAI : MonoBehaviour
             case PlaneState.Landing: StartLanding(); break;
             case PlaneState.FlightPlan: StartFlightPlan(); break;
             case PlaneState.Idle: 
-                currentPath = null;
                 finalDestination = transform.position;
                 break;
         }
@@ -82,6 +136,45 @@ public class NPCPlaneAI : MonoBehaviour
 
     void Update()
     {
+        // --- UTILITY DECISION MAKING UPDATE ---
+        if (useUtilityDecisionMaking)
+        {
+            // Consumir combustible si no está quieto
+            if (currentState != PlaneState.Idle)
+            {
+                fuel = Mathf.Max(0f, fuel - fuelConsumptionRate * Time.deltaTime);
+            }
+            else
+            {
+                // Si está en Idle, recargar combustible en tierra de forma progresiva
+                fuel = Mathf.Min(maxFuel, fuel + fuelConsumptionRate * 5f * Time.deltaTime);
+
+                // Si se carga al 100%, despegar automáticamente para reanudar su comportamiento anterior
+                if (fuel >= maxFuel)
+                {
+                    Debug.LogWarning($"[Utility AI] Reabastecimiento completo. Despegando automáticamente para reanudar {stateBeforeEmergency}.");
+                    StartTakeoff();
+                }
+            }
+
+            // Calcular utilidades
+            patrolUtility = 0.3f * (fuel / maxFuel);
+
+            float fuelFactor = Mathf.Clamp01((maxFuel - fuel) / maxFuel);
+            float fuelUtility = Mathf.Pow(fuelFactor, 3f) * 1.5f; // curva cúbica
+            
+            landingUtility = Mathf.Clamp01(fuelUtility + (stormActive ? 0.6f : 0f));
+
+            // Tomar decisión
+            if (landingUtility > patrolUtility && currentState != PlaneState.Landing && currentState != PlaneState.Idle)
+            {
+                stateBeforeEmergency = currentState; // Registrar qué comportamiento estaba haciendo
+                Debug.LogWarning($"[Utility AI] Cambiando estado de {currentState} a Landing por emergencia. Fuel: {fuel:F1}%, Landing Utility: {landingUtility:F2}");
+                currentState = PlaneState.Landing;
+            }
+        }
+        // --------------------------------------
+
         if (currentState != previousState)
         {
             InitializeState(currentState);
@@ -118,7 +211,24 @@ public class NPCPlaneAI : MonoBehaviour
         if (currentState != PlaneState.Idle)
         {
             FlyTowardsTarget();
-            transform.Translate(Vector3.forward * flightSpeed * Time.deltaTime);
+
+            float currentSpeed = flightSpeed;
+            if (currentState == PlaneState.Landing)
+            {
+                Vector3 targetLandingPos = runwayEnd != null 
+                    ? runwayEnd.position + Vector3.up * landingHeightOffset 
+                    : transform.position;
+
+                float distToTarget = Vector3.Distance(transform.position, targetLandingPos);
+                
+                // Desaceleración progresiva al acercarse al fin de pista
+                if (distToTarget < 300f)
+                {
+                    currentSpeed = Mathf.Lerp(8f, flightSpeed, distToTarget / 300f);
+                }
+            }
+
+            transform.Translate(Vector3.forward * currentSpeed * Time.deltaTime);
         }
     }
 
@@ -257,7 +367,15 @@ public class NPCPlaneAI : MonoBehaviour
     {
         if (HasReachedTarget())
         {
-            StartCircling();
+            // Reanudar el comportamiento que estaba realizando antes de la recarga
+            if (stateBeforeEmergency == PlaneState.FlightPlan)
+            {
+                StartFlightPlan();
+            }
+            else
+            {
+                StartCircling();
+            }
         }
     }
 
@@ -298,16 +416,90 @@ public class NPCPlaneAI : MonoBehaviour
     {
         if (HasReachedTarget())
         {
-            finalDestination = runwayEnd != null ? runwayEnd.position : transform.position;
+            Vector3 targetLandingPos = runwayEnd != null 
+                ? runwayEnd.position + Vector3.up * landingHeightOffset 
+                : transform.position;
+
+            finalDestination = targetLandingPos;
             currentTargetPos = finalDestination;
-            if (Vector3.Distance(transform.position, currentTargetPos) < reachDistance) {
-                currentState = PlaneState.Idle; // Landed
+            
+            if (Vector3.Distance(transform.position, currentTargetPos) < landingStopDistance) {
+                currentState = PlaneState.Idle; // Landed (comienza recarga progresiva en Idle)
                 currentPitchAngle = 0;
                 currentBankAngle = 0;
+                transform.position = targetLandingPos; // Posicionar exactamente en las coordenadas y altura deseadas
                 transform.rotation = Quaternion.Euler(0, transform.eulerAngles.y, 0); // Enderezar nave
             }
         }
     }
+
+    void OnGUI()
+    {
+        if (!showDebugUI) return;
+
+        // Convertir posición 3D a pantalla
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        Vector3 screenPos = cam.WorldToScreenPoint(transform.position + Vector3.up * 15f); // 15m por encima del avión
+
+        // Verificar si está en pantalla
+        if (screenPos.z > 0 && screenPos.x > 0 && screenPos.x < Screen.width && screenPos.y > 0 && screenPos.y < Screen.height)
+        {
+            float yPos = Screen.height - screenPos.y;
+
+            // Rectángulo del panel de depuración
+            Rect rect = new Rect(screenPos.x - 100, yPos - 85, 200, 115);
+            
+            // Fondo semitransparente oscuro usando estilo de Box
+            GUI.Box(rect, "");
+            
+            // Estilo de texto personalizado
+            GUIStyle style = new GUIStyle(GUI.skin.label);
+            style.alignment = TextAnchor.UpperCenter;
+            style.fontSize = 11;
+            style.richText = true;
+
+            // Dibujar información
+            string text = $"<b><size=12>{gameObject.name}</size></b>\n" +
+                          $"Estado: <color=yellow>{currentState}</color>\n" +
+                          $"Combustible: <color=#00ffffff>{fuel:F1}%</color>\n" +
+                          $"U_Patrullar: <color=#00ff00ff>{patrolUtility:F2}</color>\n" +
+                          $"U_Aterrizar: <color=#ff3333ff>{landingUtility:F2}</color>";
+            
+            GUI.Label(rect, text, style);
+        }
+    }
+
+#if UNITY_EDITOR
+    void OnDrawGizmos()
+    {
+        if (!showDebugUI) return;
+
+        // Texto limpio para la Scene View (sin tags HTML, ya que Handles.Label no los interpreta nativamente)
+        string debugText = $"[ {gameObject.name} ]\n" +
+                           $"Estado: {currentState}\n" +
+                           $"Combustible: {fuel:F1}%\n" +
+                           $"U_Patrullar: {patrolUtility:F2}\n" +
+                           $"U_Aterrizar: {landingUtility:F2}";
+
+        GUIStyle style = new GUIStyle();
+        style.normal.textColor = currentState == PlaneState.Landing ? Color.red : Color.cyan;
+        style.fontSize = 11;
+        style.alignment = TextAnchor.UpperCenter;
+
+        // Dibujar el texto flotante en la Scene View
+        UnityEditor.Handles.Label(transform.position + Vector3.up * 18f, debugText, style);
+
+        // Dibujar línea visual de guía hacia su destino de vuelo actual
+        if (currentTargetPos != Vector3.zero)
+        {
+            Gizmos.color = currentState == PlaneState.Landing ? Color.red : Color.green;
+            Gizmos.DrawLine(transform.position, currentTargetPos);
+            Gizmos.DrawWireSphere(currentTargetPos, 5f);
+        }
+    }
+#endif
 
     // --- UTILS ---
 
