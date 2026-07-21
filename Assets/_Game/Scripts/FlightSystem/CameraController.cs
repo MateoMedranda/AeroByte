@@ -1,13 +1,17 @@
 using UnityEngine;
 
-public class CameraController : MonoBehaviour
-{
+    public class CameraController : MonoBehaviour
+    {
     [Tooltip("An array of transforms representing the different camera positions and orientations.")]
     [SerializeField] private Transform[] cameraPositions;
     [Tooltip("The speed at which the camera transitions between positions.")]
-    [SerializeField] private float speed;
+        [SerializeField] private float speed;
 
-    private int index = 0; // Empezamos en 0 (la primera cámara)
+        private int index = 0; // Empezamos en 0 (la primera cámara)
+
+        public int CurrentIndex => index;
+        public int CameraCount => cameraPositions == null ? 0 : cameraPositions.Length;
+        public string CurrentCameraName => cameraPositions == null || cameraPositions.Length == 0 ? "N/A" : cameraPositions[index].name;
 
     private void Update()
     {

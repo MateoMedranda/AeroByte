@@ -68,6 +68,33 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "ToggleLandingGear",
+                    "type": "Button",
+                    "id": "73aa2e62-cd4b-4e47-b8c2-fab66d939a6e",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "DropCargo",
+                    "type": "Button",
+                    "id": "8c459f23-d65e-49b8-a72c-f6825e378c2e",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ToggleMusic",
+                    "type": "Button",
+                    "id": "7fe51dcc-dc6d-4754-8d4a-f0d76fa34060",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -233,6 +260,39 @@
                     "processors": "",
                     "groups": "",
                     "action": "ToggleLights",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5f7c4acd-8453-46f9-abee-94b530a106c5",
+                    "path": "<Keyboard>/k",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleLandingGear",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9d45e12f-b3cb-4f81-a7b6-c9582d38e23f",
+                    "path": "<Keyboard>/m",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "DropCargo",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b417527f-4b0c-4f34-982e-3ae83d0e3bc2",
+                    "path": "<Keyboard>/p",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleMusic",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

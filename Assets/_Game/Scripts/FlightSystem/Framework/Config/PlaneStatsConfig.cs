@@ -40,6 +40,10 @@ namespace AeroByte.FlightSystem.Framework.Config
         [SerializeField] private Vector3 angularDrag = new Vector3(1, 1, 1);
         [SerializeField] private float airbrakeDrag = 50f;
 
+        [Header("Tren de Aterrizaje")]
+        [SerializeField] private bool hasRetractableGear = true;
+        [SerializeField] private float landingGearDrag = 15f;
+
         [Header("Estabilidad y Pérdida (Stall)")]
         [SerializeField] private float pitchStability = 5f;
         [SerializeField] private float yawStability = 15f;
@@ -49,6 +53,12 @@ namespace AeroByte.FlightSystem.Framework.Config
         [Header("Físicas de Suelo")]
         [SerializeField] private float groundSteeringSpeed = 40f;
         [SerializeField] private float groundBrakeDeceleration = 15f;
+
+        [Header("Colisión y Explosión")]
+        [SerializeField] private float crashVelocityThreshold = 5f;
+
+        [Header("Audio")]
+        [SerializeField] private AudioClip engineSoundClip;
 
         // Implementación de la interfaz IPlaneStats
         public float MaxThrust => maxThrust;
@@ -81,6 +91,8 @@ namespace AeroByte.FlightSystem.Framework.Config
         public AnimationCurve DragBottom => dragBottom;
         public Vector3 AngularDrag => angularDrag;
         public float AirbrakeDrag => airbrakeDrag;
+        public bool HasRetractableGear => hasRetractableGear;
+        public float LandingGearDrag => landingGearDrag;
 
         public float PitchStability => pitchStability;
         public float YawStability => yawStability;
@@ -89,5 +101,7 @@ namespace AeroByte.FlightSystem.Framework.Config
 
         public float GroundSteeringSpeed => groundSteeringSpeed;
         public float GroundBrakeDeceleration => groundBrakeDeceleration;
+        public float CrashVelocityThreshold => crashVelocityThreshold;
+        public AudioClip EngineSoundClip => engineSoundClip;
     }
 }

@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using FlightSystem.Adapters;
+using MissionSystem.Adapters;
+using AeroByte.FlightSystem.Framework.Audio;
 
 [RequireComponent(typeof(PlaneController))] 
 public class PlaneInputManager : MonoBehaviour
@@ -27,8 +29,10 @@ public class PlaneInputManager : MonoBehaviour
         controles.Vuelo.ToggleFlaps.performed += OnFlapsInput;
         controles.Vuelo.ToggleCamera.performed += CameraToggle;
         
-        // ¡OJO! Tendrás que crear la acción 'ToggleLights' en tu archivo AvionControles.inputactions
+        // ¡OJO! Tendrás que crear la acción 'ToggleLights', 'ToggleLandingGear', y 'ToggleMusic' en tu archivo AvionControles.inputactions
         controles.Vuelo.ToggleLights.performed += OnLightsInput;
+        controles.Vuelo.ToggleLandingGear.performed += OnLandingGearInput;
+        controles.Vuelo.ToggleMusic.performed += OnToggleMusicInput;
     }
 
     private void OnDisable()
@@ -36,6 +40,8 @@ public class PlaneInputManager : MonoBehaviour
         controles.Vuelo.ToggleFlaps.performed -= OnFlapsInput;
         controles.Vuelo.ToggleCamera.performed -= CameraToggle;
         controles.Vuelo.ToggleLights.performed -= OnLightsInput;
+        controles.Vuelo.ToggleLandingGear.performed -= OnLandingGearInput;
+        controles.Vuelo.ToggleMusic.performed -= OnToggleMusicInput;
         controles.Disable();
     }
 
@@ -49,6 +55,19 @@ public class PlaneInputManager : MonoBehaviour
 
         avion.OnControlInput(controlInput);
         avion.OnThrottleInput(throttle);
+
+        // Detect M key to drop cargo box
+        if (Keyboard.current != null)
+        {
+            if (Keyboard.current.mKey.wasPressedThisFrame)
+            {
+                var deliveryController = GetComponent<PlaneDeliveryController>();
+                if (deliveryController != null)
+                {
+                    deliveryController.TryDropCargo();
+                }
+            }
+        }
     }
 
     public void OnFlapsInput(InputAction.CallbackContext context) {
@@ -67,10 +86,28 @@ public class PlaneInputManager : MonoBehaviour
         }
     }
 
+    public void OnLandingGearInput(InputAction.CallbackContext context) {
+        if (avion == null) return;
+
+        if (context.phase == InputActionPhase.Performed) {
+            Debug.Log("[DEBUG] Input de teclado (K) detectado en PlaneInputManager.");
+            avion.OnToggleLandingGear();
+        }
+    }
+
     public void CameraToggle(InputAction.CallbackContext context) {
         if(cameraController == null) return;
         if(context.phase == InputActionPhase.Performed) {
             cameraController.ToggleCamera();
+        }
+    }
+
+    public void OnToggleMusicInput(InputAction.CallbackContext context) {
+        if (context.phase == InputActionPhase.Performed) {
+            var radioManager = GetComponent<RadioManager>();
+            if (radioManager != null) {
+                radioManager.ToggleMusic();
+            }
         }
     }
 }

@@ -9,6 +9,7 @@ namespace FlightSystem.Domain.Interfaces
         float ThrottleSpeed { get; }
         float GLimit { get; }
         float GLimitPitch { get; }
+        float CrashVelocityThreshold { get; }
 
         // Steering properties
         Vector3 TurnSpeed { get; }
@@ -37,8 +38,10 @@ namespace FlightSystem.Domain.Interfaces
         AnimationCurve DragBottom { get; }
         Vector3 AngularDrag { get; }
         float AirbrakeDrag { get; }
+        bool HasRetractableGear { get; }
+        float LandingGearDrag { get; }
 
-        // Aerodynamic properties 
+        // Aerodynamic properties
         float PitchStability { get; }
         float YawStability { get; }
         float StallAngle { get; }
@@ -47,5 +50,8 @@ namespace FlightSystem.Domain.Interfaces
         // Ground handling properties 
         float GroundSteeringSpeed { get; }
         float GroundBrakeDeceleration { get; }
+
+        // Audio properties
+        AudioClip EngineSoundClip { get; }
     }
 }

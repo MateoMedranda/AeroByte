@@ -4,12 +4,16 @@ namespace FlightSystem.Domain.Entities
 {
     public class PlaneState
     {
+        public event System.Action<bool> OnLandingGearStateChanged;
+
         // State properties
         public float throttle { get; private set; }
         public bool flapsDeployed { get; private set; }
         public bool airbrakeDeployed { get; private set; }
         public bool isGrounded { get; private set; }
         public bool lightsOn { get; private set; }
+        public bool landingGearDown { get; private set; } = true;
+        public bool isCrashed { get; private set; }
 
         // abstract state properties
         public Vector3 velocity { get; private set; }
@@ -33,9 +37,18 @@ namespace FlightSystem.Domain.Entities
             flapsDeployed = false;
         }
         
-        public void SetThrottleInput(float input) => throttleInput = input;
+        public void SetThrottleInput(float input)
+        {
+            if (isCrashed) return;
+            throttleInput = input;
+        }
         public void SetEffectiveInput(Vector3 input) => effectiveInput = input;
-        public void SetControlInput(Vector3 input) => controlInput = Vector3.ClampMagnitude(input, 1);
+        public void SetControlInput(Vector3 input)
+        {
+            if (isCrashed) return;
+            controlInput = Vector3.ClampMagnitude(input, 1);
+        }
+        public void Crash() => isCrashed = true;
         public void SetGroundedState(bool isGrounded) => this.isGrounded = isGrounded;
 
         public void UpdateThrottle(float dt, float throttleSpeed) {
@@ -58,6 +71,22 @@ namespace FlightSystem.Domain.Entities
 
         public void ToggleLights() {
             lightsOn = !lightsOn;
+        }
+
+        public void ToggleLandingGear(bool hasRetractableGear) {
+            Debug.Log($"[DEBUG] ToggleLandingGear en PlaneState. hasRetractable: {hasRetractableGear}, landingGearDown: {landingGearDown}, isGrounded: {isGrounded}");
+            if (!hasRetractableGear) {
+                Debug.Log("[DEBUG] Bloqueado: El avión no tiene tren retráctil configurado en sus stats.");
+                return;
+            }
+            if (landingGearDown && isGrounded) {
+                Debug.Log("[DEBUG] Bloqueado: No se puede retraer el tren porque el avión detecta que está en tierra (isGrounded = true).");
+                return; 
+            }
+            
+            landingGearDown = !landingGearDown;
+            Debug.Log($"[DEBUG] Éxito: Tren cambiado a {landingGearDown}. Disparando evento...");
+            OnLandingGearStateChanged?.Invoke(landingGearDown);
         }
 
         public void SyncPhysicsState(Vector3 velocity, Vector3 localVelocity, Vector3 localAngular, Vector3 localGForce)

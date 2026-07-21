@@ -20,18 +20,71 @@ namespace FlightSystem.Adapters
         private PlaneState _planeState;
         private FlightPhysicsUseCase _physicsUseCase;
         private Vector3 _lastVelocity;
+        private int _weatherZoneContacts;
+
+        public Rigidbody Body => _rb;
+        public PlaneState State => _planeState;
+        public bool IsInWeatherZone => _weatherZoneContacts > 0;
+        
+        private CrashPlaneUseCase _crashUseCase;
+        private IPlaneCrashPresenter _crashPresenter;
 
         private void Awake()
         {
             _rb = GetComponent<Rigidbody>();
             _planeState = new PlaneState(0f); 
             _physicsUseCase = new FlightPhysicsUseCase(this, statsConfig);
+            
+            _crashPresenter = GetComponent<IPlaneCrashPresenter>();
+            if (_crashPresenter == null)
+            {
+                Debug.LogWarning("[PlaneController] No se encontró ningún componente que implemente IPlaneCrashPresenter en este GameObject.");
+            }
+            _crashUseCase = new CrashPlaneUseCase(_crashPresenter);
+            
+            _planeState.OnLandingGearStateChanged += HandleLandingGearStateChanged;
+        }
+
+        private void OnDestroy() {
+            if (_planeState != null) {
+                _planeState.OnLandingGearStateChanged -= HandleLandingGearStateChanged;
+            }
+        }
+
+        private void HandleLandingGearStateChanged(bool isDown) {
+            Debug.Log($"[PlaneController] Tren de aterrizaje {(isDown ? "Desplegado" : "Retraído")}. Activando animación...");
+            
+            Animator animator = GetComponentInChildren<Animator>();
+            if (animator != null) {
+                animator.SetBool("GearDown", isDown);
+            } else {
+                Debug.LogWarning("[PlaneController] No se encontró componente Animator en el avión para el tren de aterrizaje.");
+            }
         }
 
         public void OnControlInput(Vector3 input) => _planeState.SetControlInput(input);
         public void OnThrottleInput(float input) => _planeState.SetThrottleInput(input);
-        public void OnToggleFlaps() => _planeState.ToggleFlaps(statsConfig.FlapsRetractSpeed);
+        public void OnToggleFlaps()
+        {
+            if (statsConfig == null) return;
+            _planeState.ToggleFlaps(statsConfig.FlapsRetractSpeed);
+        }
         public void OnToggleLights() => _planeState.ToggleLights();
+        
+        public void OnToggleLandingGear() {
+            Debug.Log($"[DEBUG] OnToggleLandingGear llamado en PlaneController. Enviando a PlaneState... HasRetractableGear: {statsConfig.HasRetractableGear}, isGrounded actual: {_planeState.isGrounded}");
+            _planeState.ToggleLandingGear(statsConfig.HasRetractableGear);
+        }
+
+        public void RegisterWeatherZoneEnter()
+        {
+            _weatherZoneContacts++;
+        }
+
+        public void RegisterWeatherZoneExit()
+        {
+            _weatherZoneContacts = Mathf.Max(0, _weatherZoneContacts - 1);
+        }
 
         private void FixedUpdate()
         {
@@ -57,6 +110,18 @@ namespace FlightSystem.Adapters
         public void ApplyRelativeForce(Vector3 force) => _rb.AddRelativeForce(force);
         public void ApplyRelativeTorque(Vector3 torque, ForceMode mode) => _rb.AddRelativeTorque(torque, mode);
         public void ApplyTransformDirection(Vector3 direction) => _rb.linearVelocity = transform.TransformDirection(direction);
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            if (statsConfig == null) return;
+            
+            // Si el impacto físico excede el umbral de velocidad, el avión explota
+            if (collision.relativeVelocity.magnitude >= statsConfig.CrashVelocityThreshold)
+            {
+                Debug.Log($"[PlaneController] Colisión detectada con {collision.gameObject.name}. Velocidad de impacto: {collision.relativeVelocity.magnitude:F2} m/s (Umbral: {statsConfig.CrashVelocityThreshold} m/s)");
+                _crashUseCase.Execute(_planeState);
+            }
+        }
 
         public PlaneState GetState() => _planeState;
     }
