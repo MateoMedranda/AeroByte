@@ -1,0 +1,178 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &506047064987231589
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4933373704111265417}
+  - component: {fileID: 4637187543901132451}
+  - component: {fileID: 7312287043786726954}
+  m_Layer: 0
+  m_Name: AvionNPC1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4933373704111265417
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506047064987231589}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 151.27126, y: 4.27369, z: -543.9525}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 892766489117915282}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4637187543901132451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506047064987231589}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 972c7803888f2a847b98ddb0a8ba73b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCPlaneAI
+  currentState: 4
+  flightSpeed: 50
+  turnSpeed: 2
+  reachDistance: 50
+  runwayStart: {fileID: 0}
+  runwayEnd: {fileID: 0}
+  circlingCenter: {fileID: 0}
+  customRoute:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  loopRoute: 1
+  cruisingAltitude: 600
+  circlingRadius: 1000
+  pathUpdateInterval: 3
+  maxBankAngle: 45
+  maxPitchAngle: 20
+  bankSmoothTime: 2
+  pitchSmoothTime: 2
+  separationDistance: 150
+  separationForce: 3
+  pathfinder: {fileID: 0}
+  landingStopDistance: 10
+  landingHeightOffset: 2
+  useUtilityDecisionMaking: 1
+  fuel: 100
+  maxFuel: 100
+  fuelConsumptionRate: 5
+  stormActive: 0
+  showDebugUI: 1
+  patrolUtility: 0
+  landingUtility: 0
+--- !u!65 &7312287043786726954
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506047064987231589}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 14, y: 3, z: 25}
+  m_Center: {x: 0.5, y: 1, z: 2}
+--- !u!1001 &858225008844185465
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4933373704111265417}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1800
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1800
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1800
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.94880676
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1.6333106
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 1.2090454
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.49999973
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.49999985
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.50000024
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.50000024
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+      propertyPath: m_Name
+      value: Airplane
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+--- !u!4 &892766489117915282 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5c1c100f03c9bff4cbef0ed9163916ba, type: 3}
+  m_PrefabInstance: {fileID: 858225008844185465}
+  m_PrefabAsset: {fileID: 0}

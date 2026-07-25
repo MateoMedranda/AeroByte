@@ -7,8 +7,8 @@ namespace AeroByte.UI_System
     public sealed class AeroByteMiniMap : MonoBehaviour
     {
         private const int TextureSize = 512;
-        private const float CameraHeight = 150f;
-        private const float OrthographicSize = 95f;
+        private const float CameraHeight = 400f;
+        private const float OrthographicSize = 250f;
 
         private static Sprite _circleSprite;
         private static Texture2D _circleTexture;
@@ -143,7 +143,7 @@ namespace AeroByte.UI_System
             _mapCamera.orthographic = true;
             _mapCamera.orthographicSize = OrthographicSize;
             _mapCamera.nearClipPlane = 0.1f;
-            _mapCamera.farClipPlane = 500f;
+            _mapCamera.farClipPlane = 1500f;
             _mapCamera.clearFlags = CameraClearFlags.SolidColor;
             _mapCamera.backgroundColor = new Color(0.06f, 0.06f, 0.08f, 1f);
             _mapCamera.cullingMask = ~0;

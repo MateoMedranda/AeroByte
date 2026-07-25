@@ -33,6 +33,11 @@ public class PlaneInputManager : MonoBehaviour
         controles.Vuelo.ToggleLights.performed += OnLightsInput;
         controles.Vuelo.ToggleLandingGear.performed += OnLandingGearInput;
         controles.Vuelo.ToggleMusic.performed += OnToggleMusicInput;
+        
+        var resetAction = controles.asset.FindAction("Vuelo/ResetCamera");
+        if (resetAction != null) {
+            resetAction.performed += OnResetCamera;
+        }
     }
 
     private void OnDisable()
@@ -42,6 +47,12 @@ public class PlaneInputManager : MonoBehaviour
         controles.Vuelo.ToggleLights.performed -= OnLightsInput;
         controles.Vuelo.ToggleLandingGear.performed -= OnLandingGearInput;
         controles.Vuelo.ToggleMusic.performed -= OnToggleMusicInput;
+        
+        var resetAction = controles.asset.FindAction("Vuelo/ResetCamera");
+        if (resetAction != null) {
+            resetAction.performed -= OnResetCamera;
+        }
+        
         controles.Disable();
     }
 
@@ -67,6 +78,13 @@ public class PlaneInputManager : MonoBehaviour
                     deliveryController.TryDropCargo();
                 }
             }
+        }
+        
+        if (cameraController != null) {
+            var lookAction = controles.asset.FindAction("Vuelo/LookEnable");
+            bool isLooking = lookAction != null && lookAction.ReadValue<float>() > 0.5f;
+            Vector2 mouseDelta = controles.Vuelo.MouseLook.ReadValue<Vector2>();
+            cameraController.SetLookInput(mouseDelta, isLooking);
         }
     }
 
@@ -108,6 +126,13 @@ public class PlaneInputManager : MonoBehaviour
             if (radioManager != null) {
                 radioManager.ToggleMusic();
             }
+        }
+    }
+    
+    public void OnResetCamera(InputAction.CallbackContext context) {
+        if(cameraController == null) return;
+        if(context.phase == InputActionPhase.Performed) {
+            cameraController.ResetCameraView();
         }
     }
 }

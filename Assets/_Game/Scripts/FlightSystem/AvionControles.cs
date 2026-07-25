@@ -181,6 +181,24 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""LookEnable"",
+                    ""type"": ""Button"",
+                    ""id"": ""3e9b1dcc-dc6d-4754-8d4a-f0d76fa34061"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ResetCamera"",
+                    ""type"": ""Button"",
+                    ""id"": ""1c8b1dcc-dc6d-4754-8d4a-f0d76fa34062"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -381,6 +399,28 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                     ""action"": ""ToggleMusic"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e3a47527-4b0c-4f34-982e-3ae83d0e3bc3"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LookEnable"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f5b67527-4b0c-4f34-982e-3ae83d0e3bc4"",
+                    ""path"": ""<Mouse>/middleButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ResetCamera"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -399,6 +439,8 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         m_Vuelo_ToggleLandingGear = m_Vuelo.FindAction("ToggleLandingGear", throwIfNotFound: true);
         m_Vuelo_DropCargo = m_Vuelo.FindAction("DropCargo", throwIfNotFound: true);
         m_Vuelo_ToggleMusic = m_Vuelo.FindAction("ToggleMusic", throwIfNotFound: true);
+        m_Vuelo_LookEnable = m_Vuelo.FindAction("LookEnable", throwIfNotFound: true);
+        m_Vuelo_ResetCamera = m_Vuelo.FindAction("ResetCamera", throwIfNotFound: true);
     }
 
     ~@AvionControles()
@@ -489,6 +531,8 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
     private readonly InputAction m_Vuelo_ToggleLandingGear;
     private readonly InputAction m_Vuelo_DropCargo;
     private readonly InputAction m_Vuelo_ToggleMusic;
+    private readonly InputAction m_Vuelo_LookEnable;
+    private readonly InputAction m_Vuelo_ResetCamera;
     /// <summary>
     /// Provides access to input actions defined in input action map "Vuelo".
     /// </summary>
@@ -540,6 +584,14 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Vuelo/ToggleMusic".
         /// </summary>
         public InputAction @ToggleMusic => m_Wrapper.m_Vuelo_ToggleMusic;
+        /// <summary>
+        /// Provides access to the underlying input action "Vuelo/LookEnable".
+        /// </summary>
+        public InputAction @LookEnable => m_Wrapper.m_Vuelo_LookEnable;
+        /// <summary>
+        /// Provides access to the underlying input action "Vuelo/ResetCamera".
+        /// </summary>
+        public InputAction @ResetCamera => m_Wrapper.m_Vuelo_ResetCamera;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -596,6 +648,12 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
             @ToggleMusic.started += instance.OnToggleMusic;
             @ToggleMusic.performed += instance.OnToggleMusic;
             @ToggleMusic.canceled += instance.OnToggleMusic;
+            @LookEnable.started += instance.OnLookEnable;
+            @LookEnable.performed += instance.OnLookEnable;
+            @LookEnable.canceled += instance.OnLookEnable;
+            @ResetCamera.started += instance.OnResetCamera;
+            @ResetCamera.performed += instance.OnResetCamera;
+            @ResetCamera.canceled += instance.OnResetCamera;
         }
 
         /// <summary>
@@ -637,6 +695,12 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
             @ToggleMusic.started -= instance.OnToggleMusic;
             @ToggleMusic.performed -= instance.OnToggleMusic;
             @ToggleMusic.canceled -= instance.OnToggleMusic;
+            @LookEnable.started -= instance.OnLookEnable;
+            @LookEnable.performed -= instance.OnLookEnable;
+            @LookEnable.canceled -= instance.OnLookEnable;
+            @ResetCamera.started -= instance.OnResetCamera;
+            @ResetCamera.performed -= instance.OnResetCamera;
+            @ResetCamera.canceled -= instance.OnResetCamera;
         }
 
         /// <summary>
@@ -747,5 +811,19 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleMusic(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "LookEnable" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnLookEnable(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ResetCamera" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnResetCamera(InputAction.CallbackContext context);
     }
 }

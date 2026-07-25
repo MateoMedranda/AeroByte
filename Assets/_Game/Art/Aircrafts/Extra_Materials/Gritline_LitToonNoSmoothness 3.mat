@@ -69,7 +69,7 @@ Material:
     - _Shades: 0.28
     - _Smoothness: 0
     m_Colors:
-    - _Color: {r: 1, g: 0.41960788, b: 0.9932317, a: 1}
+    - _Color: {r: 0.6518218, g: 1, b: 0.41960788, a: 1}
     - _Offset: {r: 0, g: 0, b: 0, a: 0}
     - _Tiling: {r: 1, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []
