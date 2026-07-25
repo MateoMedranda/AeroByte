@@ -53,6 +53,9 @@ namespace AeroByte.UI_System
         private DialUi _headingDial;
         private DialUi _gDial;
 
+        private Image _oobOverlayImage;
+        private Text _oobCenterText;
+
         private static Sprite _panelSprite;
         private static Texture2D _panelTexture;
         private static Sprite _dialSprite;
@@ -273,14 +276,39 @@ namespace AeroByte.UI_System
             _centerPitchText = CreateText(attitudeFrame.transform, "Pitch Text", font, 13, TextAnchor.LowerCenter, new Vector2(10f, 10f), new Vector2(-10f, 40f), new Color(0.15f, 1f, 0.15f, 0.82f));
             _centerHorizonText = CreateText(attitudeFrame.transform, "Horizon Info", font, 12, TextAnchor.UpperCenter, new Vector2(10f, 12f), new Vector2(-10f, -120f), new Color(0.15f, 1f, 0.15f, 0.70f));
 
-            var flightPanel = CreatePanel(canvasGo.transform, "Flight Panel", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -18f), new Vector2(330f, -178f), new Color(0.45f, 0.45f, 0.45f, 0.24f));
-            _flightText = CreateText(flightPanel.transform, "Flight Text", font, 14, TextAnchor.UpperLeft, new Vector2(10f, 10f), new Vector2(-10f, -10f), new Color(0.88f, 1f, 0.88f, 0.9f));
+            var flightPanel = CreatePanel(canvasGo.transform, "Flight Panel", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -220f), new Vector2(330f, -18f), new Color(0f, 0f, 0f, 0f));
+            _flightText = CreateText(flightPanel.transform, "Flight Text", font, 14, TextAnchor.UpperLeft, new Vector2(10f, 10f), new Vector2(-10f, -10f), new Color(0.88f, 1f, 0.88f, 1f));
 
             var warningPanel = CreatePanel(canvasGo.transform, "Warning Panel", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-340f, -18f), new Vector2(-18f, -120f), new Color(0.45f, 0.45f, 0.45f, 0.24f));
             _warningText = CreateText(warningPanel.transform, "Warning Text", font, 16, TextAnchor.UpperLeft, new Vector2(10f, 10f), new Vector2(-10f, -10f), new Color(0.15f, 1f, 0.15f, 0.95f));
 
             var miniMapPanel = CreatePanel(canvasGo.transform, "MiniMap Panel", new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(10f, 10f), new Vector2(350f, 350f), new Color(0.38f, 0.38f, 0.38f, 0.22f));
             miniMapPanel.AddComponent<AeroByteMiniMap>();
+
+            // OOB Overlay
+            var oobOverlay = new GameObject("OOB Overlay", typeof(RectTransform), typeof(Image));
+            oobOverlay.transform.SetParent(canvasGo.transform, false);
+            var overlayRect = oobOverlay.GetComponent<RectTransform>();
+            overlayRect.anchorMin = Vector2.zero;
+            overlayRect.anchorMax = Vector2.one;
+            overlayRect.offsetMin = Vector2.zero;
+            overlayRect.offsetMax = Vector2.zero;
+            _oobOverlayImage = oobOverlay.GetComponent<Image>();
+            _oobOverlayImage.color = new Color(1f, 0f, 0f, 0f); // Hidden by default
+            _oobOverlayImage.raycastTarget = false;
+
+            // OOB Center Text
+            _oobCenterText = CreateText(canvasGo.transform, "OOB Text", font, 42, TextAnchor.MiddleCenter, Vector2.zero, Vector2.zero, new Color(1f, 0.15f, 0.15f, 0f));
+            var oobTextRect = _oobCenterText.GetComponent<RectTransform>();
+            oobTextRect.anchorMin = new Vector2(0f, 0.5f);
+            oobTextRect.anchorMax = new Vector2(1f, 0.5f);
+            oobTextRect.sizeDelta = new Vector2(0f, 100f);
+            oobTextRect.anchoredPosition = new Vector2(0f, 150f);
+            
+            // Outline for visibility
+            var oobOutline = _oobCenterText.gameObject.AddComponent<Outline>();
+            oobOutline.effectColor = Color.black;
+            oobOutline.effectDistance = new Vector2(2f, -2f);
         }
 
         private static Font GetHudFont()
@@ -747,19 +775,18 @@ namespace AeroByte.UI_System
             UpdateDial(_gDial, gForce, $"{gForce:0.0}G");
 
             _builder.Clear();
-            _builder.AppendLine("FLIGHT");
-            _builder.AppendFormat("Airspeed: {0,7:0.0} m/s ({1,7:0.0} km/h)\n", airspeed, airspeed * 3.6f);
-            _builder.AppendFormat("Forward:  {0,7:0.0} m/s\n", forwardSpeed);
-            _builder.AppendFormat("Altitude: {0,7:0.0} m\n", altitude);
-            _builder.AppendFormat("V/S:      {0,7:0.0} m/s\n", verticalSpeed);
-            _builder.AppendFormat("Heading:  {0,7:0.0} deg\n", heading);
-            _builder.AppendFormat("Pitch:    {0,7:0.0} deg\n", pitch);
-            _builder.AppendFormat("Roll:     {0,7:0.0} deg\n", roll);
-            _builder.AppendFormat("Throttle: {0,7:0.0} %%\n", throttle * 100f);
-            _builder.AppendFormat("G-Load:   {0,7:0.00} G\n", gForce);
-            _builder.AppendFormat("AoA:      {0,7:0.0} deg\n", aoa);
-            _builder.AppendFormat("AoA Yaw:  {0,7:0.0} deg\n", aoaYaw);
-            _builder.AppendFormat("Input:    {0,7:0.00} / {1,7:0.00} / {2,7:0.00}\n", effectiveInput.x, effectiveInput.y, effectiveInput.z);
+            
+            if (MissionSystem.Adapters.AeroByteDeliveryManager.Instance != null)
+            {
+                var mgr = MissionSystem.Adapters.AeroByteDeliveryManager.Instance;
+                _builder.AppendLine("MISSION STATUS");
+                _builder.AppendFormat("Entregas: {0} / {1}\n", mgr.CurrentZoneIndex, mgr.TotalZones);
+                if (mgr.CurrentZoneIndex >= mgr.TotalZones)
+                    _builder.AppendLine("STATUS:   COMPLETED");
+                else
+                    _builder.AppendLine("STATUS:   ACTIVE (Press G for Map)");
+            }
+
             _flightText.text = _builder.ToString();
 
             _builder.Clear();
@@ -792,6 +819,24 @@ namespace AeroByte.UI_System
 
             _warningText.color = stallWarning ? new Color(1f, 0.35f, 0.2f, 1f) : new Color(1f, 0.85f, 0.2f, 1f);
             _warningText.text = _builder.ToString();
+
+            // Out Of Bounds Logic
+            if (MissionSystem.Adapters.OutOfBoundsManager.Instance != null && MissionSystem.Adapters.OutOfBoundsManager.Instance.IsOOB)
+            {
+                float timeLeft = MissionSystem.Adapters.OutOfBoundsManager.Instance.CurrentTimer;
+                
+                // Pulsing red effect
+                float pulse = (Mathf.Sin(Time.time * 10f) + 1f) / 2f; 
+                _oobOverlayImage.color = new Color(1f, 0f, 0f, 0.15f + (pulse * 0.25f)); // Flashes between 0.15 and 0.40 alpha
+                
+                _oobCenterText.color = new Color(1f, 0.15f, 0.15f, 1f);
+                _oobCenterText.text = $"¡REGRESA AL ÁREA DE JUEGO!\n{timeLeft:F1}s";
+            }
+            else
+            {
+                if (_oobOverlayImage.color.a > 0f) _oobOverlayImage.color = new Color(1f, 0f, 0f, 0f);
+                if (_oobCenterText.color.a > 0f) _oobCenterText.color = new Color(1f, 0.15f, 0.15f, 0f);
+            }
         }
 
         private void UpdateCompass(float heading)

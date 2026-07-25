@@ -20,6 +20,7 @@ namespace AeroByte.UI_System
         private RenderTexture _renderTexture;
         private RectTransform _playerMarker;
         private RectTransform _playerMarkerTip;
+        private RectTransform _targetMarker;
 
         private void Awake()
         {
@@ -43,6 +44,34 @@ namespace AeroByte.UI_System
                 {
                     _playerMarker.anchoredPosition = Vector2.zero;
                     _playerMarker.localRotation = Quaternion.Euler(0f, 0f, -_plane.transform.eulerAngles.y);
+                }
+
+                if (_targetMarker != null && MissionSystem.Adapters.AeroByteDeliveryManager.Instance != null)
+                {
+                    var currentZone = MissionSystem.Adapters.AeroByteDeliveryManager.Instance.GetCurrentActiveZone();
+                    if (currentZone != null)
+                    {
+                        if (!_targetMarker.gameObject.activeSelf) _targetMarker.gameObject.SetActive(true);
+                        Vector3 viewportPos = _mapCamera.WorldToViewportPoint(currentZone.transform.position);
+                        Vector2 viewCenter = new Vector2(0.5f, 0.5f);
+                        Vector2 offset = new Vector2(viewportPos.x, viewportPos.y) - viewCenter;
+                        
+                        float angle = Mathf.Atan2(offset.y, offset.x) * Mathf.Rad2Deg;
+                        _targetMarker.localRotation = Quaternion.Euler(0, 0, angle - 90f);
+                        
+                        if (offset.magnitude > 0.42f)
+                        {
+                            offset = offset.normalized * 0.42f;
+                        }
+                        
+                        _targetMarker.anchorMin = viewCenter + offset;
+                        _targetMarker.anchorMax = viewCenter + offset;
+                        _targetMarker.anchoredPosition = Vector2.zero;
+                    }
+                    else
+                    {
+                        if (_targetMarker.gameObject.activeSelf) _targetMarker.gameObject.SetActive(false);
+                    }
                 }
             }
         }
@@ -192,6 +221,17 @@ namespace AeroByte.UI_System
             var haloImg = centerHalo.GetComponent<Image>();
             haloImg.sprite = GetCircleSprite();
             haloImg.color = new Color(0.95f, 0.95f, 0.98f, 0.16f);
+
+            var targetRoot = new GameObject("Target Marker", typeof(RectTransform), typeof(Image));
+            targetRoot.transform.SetParent(circleMaskGo.transform, false);
+            _targetMarker = targetRoot.GetComponent<RectTransform>();
+            _targetMarker.anchorMin = new Vector2(0.5f, 0.5f);
+            _targetMarker.anchorMax = new Vector2(0.5f, 0.5f);
+            _targetMarker.sizeDelta = new Vector2(12f, 28f);
+            var targetImg = targetRoot.GetComponent<Image>();
+            targetImg.sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
+            targetImg.color = new Color(1f, 0.9f, 0.1f, 1f);
+            _targetMarker.gameObject.SetActive(false);
 
             if (frame != null)
             {

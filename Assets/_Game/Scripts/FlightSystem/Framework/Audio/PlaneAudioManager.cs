@@ -10,7 +10,8 @@ namespace AeroByte.FlightSystem.Framework.Audio
     {
         [Header("Settings")]
         [SerializeField] private float minPitch = 0.8f;
-        [SerializeField] private float maxPitch = 2.0f;
+        [SerializeField] private float maxPitch = 1.3f; // Lowered from 2.0f to avoid chipmunk effect
+        [SerializeField] private AnimationCurve pitchCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
         [SerializeField] private float minVolume = 0.2f;
         [SerializeField] private float maxVolume = 1.0f;
         [SerializeField] private float pitchSpeed = 2f;
@@ -60,7 +61,8 @@ namespace AeroByte.FlightSystem.Framework.Audio
             if (state == null) return;
 
             // Calculate target pitch and volume based on throttle
-            float targetPitch = Mathf.Lerp(minPitch, maxPitch, Mathf.Abs(state.throttle));
+            float throttleEval = pitchCurve.Evaluate(Mathf.Abs(state.throttle));
+            float targetPitch = Mathf.Lerp(minPitch, maxPitch, throttleEval);
             float targetVolume = Mathf.Lerp(minVolume, maxVolume, Mathf.Abs(state.throttle));
 
             // Smooth transition

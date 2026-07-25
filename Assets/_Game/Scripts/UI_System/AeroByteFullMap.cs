@@ -12,9 +12,12 @@ namespace AeroByte.UI_System
         [Tooltip("Cantidad de divisiones para la cuadrícula.")]
         public float gridDivisions = 20f;
 
+        [Header("Configuración del Mapa")]
+        [Tooltip("Define qué tan grande es el área que cubre el mapa completo (zoom).")]
+        public float mapScale = 1500f;
+
         private const int TextureSize = 1024;
         private const float CameraHeight = 800f;
-        private const float OrthographicSize = 1500f;
 
         private static AeroByteFullMap _instance;
 
@@ -25,6 +28,8 @@ namespace AeroByte.UI_System
         private GameObject _cameraObject;
         private RenderTexture _renderTexture;
         private RectTransform _playerMarker;
+        private RectTransform _targetMarker;
+        private Vector3 _mapOffset = Vector3.zero;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
@@ -56,6 +61,31 @@ namespace AeroByte.UI_System
             if (Keyboard.current != null && Keyboard.current.gKey.wasPressedThisFrame)
             {
                 _canvas.enabled = !_canvas.enabled;
+                if (_canvas.enabled)
+                {
+                    _mapOffset = Vector3.zero; // Center on player when opened
+                }
+            }
+            
+            if (_canvas.enabled && Mouse.current != null)
+            {
+                // Zoom
+                float scroll = Mouse.current.scroll.ReadValue().y;
+                if (Mathf.Abs(scroll) > 0.01f)
+                {
+                    float zoomFactor = (scroll > 0) ? 0.85f : 1.15f;
+                    mapScale *= zoomFactor;
+                    mapScale = Mathf.Clamp(mapScale, 500f, 15000f);
+                }
+
+                // Pan
+                if (Mouse.current.rightButton.isPressed)
+                {
+                    Vector2 delta = Mouse.current.delta.ReadValue();
+                    float panSpeed = mapScale * 0.002f;
+                    _mapOffset.x -= delta.x * panSpeed;
+                    _mapOffset.z -= delta.y * panSpeed;
+                }
             }
         }
 
@@ -71,14 +101,37 @@ namespace AeroByte.UI_System
             if (_plane != null && _mapCamera != null)
             {
                 var planePosition = _plane.transform.position;
-                _mapCamera.transform.SetPositionAndRotation(new Vector3(planePosition.x, planePosition.y + CameraHeight, planePosition.z), Quaternion.Euler(90f, 0f, 0f));
+                _mapCamera.transform.SetPositionAndRotation(new Vector3(planePosition.x + _mapOffset.x, planePosition.y + CameraHeight, planePosition.z + _mapOffset.z), Quaternion.Euler(90f, 0f, 0f));
+                if (_mapCamera.orthographicSize != mapScale)
+                {
+                    _mapCamera.orthographicSize = mapScale;
+                }
                 _mapCamera.Render();
 
                 if (_playerMarker != null)
                 {
+                    Vector3 playerViewportPos = _mapCamera.WorldToViewportPoint(planePosition);
+                    _playerMarker.anchorMin = playerViewportPos;
+                    _playerMarker.anchorMax = playerViewportPos;
                     _playerMarker.anchoredPosition = Vector2.zero;
                     // Rotate the marker based on plane's Y rotation
                     _playerMarker.localRotation = Quaternion.Euler(0f, 0f, -_plane.transform.eulerAngles.y);
+                }
+
+                if (_targetMarker != null && MissionSystem.Adapters.AeroByteDeliveryManager.Instance != null)
+                {
+                    var currentZone = MissionSystem.Adapters.AeroByteDeliveryManager.Instance.GetCurrentActiveZone();
+                    if (currentZone != null)
+                    {
+                        if (!_targetMarker.gameObject.activeSelf) _targetMarker.gameObject.SetActive(true);
+                        Vector3 viewportPos = _mapCamera.WorldToViewportPoint(currentZone.transform.position);
+                        _targetMarker.anchorMin = viewportPos;
+                        _targetMarker.anchorMax = viewportPos;
+                    }
+                    else
+                    {
+                        if (_targetMarker.gameObject.activeSelf) _targetMarker.gameObject.SetActive(false);
+                    }
                 }
             }
         }
@@ -151,7 +204,7 @@ namespace AeroByte.UI_System
             _mapCamera = _cameraObject.AddComponent<Camera>();
             _mapCamera.enabled = false; // We render manually in LateUpdate
             _mapCamera.orthographic = true;
-            _mapCamera.orthographicSize = OrthographicSize;
+            _mapCamera.orthographicSize = mapScale;
             _mapCamera.nearClipPlane = 0.1f;
             _mapCamera.farClipPlane = 2000f;
             _mapCamera.clearFlags = CameraClearFlags.SolidColor;
@@ -192,6 +245,20 @@ namespace AeroByte.UI_System
             var markerTipImg = markerTip.GetComponent<Image>();
             markerTipImg.sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
             markerTipImg.color = Color.red;
+
+            // Target Marker
+            var targetRoot = new GameObject("Target Marker", typeof(RectTransform));
+            targetRoot.transform.SetParent(viewGo.transform, false);
+            _targetMarker = targetRoot.GetComponent<RectTransform>();
+            _targetMarker.anchorMin = new Vector2(0.5f, 0.5f);
+            _targetMarker.anchorMax = new Vector2(0.5f, 0.5f);
+            _targetMarker.sizeDelta = new Vector2(32f, 32f);
+            _targetMarker.anchoredPosition = Vector2.zero;
+
+            var targetImg = targetRoot.AddComponent<Image>();
+            targetImg.sprite = GetCircleSprite();
+            targetImg.color = Color.yellow;
+            _targetMarker.gameObject.SetActive(false);
         }
 
         private static Sprite _circleSprite;

@@ -12,10 +12,17 @@ namespace AeroByte.WeatherSystem.Adapters
 
         private Material materialInstance;
         private Renderer targetRenderer;
+        private Light targetLight;
+        private float originalLightIntensity;
 
         private void Start()
         {
             targetRenderer = GetComponent<Renderer>();
+            targetLight = GetComponentInChildren<Light>();
+            if (targetLight != null)
+            {
+                originalLightIntensity = targetLight.intensity;
+            }
             if (targetRenderer != null)
             {
                 // Create a unique instance of the material to avoid affecting the asset file on disk
@@ -31,8 +38,6 @@ namespace AeroByte.WeatherSystem.Adapters
 
         private void Update()
         {
-            if (materialInstance == null) return;
-
             float intensity;
             if (useSmoothPulse)
             {
@@ -46,7 +51,16 @@ namespace AeroByte.WeatherSystem.Adapters
             }
 
             // Apply the emission color multiplied by the calculated intensity and emission boost
-            materialInstance.SetColor("_EmissionColor", blinkColor * (intensity * emissionBoost));
+            if (materialInstance != null)
+            {
+                materialInstance.SetColor("_EmissionColor", blinkColor * (intensity * emissionBoost));
+            }
+
+            if (targetLight != null)
+            {
+                targetLight.color = blinkColor;
+                targetLight.intensity = originalLightIntensity * intensity;
+            }
         }
 
         public void SetBlinkColor(Color newColor)

@@ -111,7 +111,7 @@ public class NPCPlaneAI : MonoBehaviour
         }
 
         if (pathfinder == null) {
-            pathfinder = FindObjectOfType<AStar3D>();
+            pathfinder = FindFirstObjectByType<AStar3D>();
         }
         previousState = currentState;
         InitializeState(currentState);

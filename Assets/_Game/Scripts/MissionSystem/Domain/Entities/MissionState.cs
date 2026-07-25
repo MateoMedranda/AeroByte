@@ -27,5 +27,10 @@ namespace MissionSystem.Domain.Entities
                 OnDeliveryCompletedChanged?.Invoke(IsDeliveryCompleted);
             }
         }
+
+        public void ResetDelivery()
+        {
+            IsDeliveryCompleted = false;
+        }
     }
 }

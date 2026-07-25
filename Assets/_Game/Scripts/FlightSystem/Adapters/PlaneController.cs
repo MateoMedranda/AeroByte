@@ -111,6 +111,14 @@ namespace FlightSystem.Adapters
         public void ApplyRelativeTorque(Vector3 torque, ForceMode mode) => _rb.AddRelativeTorque(torque, mode);
         public void ApplyTransformDirection(Vector3 direction) => _rb.linearVelocity = transform.TransformDirection(direction);
 
+        public void ForceCrash()
+        {
+            if (_crashUseCase != null && !_planeState.isCrashed)
+            {
+                _crashUseCase.Execute(_planeState);
+            }
+        }
+
         private void OnCollisionEnter(Collision collision)
         {
             if (statsConfig == null) return;

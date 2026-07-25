@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 126eed947adcc07408fce2077fe4ba9e, type: 3}
-  m_Name: Clima_TormentaArena
+  m_Name: Clima_TormentaArena_Agresiva
   m_EditorClassIdentifier: Assembly-CSharp::AeroByte.WeatherSystem.Framework.Config.WeatherStatsConfig
-  constantWindVelocity: {x: 1000, y: 0, z: 500}
-  windGustIntensity: 4500
-  turbulenceTorqueIntensity: 2000
-  noiseScale: 18
+  constantWindVelocity: {x: 15000, y: -50000, z: 15000}
+  windGustIntensity: 30000
+  turbulenceTorqueIntensity: 20000
+  noiseScale: 200

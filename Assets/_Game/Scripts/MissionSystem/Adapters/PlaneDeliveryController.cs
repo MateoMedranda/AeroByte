@@ -18,6 +18,13 @@ namespace MissionSystem.Adapters
         private IDeliveryPresenter _presenter;
         private Rigidbody _rb;
 
+        public DeliveryZoneTrigger CurrentZone { get; private set; }
+
+        public void SetCurrentZone(DeliveryZoneTrigger zone)
+        {
+            CurrentZone = zone;
+        }
+
         private void Awake()
         {
             _rb = GetComponent<Rigidbody>();
@@ -69,6 +76,14 @@ namespace MissionSystem.Adapters
             if (success)
             {
                 Debug.Log("[PlaneDeliveryController] La carga ha sido soltada exitosamente.");
+                
+                if (AeroByteDeliveryManager.Instance != null && CurrentZone != null)
+                {
+                    AeroByteDeliveryManager.Instance.RegisterDeliveryComplete(CurrentZone);
+                }
+
+                // Reset delivery state to allow dropping in the next zone
+                _state.ResetDelivery();
             }
             else
             {

@@ -145,7 +145,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  inducedDrag: 5
+  inducedDrag: 8
   inducedDragCurve:
     serializedVersion: 2
     m_Curve:
@@ -173,8 +173,8 @@ MonoBehaviour:
   flapsLiftPower: 25
   flapsAOABias: 8
   flapsDrag: 1
-  turnSpeed: {x: 60, y: 30, z: 120}
-  turnAcceleration: {x: 120, y: 60, z: 240}
+  turnSpeed: {x: 35, y: 20, z: 50}
+  turnAcceleration: {x: 50, y: 30, z: 75}
   steeringCurve:
     serializedVersion: 2
     m_Curve:
@@ -361,12 +361,12 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  angularDrag: {x: 1, y: 1, z: 1}
+  angularDrag: {x: 2, y: 2, z: 2}
   airbrakeDrag: 5
   hasRetractableGear: 1
   landingGearDrag: 15
-  pitchStability: 5
-  yawStability: 15
+  pitchStability: 10
+  yawStability: 25
   stallAngle: 18
   stallTorque: 3000
   groundSteeringSpeed: 8
