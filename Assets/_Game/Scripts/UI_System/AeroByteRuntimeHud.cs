@@ -820,17 +820,32 @@ namespace AeroByte.UI_System
             _warningText.color = stallWarning ? new Color(1f, 0.35f, 0.2f, 1f) : new Color(1f, 0.85f, 0.2f, 1f);
             _warningText.text = _builder.ToString();
 
-            // Out Of Bounds Logic
-            if (MissionSystem.Adapters.OutOfBoundsManager.Instance != null && MissionSystem.Adapters.OutOfBoundsManager.Instance.IsOOB)
+            // Animal Cargo & Out Of Bounds Logic
+            bool isOOB = MissionSystem.Adapters.OutOfBoundsManager.Instance != null && MissionSystem.Adapters.OutOfBoundsManager.Instance.IsOOB;
+            bool isAnimalStressed = MissionSystem.Adapters.AnimalCargoManager.Instance != null && MissionSystem.Adapters.AnimalCargoManager.Instance.IsAnimalStressed;
+
+            if (isOOB || isAnimalStressed)
             {
-                float timeLeft = MissionSystem.Adapters.OutOfBoundsManager.Instance.CurrentTimer;
+                float timeLeft = 0f;
+                string message = "";
+
+                if (isOOB)
+                {
+                    timeLeft = MissionSystem.Adapters.OutOfBoundsManager.Instance.CurrentTimer;
+                    message = "¡REGRESA AL ÁREA DE JUEGO!";
+                }
+                else if (isAnimalStressed)
+                {
+                    timeLeft = MissionSystem.Adapters.AnimalCargoManager.Instance.CurrentStressTimer;
+                    message = "¡ALTITUD CRÍTICA! ANIMAL ESTRESADO";
+                }
                 
                 // Pulsing red effect
                 float pulse = (Mathf.Sin(Time.time * 10f) + 1f) / 2f; 
                 _oobOverlayImage.color = new Color(1f, 0f, 0f, 0.15f + (pulse * 0.25f)); // Flashes between 0.15 and 0.40 alpha
                 
                 _oobCenterText.color = new Color(1f, 0.15f, 0.15f, 1f);
-                _oobCenterText.text = $"¡REGRESA AL ÁREA DE JUEGO!\n{timeLeft:F1}s";
+                _oobCenterText.text = $"{message}\n{timeLeft:F1}s";
             }
             else
             {
