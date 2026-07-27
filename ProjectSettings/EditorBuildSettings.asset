@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/_Game/Menu/Scenes/MainMenu.unity
+    guid: c0d23f566b684a41ae8bbe58eb51011f
+  - enabled: 1
     path: Assets/_Game/Scenes/1. Mapa_Costa.unity
     guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:
