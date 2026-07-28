@@ -28,6 +28,9 @@ namespace AeroByte.UI_System
         private Canvas _canvas;
         private Text _flightText;
         private Text _warningText;
+        private GameObject _racePanelGo;
+        private Text _raceCheckpointsText;
+        private Text _raceTimerText;
         private Text _attitudeText;
         private Text[] _compassLabels;
         private Text _leftPrimaryText;
@@ -55,6 +58,7 @@ namespace AeroByte.UI_System
 
         private Image _oobOverlayImage;
         private Text _oobCenterText;
+        private Image _animalAlertImage;
 
         private static Sprite _panelSprite;
         private static Texture2D _panelTexture;
@@ -276,11 +280,17 @@ namespace AeroByte.UI_System
             _centerPitchText = CreateText(attitudeFrame.transform, "Pitch Text", font, 13, TextAnchor.LowerCenter, new Vector2(10f, 10f), new Vector2(-10f, 40f), new Color(0.15f, 1f, 0.15f, 0.82f));
             _centerHorizonText = CreateText(attitudeFrame.transform, "Horizon Info", font, 12, TextAnchor.UpperCenter, new Vector2(10f, 12f), new Vector2(-10f, -120f), new Color(0.15f, 1f, 0.15f, 0.70f));
 
-            var flightPanel = CreatePanel(canvasGo.transform, "Flight Panel", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -220f), new Vector2(330f, -18f), new Color(0f, 0f, 0f, 0f));
-            _flightText = CreateText(flightPanel.transform, "Flight Text", font, 14, TextAnchor.UpperLeft, new Vector2(10f, 10f), new Vector2(-10f, -10f), new Color(0.88f, 1f, 0.88f, 1f));
+            var flightPanel = CreatePanel(canvasGo.transform, "Flight Panel", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -240f), new Vector2(360f, -18f), new Color(0.03f, 0.06f, 0.14f, 0.85f));
+            _flightText = CreateText(flightPanel.transform, "Flight Text", font, 16, TextAnchor.UpperLeft, new Vector2(14f, 14f), new Vector2(-14f, -14f), new Color(0.92f, 1f, 0.92f, 1f));
 
             var warningPanel = CreatePanel(canvasGo.transform, "Warning Panel", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-340f, -18f), new Vector2(-18f, -120f), new Color(0.45f, 0.45f, 0.45f, 0.24f));
             _warningText = CreateText(warningPanel.transform, "Warning Text", font, 16, TextAnchor.UpperLeft, new Vector2(10f, 10f), new Vector2(-10f, -10f), new Color(0.15f, 1f, 0.15f, 0.95f));
+
+            // Dedicated Race HUD Banner (Top Center below Compass with high contrast dark transparent background)
+            _racePanelGo = CreatePanel(canvasGo.transform, "Race HUD Banner", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-300f, -145f), new Vector2(300f, -65f), new Color(0.02f, 0.05f, 0.13f, 0.88f));
+            _raceCheckpointsText = CreateText(_racePanelGo.transform, "Race Checkpoints", font, 22, TextAnchor.MiddleLeft, new Vector2(20f, 5f), new Vector2(-310f, -5f), new Color(0.2f, 0.95f, 1f, 1f));
+            _raceTimerText = CreateText(_racePanelGo.transform, "Race Timer", font, 24, TextAnchor.MiddleRight, new Vector2(310f, 5f), new Vector2(-20f, -5f), new Color(1f, 0.9f, 0.15f, 1f));
+            _racePanelGo.SetActive(false);
 
             var miniMapPanel = CreatePanel(canvasGo.transform, "MiniMap Panel", new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(10f, 10f), new Vector2(350f, 350f), new Color(0.38f, 0.38f, 0.38f, 0.22f));
             miniMapPanel.AddComponent<AeroByteMiniMap>();
@@ -309,6 +319,19 @@ namespace AeroByte.UI_System
             var oobOutline = _oobCenterText.gameObject.AddComponent<Outline>();
             oobOutline.effectColor = Color.black;
             oobOutline.effectDistance = new Vector2(2f, -2f);
+
+            // Animal Alert Icon Image
+            GameObject animalIconGo = new GameObject("AnimalAlertIcon", typeof(RectTransform), typeof(Image));
+            animalIconGo.transform.SetParent(canvasGo.transform, false);
+            var animalRect = animalIconGo.GetComponent<RectTransform>();
+            animalRect.anchorMin = new Vector2(0.5f, 0.5f);
+            animalRect.anchorMax = new Vector2(0.5f, 0.5f);
+            animalRect.sizeDelta = new Vector2(160f, 160f);
+            animalRect.anchoredPosition = new Vector2(0f, 40f); // Justo encima del texto de alerta
+            _animalAlertImage = animalIconGo.GetComponent<Image>();
+            _animalAlertImage.color = new Color(1f, 1f, 1f, 0f); // Hidden by default
+            _animalAlertImage.raycastTarget = false;
+            _animalAlertImage.preserveAspect = true;
         }
 
         private static Font GetHudFont()
@@ -776,7 +799,67 @@ namespace AeroByte.UI_System
 
             _builder.Clear();
             
-            if (MissionSystem.Adapters.AeroByteDeliveryManager.Instance != null)
+            if (AeroByte.CheckpointSystem.Adapters.CheckpointSequenceController.ActiveInstance != null)
+            {
+                var raceMgr = AeroByte.CheckpointSystem.Adapters.CheckpointSequenceController.ActiveInstance;
+                if (raceMgr.IsRaceActive)
+                {
+                    _builder.AppendLine("TIME TRIAL RACE");
+                    _builder.AppendFormat("Checkpoints: {0} / {1}\n", raceMgr.CurrentCheckpointIndex, raceMgr.TotalCheckpoints);
+                    int mins = Mathf.FloorToInt(raceMgr.RemainingTime / 60f);
+                    int secs = Mathf.FloorToInt(raceMgr.RemainingTime % 60f);
+                    int millis = Mathf.FloorToInt((raceMgr.RemainingTime * 100f) % 100f);
+                    _builder.AppendFormat("TIEMPO:      {0:00}:{1:00}.{2:00}\n", mins, secs, millis);
+                    _builder.AppendLine("STATUS:      RACING (Press G for Map)");
+                }
+                else if (raceMgr.IsRaceWon)
+                {
+                    _builder.AppendLine("TIME TRIAL RACE");
+                    _builder.AppendFormat("Checkpoints: {0} / {1}\n", raceMgr.TotalCheckpoints, raceMgr.TotalCheckpoints);
+                    int mins = Mathf.FloorToInt(raceMgr.RemainingTime / 60f);
+                    int secs = Mathf.FloorToInt(raceMgr.RemainingTime % 60f);
+                    int millis = Mathf.FloorToInt((raceMgr.RemainingTime * 100f) % 100f);
+                    _builder.AppendFormat("TIEMPO FINAL:{0:00}:{1:00}.{2:00}\n", mins, secs, millis);
+                    _builder.AppendLine("STATUS:      ¡CARRERA GANADA!");
+                }
+                else if (raceMgr.IsRaceFailed)
+                {
+                    _builder.AppendLine("TIME TRIAL RACE");
+                    _builder.AppendLine("TIEMPO:      00:00.00");
+                    _builder.AppendLine("STATUS:      ¡TIEMPO AGOTADO!");
+                }
+            }
+            else if (MissionSystem.Adapters.CheckpointRaceManager.Instance != null)
+            {
+                var raceMgr = MissionSystem.Adapters.CheckpointRaceManager.Instance;
+                if (raceMgr.IsRaceActive)
+                {
+                    _builder.AppendLine("TIME TRIAL RACE");
+                    _builder.AppendFormat("Checkpoints: {0} / {1}\n", raceMgr.CurrentCheckpointIndex, raceMgr.checkpoints.Count);
+                    int mins = Mathf.FloorToInt(raceMgr.RemainingTime / 60f);
+                    int secs = Mathf.FloorToInt(raceMgr.RemainingTime % 60f);
+                    int millis = Mathf.FloorToInt((raceMgr.RemainingTime * 100f) % 100f);
+                    _builder.AppendFormat("TIEMPO:      {0:00}:{1:00}.{2:00}\n", mins, secs, millis);
+                    _builder.AppendLine("STATUS:      RACING (Press G for Map)");
+                }
+                else if (raceMgr.IsRaceWon)
+                {
+                    _builder.AppendLine("TIME TRIAL RACE");
+                    _builder.AppendFormat("Checkpoints: {0} / {1}\n", raceMgr.checkpoints.Count, raceMgr.checkpoints.Count);
+                    int mins = Mathf.FloorToInt(raceMgr.RemainingTime / 60f);
+                    int secs = Mathf.FloorToInt(raceMgr.RemainingTime % 60f);
+                    int millis = Mathf.FloorToInt((raceMgr.RemainingTime * 100f) % 100f);
+                    _builder.AppendFormat("TIEMPO FINAL:{0:00}:{1:00}.{2:00}\n", mins, secs, millis);
+                    _builder.AppendLine("STATUS:      ¡CARRERA GANADA!");
+                }
+                else if (raceMgr.IsRaceFailed)
+                {
+                    _builder.AppendLine("TIME TRIAL RACE");
+                    _builder.AppendLine("TIEMPO:      00:00.00");
+                    _builder.AppendLine("STATUS:      ¡TIEMPO AGOTADO!");
+                }
+            }
+            else if (MissionSystem.Adapters.AeroByteDeliveryManager.Instance != null)
             {
                 var mgr = MissionSystem.Adapters.AeroByteDeliveryManager.Instance;
                 _builder.AppendLine("MISSION STATUS");
@@ -820,11 +903,12 @@ namespace AeroByte.UI_System
             _warningText.color = stallWarning ? new Color(1f, 0.35f, 0.2f, 1f) : new Color(1f, 0.85f, 0.2f, 1f);
             _warningText.text = _builder.ToString();
 
-            // Animal Cargo & Out Of Bounds Logic
+            // Animal Cargo, Out Of Bounds & Altitude Danger Logic
             bool isOOB = MissionSystem.Adapters.OutOfBoundsManager.Instance != null && MissionSystem.Adapters.OutOfBoundsManager.Instance.IsOOB;
             bool isAnimalStressed = MissionSystem.Adapters.AnimalCargoManager.Instance != null && MissionSystem.Adapters.AnimalCargoManager.Instance.IsAnimalStressed;
+            bool isAltitudeDanger = MissionSystem.Adapters.AeroByteAltitudeManager.Instance != null && MissionSystem.Adapters.AeroByteAltitudeManager.Instance.IsAltitudeDanger;
 
-            if (isOOB || isAnimalStressed)
+            if (isOOB || isAnimalStressed || isAltitudeDanger)
             {
                 float timeLeft = 0f;
                 string message = "";
@@ -833,11 +917,43 @@ namespace AeroByte.UI_System
                 {
                     timeLeft = MissionSystem.Adapters.OutOfBoundsManager.Instance.CurrentTimer;
                     message = "¡REGRESA AL ÁREA DE JUEGO!";
+                    if (_animalAlertImage != null && _animalAlertImage.color.a > 0f) _animalAlertImage.color = new Color(1f, 1f, 1f, 0f);
+                }
+                else if (isAltitudeDanger)
+                {
+                    timeLeft = MissionSystem.Adapters.AeroByteAltitudeManager.Instance.CurrentDangerTimer;
+                    message = "¡ALERTA RADAR / ANTIAÉREA! ALTURA PELIGROSA";
+
+                    if (_animalAlertImage != null)
+                    {
+                        Sprite alertSprite = MissionSystem.Adapters.AeroByteAltitudeManager.Instance.GetAlertSprite();
+                        if (alertSprite != null)
+                        {
+                            _animalAlertImage.sprite = alertSprite;
+                            float pulseIcon = (Mathf.Sin(Time.time * 14f) + 1f) / 2f;
+                            _animalAlertImage.color = new Color(1f, 0.2f, 0.2f, 0.7f + (pulseIcon * 0.3f));
+                            float scaleIcon = 1f + (Mathf.Sin(Time.time * 14f) * 0.15f);
+                            _animalAlertImage.rectTransform.localScale = new Vector3(scaleIcon, scaleIcon, 1f);
+                        }
+                    }
                 }
                 else if (isAnimalStressed)
                 {
                     timeLeft = MissionSystem.Adapters.AnimalCargoManager.Instance.CurrentStressTimer;
                     message = "¡ALTITUD CRÍTICA! ANIMAL ESTRESADO";
+
+                    if (_animalAlertImage != null)
+                    {
+                        Sprite alertSprite = MissionSystem.Adapters.AnimalCargoManager.Instance.GetAlertSprite();
+                        if (alertSprite != null)
+                        {
+                            _animalAlertImage.sprite = alertSprite;
+                            float pulseIcon = (Mathf.Sin(Time.time * 12f) + 1f) / 2f;
+                            _animalAlertImage.color = new Color(1f, 1f, 1f, 0.6f + (pulseIcon * 0.4f));
+                            float scaleIcon = 1f + (Mathf.Sin(Time.time * 12f) * 0.12f);
+                            _animalAlertImage.rectTransform.localScale = new Vector3(scaleIcon, scaleIcon, 1f);
+                        }
+                    }
                 }
                 
                 // Pulsing red effect
@@ -851,6 +967,82 @@ namespace AeroByte.UI_System
             {
                 if (_oobOverlayImage.color.a > 0f) _oobOverlayImage.color = new Color(1f, 0f, 0f, 0f);
                 if (_oobCenterText.color.a > 0f) _oobCenterText.color = new Color(1f, 0.15f, 0.15f, 0f);
+                if (_animalAlertImage != null && _animalAlertImage.color.a > 0f) _animalAlertImage.color = new Color(1f, 1f, 1f, 0f);
+            }
+
+            UpdateRaceBanner();
+        }
+
+        private void UpdateRaceBanner()
+        {
+            if (_racePanelGo == null || _raceCheckpointsText == null || _raceTimerText == null) return;
+
+            if (AeroByte.CheckpointSystem.Adapters.CheckpointSequenceController.ActiveInstance != null)
+            {
+                var raceMgr = AeroByte.CheckpointSystem.Adapters.CheckpointSequenceController.ActiveInstance;
+                if (raceMgr.IsRaceActive)
+                {
+                    if (!_racePanelGo.activeSelf) _racePanelGo.SetActive(true);
+                    _raceCheckpointsText.text = $"CHECKPOINTS: {raceMgr.CurrentCheckpointIndex} / {raceMgr.TotalCheckpoints}";
+
+                    int mins = Mathf.FloorToInt(raceMgr.RemainingTime / 60f);
+                    int secs = Mathf.FloorToInt(raceMgr.RemainingTime % 60f);
+                    int millis = Mathf.FloorToInt((raceMgr.RemainingTime * 100f) % 100f);
+                    _raceTimerText.text = $"TIEMPO: {mins:00}:{secs:00}.{millis:00}";
+
+                    if (raceMgr.RemainingTime < 15f)
+                    {
+                        float pulse = (Mathf.Sin(Time.time * 12f) + 1f) / 2f;
+                        _raceTimerText.color = Color.Lerp(new Color(1f, 0.9f, 0.15f, 1f), new Color(1f, 0.15f, 0.15f, 1f), pulse);
+                    }
+                    else
+                    {
+                        _raceTimerText.color = new Color(1f, 0.9f, 0.15f, 1f);
+                    }
+                }
+                else if (raceMgr.IsRaceWon)
+                {
+                    if (!_racePanelGo.activeSelf) _racePanelGo.SetActive(true);
+                    _raceCheckpointsText.text = $"¡CARRERA GANADA! ({raceMgr.TotalCheckpoints}/{raceMgr.TotalCheckpoints})";
+                    int mins = Mathf.FloorToInt(raceMgr.RemainingTime / 60f);
+                    int secs = Mathf.FloorToInt(raceMgr.RemainingTime % 60f);
+                    int millis = Mathf.FloorToInt((raceMgr.RemainingTime * 100f) % 100f);
+                    _raceTimerText.text = $"TIEMPO FINAL: {mins:00}:{secs:00}.{millis:00}";
+                    _raceTimerText.color = new Color(0.2f, 1f, 0.4f, 1f);
+                }
+                else if (raceMgr.IsRaceFailed)
+                {
+                    if (!_racePanelGo.activeSelf) _racePanelGo.SetActive(true);
+                    _raceCheckpointsText.text = "¡TIEMPO AGOTADO!";
+                    _raceTimerText.text = "00:00.00";
+                    _raceTimerText.color = new Color(1f, 0.15f, 0.15f, 1f);
+                }
+                else
+                {
+                    if (_racePanelGo.activeSelf) _racePanelGo.SetActive(false);
+                }
+            }
+            else if (MissionSystem.Adapters.AeroByteAttackManager.Instance != null)
+            {
+                var atkMgr = MissionSystem.Adapters.AeroByteAttackManager.Instance;
+                if (!atkMgr.IsMissionComplete)
+                {
+                    if (!_racePanelGo.activeSelf) _racePanelGo.SetActive(true);
+                    _raceCheckpointsText.text = $"ZONAS DESTRUIDAS: {atkMgr.DestroyedZones} / {atkMgr.TotalZones}";
+                    _raceTimerText.text = "OBJETIVO: BOMBARDEAR";
+                    _raceTimerText.color = new Color(1f, 0.45f, 0.15f, 1f);
+                }
+                else
+                {
+                    if (!_racePanelGo.activeSelf) _racePanelGo.SetActive(true);
+                    _raceCheckpointsText.text = $"¡ZONAS DESTRUIDAS: {atkMgr.TotalZones} / {atkMgr.TotalZones}!";
+                    _raceTimerText.text = "¡MISIÓN COMPLETADA!";
+                    _raceTimerText.color = new Color(0.2f, 1f, 0.4f, 1f);
+                }
+            }
+            else
+            {
+                if (_racePanelGo.activeSelf) _racePanelGo.SetActive(false);
             }
         }
 

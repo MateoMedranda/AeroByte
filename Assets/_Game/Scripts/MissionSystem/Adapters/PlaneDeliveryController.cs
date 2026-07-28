@@ -19,10 +19,24 @@ namespace MissionSystem.Adapters
         private Rigidbody _rb;
 
         public DeliveryZoneTrigger CurrentZone { get; private set; }
+        public AttackZoneTrigger CurrentAttackZone { get; private set; }
 
         public void SetCurrentZone(DeliveryZoneTrigger zone)
         {
             CurrentZone = zone;
+        }
+
+        public void SetCurrentAttackZone(AttackZoneTrigger zone)
+        {
+            CurrentAttackZone = zone;
+            if (zone != null)
+            {
+                _state.SetInDeliveryZone(true); // Permite que el avión habilite soltar carga/bomba en zona de ataque
+            }
+            else if (CurrentZone == null)
+            {
+                _state.SetInDeliveryZone(false);
+            }
         }
 
         private void Awake()
@@ -80,6 +94,11 @@ namespace MissionSystem.Adapters
                 if (AeroByteDeliveryManager.Instance != null && CurrentZone != null)
                 {
                     AeroByteDeliveryManager.Instance.RegisterDeliveryComplete(CurrentZone);
+                }
+
+                if (AeroByteAttackManager.Instance != null && CurrentAttackZone != null)
+                {
+                    AeroByteAttackManager.Instance.RegisterAttackComplete(CurrentAttackZone);
                 }
 
                 // Reset delivery state to allow dropping in the next zone

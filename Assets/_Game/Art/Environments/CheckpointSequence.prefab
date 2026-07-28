@@ -65,6 +65,9 @@ MonoBehaviour:
   - {fileID: 5728625866579391972}
   defaultColor: {r: 1, g: 0, b: 0, a: 1}
   checkpointColors: []
+  isTimeTrialRace: 1
+  raceTimeLimit: 120
+  autoStartRace: 1
 --- !u!1001 &7560108133499102663
 PrefabInstance:
   m_ObjectHideFlags: 0

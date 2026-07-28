@@ -118,13 +118,31 @@ namespace AeroByte.UI_System
                     _playerMarker.localRotation = Quaternion.Euler(0f, 0f, -_plane.transform.eulerAngles.y);
                 }
 
-                if (_targetMarker != null && MissionSystem.Adapters.AeroByteDeliveryManager.Instance != null)
+                if (_targetMarker != null)
                 {
-                    var currentZone = MissionSystem.Adapters.AeroByteDeliveryManager.Instance.GetCurrentActiveZone();
-                    if (currentZone != null)
+                    Transform targetTransform = null;
+                    if (AeroByte.CheckpointSystem.Adapters.CheckpointSequenceController.ActiveInstance != null && AeroByte.CheckpointSystem.Adapters.CheckpointSequenceController.ActiveInstance.IsRaceActive)
+                    {
+                        targetTransform = AeroByte.CheckpointSystem.Adapters.CheckpointSequenceController.ActiveInstance.GetCurrentActiveCheckpointTransform();
+                    }
+                    else if (MissionSystem.Adapters.CheckpointRaceManager.Instance != null && MissionSystem.Adapters.CheckpointRaceManager.Instance.IsRaceActive)
+                    {
+                        targetTransform = MissionSystem.Adapters.CheckpointRaceManager.Instance.GetCurrentActiveCheckpointTransform();
+                    }
+                    else if (MissionSystem.Adapters.AeroByteAttackManager.Instance != null && !MissionSystem.Adapters.AeroByteAttackManager.Instance.IsMissionComplete)
+                    {
+                        targetTransform = MissionSystem.Adapters.AeroByteAttackManager.Instance.GetCurrentActiveZoneTransform();
+                    }
+                    else if (MissionSystem.Adapters.AeroByteDeliveryManager.Instance != null)
+                    {
+                        var currentZone = MissionSystem.Adapters.AeroByteDeliveryManager.Instance.GetCurrentActiveZone();
+                        if (currentZone != null) targetTransform = currentZone.transform;
+                    }
+
+                    if (targetTransform != null)
                     {
                         if (!_targetMarker.gameObject.activeSelf) _targetMarker.gameObject.SetActive(true);
-                        Vector3 viewportPos = _mapCamera.WorldToViewportPoint(currentZone.transform.position);
+                        Vector3 viewportPos = _mapCamera.WorldToViewportPoint(targetTransform.position);
                         _targetMarker.anchorMin = viewportPos;
                         _targetMarker.anchorMax = viewportPos;
                     }
