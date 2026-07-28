@@ -7748,6 +7748,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: AvionFisicas2.0 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6581620988993478981, guid: 3c272b1c52072f94db8c062de8a5cef9, type: 3}
+      propertyPath: explosionSoundClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 0dc95b9c1f8649c4b87372d5eeba878d, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -26,12 +26,17 @@ namespace AeroByte.UI_System
         private CameraController _cameraController;
 
         private Canvas _canvas;
+        private GameObject _flightPanelGo;
         private Text _flightText;
+        private GameObject _warningPanelGo;
         private Text _warningText;
         private GameObject _racePanelGo;
         private Text _raceCheckpointsText;
         private Text _raceTimerText;
         private Text _attitudeText;
+        private Text _attackPromptText;
+        private bool _isGameOverActive = false;
+        private bool _isSuccessActive = false;
         private Text[] _compassLabels;
         private Text _leftPrimaryText;
         private Text _leftSecondaryText;
@@ -280,11 +285,21 @@ namespace AeroByte.UI_System
             _centerPitchText = CreateText(attitudeFrame.transform, "Pitch Text", font, 13, TextAnchor.LowerCenter, new Vector2(10f, 10f), new Vector2(-10f, 40f), new Color(0.15f, 1f, 0.15f, 0.82f));
             _centerHorizonText = CreateText(attitudeFrame.transform, "Horizon Info", font, 12, TextAnchor.UpperCenter, new Vector2(10f, 12f), new Vector2(-10f, -120f), new Color(0.15f, 1f, 0.15f, 0.70f));
 
-            var flightPanel = CreatePanel(canvasGo.transform, "Flight Panel", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -240f), new Vector2(360f, -18f), new Color(0.03f, 0.06f, 0.14f, 0.85f));
-            _flightText = CreateText(flightPanel.transform, "Flight Text", font, 16, TextAnchor.UpperLeft, new Vector2(14f, 14f), new Vector2(-14f, -14f), new Color(0.92f, 1f, 0.92f, 1f));
+            _flightPanelGo = CreatePanel(canvasGo.transform, "Flight Panel", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -240f), new Vector2(360f, -18f), new Color(0.03f, 0.06f, 0.14f, 0.85f));
+            _flightText = CreateText(_flightPanelGo.transform, "Flight Text", font, 16, TextAnchor.UpperLeft, new Vector2(14f, 14f), new Vector2(-14f, -14f), new Color(0.92f, 1f, 0.92f, 1f));
 
-            var warningPanel = CreatePanel(canvasGo.transform, "Warning Panel", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-340f, -18f), new Vector2(-18f, -120f), new Color(0.45f, 0.45f, 0.45f, 0.24f));
-            _warningText = CreateText(warningPanel.transform, "Warning Text", font, 16, TextAnchor.UpperLeft, new Vector2(10f, 10f), new Vector2(-10f, -10f), new Color(0.15f, 1f, 0.15f, 0.95f));
+            _warningPanelGo = CreatePanel(canvasGo.transform, "Warning Panel", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-340f, -18f), new Vector2(-18f, -120f), new Color(0.45f, 0.45f, 0.45f, 0.24f));
+            _warningText = CreateText(_warningPanelGo.transform, "Warning Text", font, 16, TextAnchor.UpperLeft, new Vector2(10f, 10f), new Vector2(-10f, -10f), new Color(0.15f, 1f, 0.15f, 0.95f));
+
+            // Attack Prompt Center Text
+            _attackPromptText = CreateText(canvasGo.transform, "Attack Prompt Text", font, 24, TextAnchor.MiddleCenter, Vector2.zero, Vector2.zero, new Color(1f, 0.3f, 0.1f, 0f));
+            var attackPromptRect = _attackPromptText.GetComponent<RectTransform>();
+            attackPromptRect.anchorMin = new Vector2(0f, 0.5f);
+            attackPromptRect.anchorMax = new Vector2(1f, 0.5f);
+            attackPromptRect.sizeDelta = new Vector2(0f, 80f);
+            attackPromptRect.anchoredPosition = new Vector2(0f, 80f);
+            var attackPromptOutline = _attackPromptText.gameObject.AddComponent<Outline>();
+            attackPromptOutline.effectColor = Color.black;
 
             // Dedicated Race HUD Banner (Top Center below Compass with high contrast dark transparent background)
             _racePanelGo = CreatePanel(canvasGo.transform, "Race HUD Banner", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-300f, -145f), new Vector2(300f, -65f), new Color(0.02f, 0.05f, 0.13f, 0.88f));
@@ -774,6 +789,18 @@ namespace AeroByte.UI_System
             }
 
             var state = _plane.GetState();
+            if (state != null && state.isCrashed)
+            {
+                TriggerGameOver();
+                return;
+            }
+
+            if (IsMissionCompleted() && !_isGameOverActive)
+            {
+                TriggerMissionSuccess();
+                return;
+            }
+
             var rb = _plane.Body;
 
             float airspeed = state != null ? state.velocity.magnitude : rb.linearVelocity.magnitude;
@@ -1044,6 +1071,209 @@ namespace AeroByte.UI_System
             {
                 if (_racePanelGo.activeSelf) _racePanelGo.SetActive(false);
             }
+
+            // Attack mission panel hiding
+            bool isAttackMission = MissionSystem.Adapters.AeroByteAttackManager.Instance != null;
+            if (isAttackMission)
+            {
+                if (_flightPanelGo != null && _flightPanelGo.activeSelf) _flightPanelGo.SetActive(false);
+                if (_warningPanelGo != null && _warningPanelGo.activeSelf) _warningPanelGo.SetActive(false);
+            }
+            else
+            {
+                if (_flightPanelGo != null && !_flightPanelGo.activeSelf) _flightPanelGo.SetActive(true);
+                if (_warningPanelGo != null && !_warningPanelGo.activeSelf) _warningPanelGo.SetActive(true);
+            }
+
+            // Attack zone prompt logic
+            bool showAttackPrompt = false;
+            if (_plane != null)
+            {
+                var deliveryCtrl = _plane.GetComponent<MissionSystem.Adapters.PlaneDeliveryController>();
+                if (deliveryCtrl != null && deliveryCtrl.CurrentAttackZone != null)
+                {
+                    showAttackPrompt = true;
+                }
+            }
+
+            if (_attackPromptText != null)
+            {
+                if (showAttackPrompt)
+                {
+                    _attackPromptText.text = "¡ZONA DE ATAQUE! PRESIONA 'M' PARA ATACAR";
+                    // Pulsating color effect
+                    float pulse = (Mathf.Sin(Time.time * 8f) + 1f) / 2f;
+                    _attackPromptText.color = Color.Lerp(new Color(1f, 0.2f, 0f, 1f), new Color(1f, 0.9f, 0.15f, 1f), pulse);
+                }
+                else
+                {
+                    _attackPromptText.text = "";
+                }
+            }
+        }
+
+        private void TriggerGameOver()
+        {
+            if (_isGameOverActive) return;
+            _isGameOverActive = true;
+
+            // Start coroutine to handle UI and Scene transition
+            StartCoroutine(GameOverSequence());
+        }
+
+        private System.Collections.IEnumerator GameOverSequence()
+        {
+            // 1. Create a full-screen Game Over Panel dynamically
+            var gameOverPanel = CreatePanel(_canvas.transform, "GameOver Panel", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0f, 0f, 0f, 0f));
+            var panelImage = gameOverPanel.GetComponent<Image>();
+            
+            // 2. Create GAME OVER text
+            var font = GetHudFont();
+            var gameOverText = CreateText(gameOverPanel.transform, "GameOver Text", font, 54, TextAnchor.MiddleCenter, Vector2.zero, Vector2.zero, new Color(1f, 0.15f, 0.15f, 0f));
+            var textRect = gameOverText.GetComponent<RectTransform>();
+            textRect.anchorMin = new Vector2(0f, 0.5f);
+            textRect.anchorMax = new Vector2(1f, 0.5f);
+            textRect.sizeDelta = new Vector2(0f, 100f);
+            textRect.anchoredPosition = new Vector2(0f, 40f);
+            gameOverText.text = "GAME OVER";
+            
+            var textOutline = gameOverText.gameObject.AddComponent<Outline>();
+            textOutline.effectColor = Color.black;
+
+            // 3. Create Subtitle text
+            var subtitleText = CreateText(gameOverPanel.transform, "Subtitle Text", font, 18, TextAnchor.MiddleCenter, Vector2.zero, Vector2.zero, new Color(0.9f, 0.9f, 0.9f, 0f));
+            var subtitleRect = subtitleText.GetComponent<RectTransform>();
+            subtitleRect.anchorMin = new Vector2(0f, 0.5f);
+            subtitleRect.anchorMax = new Vector2(1f, 0.5f);
+            subtitleRect.sizeDelta = new Vector2(0f, 50f);
+            subtitleRect.anchoredPosition = new Vector2(0f, -30f);
+            subtitleText.text = "Regresando al menú principal...";
+
+            var subtitleOutline = subtitleText.gameObject.AddComponent<Outline>();
+            subtitleOutline.effectColor = Color.black;
+
+            // 4. Fade in transition over 1.5 seconds
+            float duration = 1.5f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime; // Use unscaled time in case timeScale is 0 (or paused)
+                float t = elapsed / duration;
+                
+                panelImage.color = new Color(0f, 0f, 0f, t * 0.85f);
+                gameOverText.color = new Color(1f, 0.15f, 0.15f, t);
+                subtitleText.color = new Color(0.9f, 0.9f, 0.9f, t);
+                yield return null;
+            }
+
+            // 5. Wait for the remaining delay
+            yield return new WaitForSecondsRealtime(2.0f);
+
+            // 6. Load MainMenu scene
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+        }
+
+        private bool IsMissionCompleted()
+        {
+            if (MissionSystem.Adapters.AeroByteDeliveryManager.Instance != null &&
+                MissionSystem.Adapters.AeroByteDeliveryManager.Instance.CurrentZoneIndex >= MissionSystem.Adapters.AeroByteDeliveryManager.Instance.TotalZones)
+            {
+                return true;
+            }
+
+            if (MissionSystem.Adapters.AeroByteAttackManager.Instance != null &&
+                MissionSystem.Adapters.AeroByteAttackManager.Instance.IsMissionComplete)
+            {
+                return true;
+            }
+
+            if (AeroByte.CheckpointSystem.Adapters.CheckpointSequenceController.ActiveInstance != null &&
+                AeroByte.CheckpointSystem.Adapters.CheckpointSequenceController.ActiveInstance.IsRaceWon)
+            {
+                return true;
+            }
+
+            if (MissionSystem.Adapters.CheckpointRaceManager.Instance != null &&
+                MissionSystem.Adapters.CheckpointRaceManager.Instance.IsRaceWon)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private void TriggerMissionSuccess()
+        {
+            if (_isSuccessActive) return;
+            _isSuccessActive = true;
+
+            // Show cursor so player can click the button
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
+            // Instantiate success overlay dynamically
+            var successPanel = CreatePanel(_canvas.transform, "Success Panel", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0f, 0f, 0f, 0.85f));
+            var font = GetHudFont();
+
+            // 1. Title Text
+            var title = CreateText(successPanel.transform, "Success Title", font, 36, TextAnchor.MiddleCenter, Vector2.zero, Vector2.zero, new Color(0.2f, 1f, 0.4f, 1f));
+            var titleRect = title.GetComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0f, 0.5f);
+            titleRect.anchorMax = new Vector2(1f, 0.5f);
+            titleRect.sizeDelta = new Vector2(0f, 100f);
+            titleRect.anchoredPosition = new Vector2(0f, 60f);
+            title.text = "¡MISIÓN COMPLETADA CON ÉXITO!";
+            
+            var titleOutline = title.gameObject.AddComponent<Outline>();
+            titleOutline.effectColor = Color.black;
+
+            // 2. Subtitle Text
+            var subText = CreateText(successPanel.transform, "Success Subtitle", font, 18, TextAnchor.MiddleCenter, Vector2.zero, Vector2.zero, Color.white);
+            var subRect = subText.GetComponent<RectTransform>();
+            subRect.anchorMin = new Vector2(0f, 0.5f);
+            subRect.anchorMax = new Vector2(1f, 0.5f);
+            subRect.sizeDelta = new Vector2(0f, 50f);
+            subRect.anchoredPosition = new Vector2(0f, 0f);
+            subText.text = "Has cumplido todos los objetivos tácticos.";
+
+            var subOutline = subText.gameObject.AddComponent<Outline>();
+            subOutline.effectColor = Color.black;
+
+            // 3. Return to Menu Button
+            var buttonGo = new GameObject("Menu Button", typeof(RectTransform), typeof(Image), typeof(Button));
+            buttonGo.transform.SetParent(successPanel.transform, false);
+            
+            var btnRect = buttonGo.GetComponent<RectTransform>();
+            btnRect.anchorMin = new Vector2(0.5f, 0.5f);
+            btnRect.anchorMax = new Vector2(0.5f, 0.5f);
+            btnRect.pivot = new Vector2(0.5f, 0.5f);
+            btnRect.sizeDelta = new Vector2(250f, 50f);
+            btnRect.anchoredPosition = new Vector2(0f, -80f);
+
+            var btnImage = buttonGo.GetComponent<Image>();
+            btnImage.sprite = GetPanelSprite();
+            btnImage.type = Image.Type.Sliced;
+            btnImage.color = new Color(0.1f, 0.65f, 0.25f, 1f); // Sleek HUD green
+
+            // 4. Button Text
+            var btnText = CreateText(buttonGo.transform, "Button Text", font, 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.zero, Color.white);
+            var btnTextRect = btnText.GetComponent<RectTransform>();
+            btnTextRect.anchorMin = Vector2.zero;
+            btnTextRect.anchorMax = Vector2.one;
+            btnTextRect.offsetMin = Vector2.zero;
+            btnTextRect.offsetMax = Vector2.zero;
+            btnText.text = "REGRESAR AL MENÚ";
+
+            // Outline for button text
+            var btnTextOutline = btnText.gameObject.AddComponent<Outline>();
+            btnTextOutline.effectColor = Color.black;
+
+            // 5. Button onClick Listener
+            var button = buttonGo.GetComponent<Button>();
+            button.onClick.AddListener(() =>
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+            });
         }
 
         private void UpdateCompass(float heading)

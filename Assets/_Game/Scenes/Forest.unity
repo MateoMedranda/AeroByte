@@ -1819,7 +1819,8 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 8956924783948088784, guid: d757a62addcc76149b147c3b86e056c4, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 9072841238758800123, guid: d757a62addcc76149b147c3b86e056c4, type: 3}
       insertIndex: -1
@@ -2046,7 +2047,7 @@ Transform:
   m_GameObject: {fileID: 660367628}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 24981.436, y: 16.2, z: 8856.1}
+  m_LocalPosition: {x: 24981.436, y: 33.4, z: 8856.1}
   m_LocalScale: {x: 213.924, y: 82.21522, z: 177.23958}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3671,7 +3672,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MissionSystem.Adapters.AeroByteAltitudeManager
   minSafeAltitude: 50
-  maxSafeAltitude: 300
+  maxSafeAltitude: 600
   maxDangerTime: 25
   ignoreMinAltitudeDuringTakeoff: 1
   maxTakeoffTime: 20
