@@ -326,28 +326,35 @@ public class NPCPlaneAI : MonoBehaviour
             return;
         }
 
-        if (currentRouteIndex >= customRoute.Length)
+        int inspectedWaypoints = 0;
+        while (inspectedWaypoints < customRoute.Length)
         {
-            if (loopRoute) {
-                currentRouteIndex = 0;
-            } else {
-                currentState = PlaneState.Idle;
-                currentBankAngle = 0;
-                currentPitchAngle = 0;
+            if (currentRouteIndex >= customRoute.Length)
+            {
+                if (loopRoute) {
+                    currentRouteIndex = 0;
+                } else {
+                    currentState = PlaneState.Idle;
+                    currentBankAngle = 0;
+                    currentPitchAngle = 0;
+                    return;
+                }
+            }
+
+            if (customRoute[currentRouteIndex] != null)
+            {
+                finalDestination = customRoute[currentRouteIndex].position;
+                RequestPathTo(finalDestination);
                 return;
             }
+
+            currentRouteIndex++;
+            inspectedWaypoints++;
         }
 
-        if (customRoute[currentRouteIndex] != null) 
-        {
-            finalDestination = customRoute[currentRouteIndex].position;
-            RequestPathTo(finalDestination);
-        } 
-        else 
-        {
-            currentRouteIndex++;
-            SetNextRouteWaypoint();
-        }
+        currentState = PlaneState.Idle;
+        currentBankAngle = 0;
+        currentPitchAngle = 0;
     }
 
     [ContextMenu("Start Takeoff")]
