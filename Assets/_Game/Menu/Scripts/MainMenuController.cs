@@ -1,4 +1,6 @@
 using AeroByte.Menu.Credits;
+using AeroByte.Menu.LevelSelection;
+using AeroByte.Menu.Loading;
 using AeroByte.Menu.Profile;
 using AeroByte.Menu.UI;
 using UnityEngine;
@@ -13,9 +15,9 @@ namespace AeroByte.Menu
     [ExecuteAlways]
     public sealed class MainMenuController : MonoBehaviour
     {
-        private const string LayoutMarkerName = "AeroByte Pilot Profile Layout v10";
+        private const string LayoutMarkerName = "AeroByte Pilot Profile Layout v23";
+        private const string MenuBackgroundPath = "Assets/_Game/Menu/Art/Backgrounds/MAIN MENU/BG-MAINMENU.png";
 
-        [SerializeField] private string gameplaySceneName = "1. Mapa_Costa";
         [SerializeField] private Texture2D menuBackground;
 
         private readonly Color _panelColor = new Color(0.018f, 0.075f, 0.125f, 0.89f);
@@ -27,6 +29,7 @@ namespace AeroByte.Menu
         private Font _displayFont;
         private Font _bodyFont;
         private GameObject _mainPanel;
+        private GameObject _levelSelectPanel;
         private GameObject _optionsPanel;
         private GameObject _creditsPanel;
         private GameObject _exitPanel;
@@ -38,13 +41,18 @@ namespace AeroByte.Menu
         private Text _pilotNameText;
         private PilotAvatarGraphic _pilotAvatar;
         private PilotProfileEditorView _profileEditorView;
-        private Texture2D _backgroundTexture;
+        private LevelSelectionView _levelSelectionView;
+        private LoadingScreenView _loadingScreen;
         private bool _panelsInitialized;
 
         private void OnEnable()
         {
             _displayFont = MenuFontProvider.DisplayFont;
             _bodyFont = MenuFontProvider.BodyFont;
+
+#if UNITY_EDITOR
+            ResolveConfiguredBackground();
+#endif
 
             if (!Application.isPlaying)
             {
@@ -61,16 +69,22 @@ namespace AeroByte.Menu
             BuildInput();
         }
 
-        private void OnDestroy()
-        {
-            if (!Application.isPlaying) return;
-            if (_backgroundTexture != null) Destroy(_backgroundTexture);
-        }
-
 #if UNITY_EDITOR
         private void OnValidate()
         {
+            ResolveConfiguredBackground();
             UnityEditor.EditorApplication.delayCall += ApplyConfiguredBackground;
+        }
+
+        private void ResolveConfiguredBackground()
+        {
+            if (menuBackground != null) return;
+
+            menuBackground = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(MenuBackgroundPath);
+            if (menuBackground == null) return;
+
+            UnityEditor.EditorUtility.SetDirty(this);
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
         }
 
         private void ApplyConfiguredBackground()
@@ -137,8 +151,13 @@ namespace AeroByte.Menu
             return changed;
         }
 
-        public void Play() => SceneManager.LoadScene(gameplaySceneName);
+        public void Play() => ShowPanel(_levelSelectPanel, false);
         public void ShowMain() => ShowPanel(_mainPanel, false);
+        public void LoadLevel(string sceneName)
+        {
+            if (_loadingScreen != null) _loadingScreen.BeginLoad(sceneName);
+            else SceneManager.LoadScene(sceneName);
+        }
         public void ShowOptions() => ShowPanel(_optionsPanel, false);
         public void ShowCredits() => ShowPanel(_creditsPanel, false);
         public void ShowExitConfirmation() => ShowPanel(_exitPanel, false);
@@ -206,6 +225,7 @@ namespace AeroByte.Menu
         {
             if (Application.isPlaying && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
+                if (_loadingScreen != null && _loadingScreen.IsLoading) return;
                 ShowMain();
             }
         }
@@ -229,10 +249,12 @@ namespace AeroByte.Menu
 
             BuildBackdrop(canvasObject.transform);
             _mainPanel = BuildMainPanel(canvasObject.transform);
+            _levelSelectPanel = BuildLevelSelectPanel(canvasObject.transform);
             _optionsPanel = BuildOptionsPanel(canvasObject.transform);
             _creditsPanel = BuildCreditsPanel(canvasObject.transform);
             _exitPanel = BuildExitPanel(canvasObject.transform);
             _profileEditorPanel = BuildProfileEditorPanel(canvasObject.transform);
+            _loadingScreen = BuildLoadingScreen(canvasObject.transform);
             SetInitialPanelState();
         }
 
@@ -244,28 +266,15 @@ namespace AeroByte.Menu
             {
                 backdrop.texture = menuBackground;
             }
-            else
-            {
-                _backgroundTexture = GenerateBackdropTexture(960, 540);
-                backdrop.texture = _backgroundTexture;
-            }
 
-            float cinematicAlpha = menuBackground != null ? 0.10f : 0.25f;
-            float leftShadeAlpha = menuBackground != null ? 0.20f : 0.38f;
-            CreateStretchImage(parent, "Cinematic Shade", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0f, 0.025f, 0.06f, cinematicAlpha));
-            CreateStretchImage(parent, "Left Shade", Vector2.zero, new Vector2(0.38f, 1f), Vector2.zero, Vector2.zero, new Color(0f, 0.02f, 0.05f, leftShadeAlpha));
+            CreateStretchImage(parent, "Cinematic Shade", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0f, 0.025f, 0.06f, 0.10f));
+            CreateStretchImage(parent, "Left Shade", Vector2.zero, new Vector2(0.38f, 1f), Vector2.zero, Vector2.zero, new Color(0f, 0.02f, 0.05f, 0.20f));
 
             var ambientObject = new GameObject("Ambient Navigation Lights", typeof(RectTransform), typeof(CanvasRenderer), typeof(MenuAmbientOverlay));
             ambientObject.transform.SetParent(parent, false);
             SetStretchRect(ambientObject.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             ambientObject.GetComponent<MenuAmbientOverlay>().color = new Color(0.12f, 0.72f, 1f, 0.75f);
 
-            if (menuBackground == null)
-            {
-                var hero = CreateText(parent, "Hero Message", 54, FontStyle.Bold, TextAnchor.MiddleRight, new Vector2(-90f, 70f), new Vector2(760f, 160f), "VUELA. EXPLORA.\nDOMINA EL CIELO.", new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f));
-                hero.color = new Color(0.93f, 0.98f, 1f, 0.92f);
-                CreateText(parent, "Hero Subtitle", 19, FontStyle.Normal, TextAnchor.MiddleRight, new Vector2(-94f, -55f), new Vector2(620f, 42f), "SIMULACION DE VUELO ACCESIBLE", new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f)).color = new Color(0.62f, 0.84f, 0.96f, 0.9f);
-            }
         }
 
         private void EnsureBackdropTexture()
@@ -280,10 +289,7 @@ namespace AeroByte.Menu
                 return;
             }
 
-            if (backdrop.texture != null) return;
-
-            _backgroundTexture = GenerateBackdropTexture(960, 540);
-            backdrop.texture = _backgroundTexture;
+            backdrop.texture = null;
         }
 
         private void BindExistingHierarchy(bool bindActions = true)
@@ -294,6 +300,8 @@ namespace AeroByte.Menu
             RepairUiComponents(canvasRoot);
 
             _mainPanel = FindDescendant(canvasRoot, "Main Panel")?.gameObject;
+            _levelSelectPanel = FindDescendant(canvasRoot, "Level Select Panel")?.gameObject;
+            _levelSelectionView = _levelSelectPanel == null ? null : _levelSelectPanel.GetComponent<LevelSelectionView>();
             _optionsPanel = FindDescendant(canvasRoot, "Options Panel")?.gameObject;
             _creditsPanel = FindDescendant(canvasRoot, "Credits Panel")?.gameObject;
             _exitPanel = FindDescendant(canvasRoot, "Exit Screen Shade")?.gameObject;
@@ -305,11 +313,13 @@ namespace AeroByte.Menu
             _pilotNameText = FindDescendant(canvasRoot, "Pilot Name")?.GetComponent<Text>();
             _pilotAvatar = FindDescendant(canvasRoot, "Active Pilot Avatar")?.GetComponent<PilotAvatarGraphic>();
             _profileEditorView = FindDescendant(canvasRoot, "Profile Editor Card")?.GetComponent<PilotProfileEditorView>();
+            _loadingScreen = FindDescendant(canvasRoot, "Loading Screen")?.GetComponent<LoadingScreenView>();
             ApplyFonts(canvasRoot);
 
             if (!bindActions) return;
 
             BindButton(canvasRoot, "JUGAR Button", Play);
+            _levelSelectionView?.Bind(LoadLevel, ShowMain);
             BindButton(canvasRoot, "OPCIONES Button", ShowOptions);
             BindButton(canvasRoot, "CRÉDITOS Button", ShowCredits);
             BindButton(canvasRoot, "SALIR Button", ShowExitConfirmation, 0);
@@ -388,12 +398,6 @@ namespace AeroByte.Menu
         {
             var panel = CreateFixedPanel(parent, "Main Panel", new Vector2(90f, -8f), new Vector2(520f, 820f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), Color.clear);
             panel.AddComponent<MenuPanelTransition>().Configure(new Vector2(-36f, 0f));
-            if (menuBackground == null)
-            {
-                CreateText(panel.transform, "Brand Mark", 30, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(28f, -24f), new Vector2(74f, 58f), "A>");
-                CreateText(panel.transform, "AEROBYTE", 52, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(94f, -24f), new Vector2(340f, 64f), "AEROBYTE");
-            }
-
             var navLabel = CreateText(panel.transform, "Navigation Label", 20, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(0f, -174f), new Vector2(440f, 34f), "MENÚ PRINCIPAL");
             navLabel.color = new Color(0.46f, 0.78f, 0.95f, 1f);
             CreateLocalImage(panel.transform, "Navigation Line", new Vector2(0f, -220f), new Vector2(480f, 3f), new Color(0.30f, 0.78f, 1f, 0.34f));
@@ -403,22 +407,35 @@ namespace AeroByte.Menu
             CreateButton(panel.transform, "CRÉDITOS", new Vector2(0f, -450f), new Vector2(480f, 84f), ShowCredits, false, MenuIconType.Credits, 0.15f);
             CreateButton(panel.transform, "SALIR", new Vector2(0f, -550f), new Vector2(480f, 84f), ShowExitConfirmation, false, MenuIconType.Exit, 0.21f);
 
-            Color profileTop = new Color(0.012f, 0.06f, 0.10f, 0.88f);
-            Color profileBottom = new Color(0.025f, 0.13f, 0.20f, 0.94f);
-            var profile = CreateRoundedObject(panel.transform, "Pilot Profile Button", new Vector2(1370f, -728f), new Vector2(420f, 94f), new Vector2(0f, 1f), new Vector2(0f, 1f), profileTop, profileBottom, 18f, new Color(0.24f, 0.72f, 0.96f, 0.24f), 1f);
+            Color profileTop = new Color(0.025f, 0.16f, 0.24f, 0.97f);
+            Color profileBottom = new Color(0.006f, 0.045f, 0.075f, 0.99f);
+            var profile = CreateRoundedObject(panel.transform, "Pilot Profile Button", new Vector2(1320f, -704f), new Vector2(460f, 118f), new Vector2(0f, 1f), new Vector2(0f, 1f), profileTop, profileBottom, 20f, new Color(0.20f, 0.74f, 1f, 0.52f), 2f);
             profile.AddComponent<CanvasGroup>();
             var profileBackground = profile.GetComponent<MenuRoundedGraphic>();
             var profileButton = profile.AddComponent<Button>();
             profileButton.targetGraphic = profileBackground;
             profileButton.transition = Selectable.Transition.None;
             profileButton.onClick.AddListener(ShowProfileEditor);
-            var avatar = CreateRoundedObject(profile.transform, "Pilot Avatar", new Vector2(16f, -16f), new Vector2(64f, 64f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.02f, 0.24f, 0.36f, 1f), new Color(0.03f, 0.40f, 0.58f, 1f), 16f, Color.clear, 0f);
-            _pilotAvatar = CreatePilotAvatar(avatar.transform, "Active Pilot Avatar", 0, Vector2.zero, new Vector2(58f, 58f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-            CreateText(profile.transform, "Pilot Label", 12, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(98f, -18f), new Vector2(180f, 24f), "PILOTO ACTIVO").color = _mutedTextColor;
-            _pilotNameText = CreateText(profile.transform, "Pilot Name", 20, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(98f, -44f), new Vector2(210f, 34f), PilotProfileService.PilotName);
-            CreateText(profile.transform, "Edit Profile Hint", 10, FontStyle.Bold, TextAnchor.MiddleRight, new Vector2(300f, -35f), new Vector2(98f, 24f), "EDITAR  >").color = new Color(0.32f, 0.78f, 1f, 1f);
-            profile.AddComponent<MenuButtonMotion>().Configure(profileBackground, null, null, _pilotNameText, profileTop, profileBottom, new Color(0.03f, 0.24f, 0.35f, 0.98f), new Color(0.015f, 0.12f, 0.20f, 1f), _textColor, Color.white, 0.24f);
+            var avatar = CreateRoundedObject(profile.transform, "Pilot Avatar", new Vector2(16f, -18f), new Vector2(82f, 82f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.03f, 0.34f, 0.49f, 1f), new Color(0.01f, 0.14f, 0.23f, 1f), 18f, new Color(0.30f, 0.86f, 1f, 0.72f), 2f);
+            _pilotAvatar = CreatePilotAvatar(avatar.transform, "Active Pilot Avatar", 0, Vector2.zero, new Vector2(74f, 74f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            CreateText(profile.transform, "Pilot Label", 12, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(118f, -18f), new Vector2(180f, 24f), "PILOTO").color = new Color(0.46f, 0.80f, 0.96f, 1f);
+            _pilotNameText = CreateText(profile.transform, "Pilot Name", 23, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(118f, -47f), new Vector2(300f, 36f), PilotProfileService.PilotName);
+            CreateText(profile.transform, "Edit Profile Hint", 11, FontStyle.Bold, TextAnchor.MiddleRight, new Vector2(318f, -82f), new Vector2(120f, 24f), "EDITAR PERFIL  >").color = new Color(0.32f, 0.82f, 1f, 1f);
+
+            var activeBadge = CreateRoundedObject(profile.transform, "Pilot Active Badge", new Vector2(350f, -18f), new Vector2(90f, 24f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.10f, 0.48f, 0.32f, 0.96f), new Color(0.03f, 0.23f, 0.16f, 0.98f), 12f, new Color(0.26f, 0.92f, 0.60f, 0.50f), 1f);
+            CreateText(activeBadge.transform, "Pilot Active Badge Label", 10, FontStyle.Bold, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(90f, 24f), "ACTIVO", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f)).color = new Color(0.72f, 1f, 0.84f, 1f);
+            profile.AddComponent<MenuButtonMotion>().Configure(profileBackground, null, null, _pilotNameText, profileTop, profileBottom, new Color(0.04f, 0.24f, 0.34f, 1f), new Color(0.01f, 0.10f, 0.16f, 1f), _textColor, Color.white, 0.24f);
             return panel;
+        }
+
+        private GameObject BuildLevelSelectPanel(Transform parent)
+        {
+            var shade = CreateStretchImage(parent, "Level Select Panel", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0.005f, 0.025f, 0.045f, 0.98f));
+            shade.raycastTarget = true;
+            shade.gameObject.AddComponent<MenuPanelTransition>().Configure(new Vector2(0f, 22f));
+            _levelSelectionView = shade.gameObject.AddComponent<LevelSelectionView>();
+            _levelSelectionView.Initialize(_displayFont, _bodyFont, LoadLevel, ShowMain);
+            return shade.gameObject;
         }
 
         private GameObject BuildOptionsPanel(Transform parent)
@@ -492,6 +509,16 @@ namespace AeroByte.Menu
             return shade.gameObject;
         }
 
+        private LoadingScreenView BuildLoadingScreen(Transform parent)
+        {
+            var loadingObject = new GameObject("Loading Screen", typeof(RectTransform), typeof(CanvasGroup), typeof(LoadingScreenView));
+            loadingObject.transform.SetParent(parent, false);
+            SetStretchRect(loadingObject.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var loadingView = loadingObject.GetComponent<LoadingScreenView>();
+            loadingView.Initialize(_displayFont, _bodyFont);
+            return loadingView;
+        }
+
         private void CreateControlRow(Transform parent, string key, string action, float y)
         {
             CreateRoundedObject(parent, $"{key} Key", new Vector2(32f, y), new Vector2(148f, 36f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.03f, 0.18f, 0.28f, 1f), new Color(0.04f, 0.31f, 0.44f, 1f), 8f, new Color(0.20f, 0.68f, 0.92f, 0.28f), 1f);
@@ -528,33 +555,36 @@ namespace AeroByte.Menu
 
         private void ShowPanel(GameObject panel, bool immediate)
         {
-            if (_mainPanel == null || _optionsPanel == null || _creditsPanel == null || _exitPanel == null || _profileEditorPanel == null || panel == null) return;
+            if (_mainPanel == null || _levelSelectPanel == null || _optionsPanel == null || _creditsPanel == null || _exitPanel == null || _profileEditorPanel == null || panel == null) return;
 
             bool useImmediate = immediate || !Application.isPlaying || !_panelsInitialized;
-            HidePanelUnlessTarget(_mainPanel, panel);
-            HidePanelUnlessTarget(_optionsPanel, panel);
-            HidePanelUnlessTarget(_creditsPanel, panel);
-            HidePanelUnlessTarget(_exitPanel, panel);
-            HidePanelUnlessTarget(_profileEditorPanel, panel);
+            HidePanelUnlessTarget(_mainPanel, panel, useImmediate);
+            HidePanelUnlessTarget(_levelSelectPanel, panel, useImmediate);
+            HidePanelUnlessTarget(_optionsPanel, panel, useImmediate);
+            HidePanelUnlessTarget(_creditsPanel, panel, useImmediate);
+            HidePanelUnlessTarget(_exitPanel, panel, useImmediate);
+            HidePanelUnlessTarget(_profileEditorPanel, panel, useImmediate);
             SetPanelVisible(panel, true, useImmediate);
             _panelsInitialized = true;
         }
 
         private void SetInitialPanelState()
         {
-            if (_mainPanel == null || _optionsPanel == null || _creditsPanel == null || _exitPanel == null || _profileEditorPanel == null) return;
+            if (_mainPanel == null || _levelSelectPanel == null || _optionsPanel == null || _creditsPanel == null || _exitPanel == null || _profileEditorPanel == null || _loadingScreen == null) return;
             SetPanelImmediate(_mainPanel, true);
+            SetPanelImmediate(_levelSelectPanel, false);
             SetPanelImmediate(_optionsPanel, false);
             SetPanelImmediate(_creditsPanel, false);
             SetPanelImmediate(_exitPanel, false);
             SetPanelImmediate(_profileEditorPanel, false);
+            _loadingScreen.SetImmediate(false);
             _panelsInitialized = true;
         }
 
-        private static void HidePanelUnlessTarget(GameObject candidate, GameObject target)
+        private static void HidePanelUnlessTarget(GameObject candidate, GameObject target, bool immediate)
         {
             if (candidate == target) return;
-            SetPanelVisible(candidate, false, true);
+            SetPanelVisible(candidate, false, immediate);
         }
 
         private static void SetPanelImmediate(GameObject panel, bool visible)
@@ -751,49 +781,5 @@ namespace AeroByte.Menu
             rect.offsetMax = offsetMax;
         }
 
-        private static Texture2D GenerateBackdropTexture(int width, int height)
-        {
-            var texture = new Texture2D(width, height, TextureFormat.RGB24, false)
-            {
-                name = "AeroByte Menu Aerodrome",
-                filterMode = FilterMode.Bilinear,
-                wrapMode = TextureWrapMode.Clamp
-            };
-            var pixels = new Color32[width * height];
-            var skyTop = new Color(0.035f, 0.34f, 0.62f);
-            var skyHorizon = new Color(0.22f, 0.68f, 0.88f);
-            var mountainFar = new Color(0.11f, 0.30f, 0.40f);
-            var mountainNear = new Color(0.045f, 0.16f, 0.22f);
-            var ground = new Color(0.025f, 0.08f, 0.105f);
-            var runway = new Color(0.10f, 0.14f, 0.16f);
-
-            for (int y = 0; y < height; y++)
-            {
-                float v = y / (float)(height - 1);
-                for (int x = 0; x < width; x++)
-                {
-                    float u = x / (float)(width - 1);
-                    var color = Color.Lerp(skyHorizon, skyTop, Mathf.Clamp01((v - 0.34f) / 0.66f));
-
-                    float farLine = 0.37f + 0.08f * Mathf.Abs(Mathf.Sin(u * 12f)) + 0.06f * Mathf.Abs(Mathf.Sin(u * 25f + 1.4f));
-                    float nearLine = 0.22f + 0.13f * Mathf.Abs(Mathf.Sin(u * 8f + 0.8f)) + 0.05f * Mathf.Abs(Mathf.Sin(u * 19f));
-                    if (v < farLine) color = mountainFar;
-                    if (v < nearLine) color = mountainNear;
-                    if (v < 0.18f) color = ground;
-
-                    float runwayHalfWidth = Mathf.Lerp(0.43f, 0.09f, Mathf.Clamp01(v / 0.36f));
-                    if (v < 0.36f && Mathf.Abs(u - 0.72f) < runwayHalfWidth) color = runway;
-                    if (v < 0.31f && Mathf.Abs(u - 0.72f) < 0.006f) color = new Color(0.94f, 0.73f, 0.22f);
-
-                    float sunDistance = Vector2.Distance(new Vector2(u, v), new Vector2(0.77f, 0.76f));
-                    if (sunDistance < 0.055f) color = Color.Lerp(new Color(1f, 0.78f, 0.32f), Color.white, 0.35f);
-                    pixels[y * width + x] = color;
-                }
-            }
-
-            texture.SetPixels32(pixels);
-            texture.Apply(false, false);
-            return texture;
-        }
     }
 }

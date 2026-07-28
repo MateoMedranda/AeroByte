@@ -17,6 +17,7 @@ namespace AeroByte.Menu.UI
             _source.playOnAwake = false;
             _source.loop = false;
             _source.spatialBlend = 0f;
+            _source.ignoreListenerPause = true;
             _source.volume = 0.22f;
             _hoverClip = CreateTone("Menu Hover", 760f, 920f, 0.045f, 0.16f);
             _clickClip = CreateTone("Menu Click", 430f, 620f, 0.075f, 0.24f);
