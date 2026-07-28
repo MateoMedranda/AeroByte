@@ -167,6 +167,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AeroByte.Menu.MainMenuController
   gameplaySceneName: 1. Mapa_Costa
   menuBackground: {fileID: 2800000, guid: 9e4333c84e73df940b491f23bbb3f12d, type: 3}
+  selectorBackground: {fileID: 2800000, guid: cc20ed46bce087244a14e071d543c12f, type: 3}
+  beachBackground: {fileID: 2800000, guid: e5e05faa04311df469522336d8745379, type: 3}
+  cityBackground: {fileID: 2800000, guid: 26b300d1cbb4e2c43b1e4ff15ebb4e07, type: 3}
+  desertBackground: {fileID: 2800000, guid: c57dc5eab8834a648a37138f48c0673c, type: 3}
+  forestBackground: {fileID: 2800000, guid: eda94b957e8503247bcd9b19cc89d285, type: 3}
+  cessnaArtwork: {fileID: 2800000, guid: bc45cde1ddba1a549818201404992d9b, type: 3}
+  boeingArtwork: {fileID: 2800000, guid: 5898d33c5cc13204693d691a2356acf0, type: 3}
+  tomcatArtwork: {fileID: 2800000, guid: 118574d8c0ed7c042af7f029b2f3790f, type: 3}
+  startupBackground: {fileID: 2800000, guid: c26624b099016914da2d55c8650442bc, type: 3}
 --- !u!1 &13704657
 GameObject:
   m_ObjectHideFlags: 0

@@ -35,6 +35,7 @@ namespace AeroByte.Menu.Pause
         private GameObject _overlay;
         private GameObject _pausePanel;
         private GameObject _optionsPanel;
+        private GameObject _confirmationPanel;
         private CanvasGroup _overlayGroup;
         private Slider _volumeSlider;
         private Text _volumeValue;
@@ -54,7 +55,7 @@ namespace AeroByte.Menu.Pause
             _bodyFont = MenuFontProvider.BodyFont;
             MenuSettingsService.Load();
             BuildUi();
-            EnsureEventSystem();
+            if (SceneManager.GetActiveScene().name != MainMenuSceneName) EnsureEventSystem();
             _overlay.SetActive(false);
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
@@ -81,6 +82,10 @@ namespace AeroByte.Menu.Pause
             {
                 ShowPausePanel();
             }
+            else if (_confirmationPanel.activeSelf)
+            {
+                ShowPausePanel();
+            }
             else
             {
                 Resume();
@@ -97,8 +102,7 @@ namespace AeroByte.Menu.Pause
         {
             if (scene.name == MainMenuSceneName)
             {
-                if (_ownedEventSystem != null) Destroy(_ownedEventSystem);
-                _ownedEventSystem = null;
+                ReleaseOwnedEventSystem();
                 _overlay.SetActive(false);
                 return;
             }
@@ -147,8 +151,17 @@ namespace AeroByte.Menu.Pause
         public void ShowPausePanel()
         {
             _optionsPanel.SetActive(false);
+            _confirmationPanel.SetActive(false);
             _pausePanel.SetActive(true);
             SelectButton("REANUDAR Button");
+        }
+
+        public void ShowExitConfirmation()
+        {
+            _pausePanel.SetActive(false);
+            _optionsPanel.SetActive(false);
+            _confirmationPanel.SetActive(true);
+            SelectButton("CANCELAR Button");
         }
 
         public void ReturnToMainMenu()
@@ -161,7 +174,17 @@ namespace AeroByte.Menu.Pause
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
             _overlay.SetActive(false);
+            ReleaseOwnedEventSystem();
             SceneManager.LoadScene(MainMenuSceneName);
+        }
+
+        private void ReleaseOwnedEventSystem()
+        {
+            if (_ownedEventSystem == null) return;
+
+            _ownedEventSystem.SetActive(false);
+            Destroy(_ownedEventSystem);
+            _ownedEventSystem = null;
         }
 
         private IEnumerator CloseAndResume()
@@ -196,7 +219,11 @@ namespace AeroByte.Menu.Pause
             canvasObject.transform.SetParent(transform, false);
             var canvas = canvasObject.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 30000;
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 32700;
+            var raycaster = canvasObject.GetComponent<GraphicRaycaster>();
+            raycaster.ignoreReversedGraphics = false;
+            raycaster.blockingObjects = GraphicRaycaster.BlockingObjects.None;
             var scaler = canvasObject.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
@@ -212,6 +239,7 @@ namespace AeroByte.Menu.Pause
 
             _pausePanel = BuildPausePanel(_overlay.transform);
             _optionsPanel = BuildOptionsPanel(_overlay.transform);
+            _confirmationPanel = BuildConfirmationPanel(_overlay.transform);
         }
 
         private GameObject BuildPausePanel(Transform parent)
@@ -228,8 +256,24 @@ namespace AeroByte.Menu.Pause
 
             CreateButton(panel.transform, "REANUDAR", new Vector2(70f, -238f), new Vector2(560f, 88f), Resume, true, MenuIconType.Play, 0f);
             CreateButton(panel.transform, "OPCIONES", new Vector2(70f, -346f), new Vector2(560f, 82f), ShowOptions, false, MenuIconType.Settings, 0.05f);
-            CreateButton(panel.transform, "SALIR AL MENU PRINCIPAL", new Vector2(70f, -448f), new Vector2(560f, 82f), ReturnToMainMenu, false, MenuIconType.Exit, 0.10f);
+            CreateButton(panel.transform, "SALIR AL MENU PRINCIPAL", new Vector2(70f, -448f), new Vector2(560f, 82f), ShowExitConfirmation, false, MenuIconType.Exit, 0.10f);
             CreateText(panel.transform, "Pause Hint", "ESC / P  REANUDAR", 12, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(70f, -590f), new Vector2(560f, 30f), _muted);
+            return panel;
+        }
+
+        private GameObject BuildConfirmationPanel(Transform parent)
+        {
+            var panel = CreateRounded(parent, "Exit Confirmation Panel", Vector2.zero, new Vector2(720f, 470f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), _panelTop, _panelBottom, 28f, new Color(1f, 0.38f, 0.28f, 0.52f), 2f);
+            var shadow = panel.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0.01f, 0.02f, 0.76f);
+            shadow.effectDistance = new Vector2(0f, -14f);
+
+            CreateIcon(panel.transform, "Warning Icon", MenuIconType.Exit, new Vector2(318f, -42f), new Vector2(84f, 84f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(1f, 0.42f, 0.34f, 1f));
+            CreateText(panel.transform, "Confirmation Title", "¿ESTÁS SEGURO?", 38, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(60f, -132f), new Vector2(600f, 56f), _text);
+            CreateText(panel.transform, "Confirmation Message", "¿QUIERES SALIR AL MENÚ PRINCIPAL?\nTU PROGRESO ACTUAL SE PERDERÁ.", 20, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(70f, -202f), new Vector2(580f, 82f), new Color(0.82f, 0.90f, 0.95f, 1f));
+            CreateLocalImage(panel.transform, "Confirmation Divider", new Vector2(70f, -306f), new Vector2(580f, 2f), new Color(1f, 0.40f, 0.30f, 0.38f));
+            CreateButton(panel.transform, "CANCELAR", new Vector2(70f, -338f), new Vector2(270f, 78f), ShowPausePanel, true, MenuIconType.Back, 0f);
+            CreateButton(panel.transform, "SALIR", new Vector2(380f, -338f), new Vector2(270f, 78f), ReturnToMainMenu, false, MenuIconType.Exit, 0.04f);
             return panel;
         }
 
@@ -288,11 +332,21 @@ namespace AeroByte.Menu.Pause
 
         private void EnsureEventSystem()
         {
-            if (EventSystem.current != null && EventSystem.current.isActiveAndEnabled) return;
+            EventSystem eventSystem = EventSystem.current;
+            if (eventSystem == null || !eventSystem.isActiveAndEnabled)
+            {
+                _ownedEventSystem = new GameObject("Pause EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+                _ownedEventSystem.transform.SetParent(transform, false);
+                eventSystem = _ownedEventSystem.GetComponent<EventSystem>();
+            }
 
-            _ownedEventSystem = new GameObject("Pause EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
-            _ownedEventSystem.transform.SetParent(transform, false);
-            _ownedEventSystem.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
+            eventSystem.enabled = true;
+            eventSystem.sendNavigationEvents = true;
+            var module = eventSystem.GetComponent<InputSystemUIInputModule>();
+            if (module == null) module = eventSystem.gameObject.AddComponent<InputSystemUIInputModule>();
+            module.enabled = true;
+            if (module.actionsAsset == null) module.AssignDefaultActions();
+            EventSystem.current = eventSystem;
         }
 
         private void SelectButton(string buttonName)
@@ -413,7 +467,7 @@ namespace AeroByte.Menu.Pause
             SetStretchRect(imageObject.GetComponent<RectTransform>(), anchorMin ?? Vector2.zero, anchorMax ?? Vector2.one, offsetMin ?? Vector2.zero, offsetMax ?? Vector2.zero);
             var image = imageObject.GetComponent<Image>();
             image.color = color;
-            image.raycastTarget = objectName == "Pause Shade";
+            image.raycastTarget = false;
             return image;
         }
 

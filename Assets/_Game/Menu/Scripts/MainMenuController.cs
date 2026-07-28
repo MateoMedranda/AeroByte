@@ -2,6 +2,7 @@ using AeroByte.Menu.Credits;
 using AeroByte.Menu.LevelSelection;
 using AeroByte.Menu.Loading;
 using AeroByte.Menu.Profile;
+using AeroByte.Menu.Startup;
 using AeroByte.Menu.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -15,10 +16,28 @@ namespace AeroByte.Menu
     [ExecuteAlways]
     public sealed class MainMenuController : MonoBehaviour
     {
-        private const string LayoutMarkerName = "AeroByte Pilot Profile Layout v23";
+        private const string LayoutMarkerName = "AeroByte Startup Screen Layout v34";
         private const string MenuBackgroundPath = "Assets/_Game/Menu/Art/Backgrounds/MAIN MENU/BG-MAINMENU.png";
+        private const string SelectorBackgroundPath = "Assets/_Game/Menu/Art/Backgrounds/LEVEL SELECTOR/BG- LEVEL SELECTOR.png";
+        private const string BeachBackgroundPath = "Assets/_Game/Menu/Art/Backgrounds/LEVEL SELECTOR/PLAYA/BGE-PLAYA.png";
+        private const string CityBackgroundPath = "Assets/_Game/Menu/Art/Backgrounds/LEVEL SELECTOR/CIUDAD/BGE-CIUDAD.png";
+        private const string DesertBackgroundPath = "Assets/_Game/Menu/Art/Backgrounds/LEVEL SELECTOR/DESIERTO/BGE-DESIERTO.png";
+        private const string ForestBackgroundPath = "Assets/_Game/Menu/Art/Backgrounds/LEVEL SELECTOR/BOSQUE/BGE-BOSQUE.png";
+        private const string CessnaArtworkPath = "Assets/_Game/Menu/Missions/A-CESSNA.png";
+        private const string BoeingArtworkPath = "Assets/_Game/Menu/Missions/A-BOEING.png";
+        private const string TomcatArtworkPath = "Assets/_Game/Menu/Missions/A-F14TOMCAT.png";
+        private const string StartupBackgroundPath = "Assets/_Game/Menu/STARTGAME/BG-STARTGAME.png";
 
         [SerializeField] private Texture2D menuBackground;
+        [SerializeField] private Texture2D selectorBackground;
+        [SerializeField] private Texture2D beachBackground;
+        [SerializeField] private Texture2D cityBackground;
+        [SerializeField] private Texture2D desertBackground;
+        [SerializeField] private Texture2D forestBackground;
+        [SerializeField] private Texture2D cessnaArtwork;
+        [SerializeField] private Texture2D boeingArtwork;
+        [SerializeField] private Texture2D tomcatArtwork;
+        [SerializeField] private Texture2D startupBackground;
 
         private readonly Color _panelColor = new Color(0.018f, 0.075f, 0.125f, 0.89f);
         private readonly Color _secondaryPanelColor = new Color(0.025f, 0.12f, 0.19f, 0.92f);
@@ -43,6 +62,7 @@ namespace AeroByte.Menu
         private PilotProfileEditorView _profileEditorView;
         private LevelSelectionView _levelSelectionView;
         private LoadingScreenView _loadingScreen;
+        private StartupScreenView _startupScreen;
         private bool _panelsInitialized;
 
         private void OnEnable()
@@ -78,13 +98,26 @@ namespace AeroByte.Menu
 
         private void ResolveConfiguredBackground()
         {
-            if (menuBackground != null) return;
+            if (menuBackground != null && selectorBackground != null && beachBackground != null && cityBackground != null && desertBackground != null && forestBackground != null && cessnaArtwork != null && boeingArtwork != null && tomcatArtwork != null && startupBackground != null) return;
 
-            menuBackground = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(MenuBackgroundPath);
-            if (menuBackground == null) return;
+            menuBackground = LoadTexture(menuBackground, MenuBackgroundPath);
+            selectorBackground = LoadTexture(selectorBackground, SelectorBackgroundPath);
+            beachBackground = LoadTexture(beachBackground, BeachBackgroundPath);
+            cityBackground = LoadTexture(cityBackground, CityBackgroundPath);
+            desertBackground = LoadTexture(desertBackground, DesertBackgroundPath);
+            forestBackground = LoadTexture(forestBackground, ForestBackgroundPath);
+            cessnaArtwork = LoadTexture(cessnaArtwork, CessnaArtworkPath);
+            boeingArtwork = LoadTexture(boeingArtwork, BoeingArtworkPath);
+            tomcatArtwork = LoadTexture(tomcatArtwork, TomcatArtworkPath);
+            startupBackground = LoadTexture(startupBackground, StartupBackgroundPath);
 
             UnityEditor.EditorUtility.SetDirty(this);
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+        }
+
+        private static Texture2D LoadTexture(Texture2D current, string path)
+        {
+            return current != null ? current : UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
         private void ApplyConfiguredBackground()
@@ -151,7 +184,11 @@ namespace AeroByte.Menu
             return changed;
         }
 
-        public void Play() => ShowPanel(_levelSelectPanel, false);
+        public void Play()
+        {
+            _levelSelectionView?.ShowSelection();
+            ShowPanel(_levelSelectPanel, false);
+        }
         public void ShowMain() => ShowPanel(_mainPanel, false);
         public void LoadLevel(string sceneName)
         {
@@ -255,6 +292,7 @@ namespace AeroByte.Menu
             _exitPanel = BuildExitPanel(canvasObject.transform);
             _profileEditorPanel = BuildProfileEditorPanel(canvasObject.transform);
             _loadingScreen = BuildLoadingScreen(canvasObject.transform);
+            _startupScreen = BuildStartupScreen(canvasObject.transform);
             SetInitialPanelState();
         }
 
@@ -302,6 +340,7 @@ namespace AeroByte.Menu
             _mainPanel = FindDescendant(canvasRoot, "Main Panel")?.gameObject;
             _levelSelectPanel = FindDescendant(canvasRoot, "Level Select Panel")?.gameObject;
             _levelSelectionView = _levelSelectPanel == null ? null : _levelSelectPanel.GetComponent<LevelSelectionView>();
+            ConfigureLevelSelectionTextures();
             _optionsPanel = FindDescendant(canvasRoot, "Options Panel")?.gameObject;
             _creditsPanel = FindDescendant(canvasRoot, "Credits Panel")?.gameObject;
             _exitPanel = FindDescendant(canvasRoot, "Exit Screen Shade")?.gameObject;
@@ -314,6 +353,7 @@ namespace AeroByte.Menu
             _pilotAvatar = FindDescendant(canvasRoot, "Active Pilot Avatar")?.GetComponent<PilotAvatarGraphic>();
             _profileEditorView = FindDescendant(canvasRoot, "Profile Editor Card")?.GetComponent<PilotProfileEditorView>();
             _loadingScreen = FindDescendant(canvasRoot, "Loading Screen")?.GetComponent<LoadingScreenView>();
+            _startupScreen = FindDescendant(canvasRoot, "Startup Screen")?.GetComponent<StartupScreenView>();
             ApplyFonts(canvasRoot);
 
             if (!bindActions) return;
@@ -434,8 +474,14 @@ namespace AeroByte.Menu
             shade.raycastTarget = true;
             shade.gameObject.AddComponent<MenuPanelTransition>().Configure(new Vector2(0f, 22f));
             _levelSelectionView = shade.gameObject.AddComponent<LevelSelectionView>();
+            ConfigureLevelSelectionTextures();
             _levelSelectionView.Initialize(_displayFont, _bodyFont, LoadLevel, ShowMain);
             return shade.gameObject;
+        }
+
+        private void ConfigureLevelSelectionTextures()
+        {
+            _levelSelectionView?.ConfigureTextures(selectorBackground, beachBackground, cityBackground, desertBackground, forestBackground, cessnaArtwork, boeingArtwork, tomcatArtwork);
         }
 
         private GameObject BuildOptionsPanel(Transform parent)
@@ -519,6 +565,16 @@ namespace AeroByte.Menu
             return loadingView;
         }
 
+        private StartupScreenView BuildStartupScreen(Transform parent)
+        {
+            var startupObject = new GameObject("Startup Screen", typeof(RectTransform), typeof(CanvasGroup), typeof(StartupScreenView));
+            startupObject.transform.SetParent(parent, false);
+            SetStretchRect(startupObject.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var startupView = startupObject.GetComponent<StartupScreenView>();
+            startupView.Initialize(_displayFont, startupBackground);
+            return startupView;
+        }
+
         private void CreateControlRow(Transform parent, string key, string action, float y)
         {
             CreateRoundedObject(parent, $"{key} Key", new Vector2(32f, y), new Vector2(148f, 36f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.03f, 0.18f, 0.28f, 1f), new Color(0.04f, 0.31f, 0.44f, 1f), 8f, new Color(0.20f, 0.68f, 0.92f, 0.28f), 1f);
@@ -570,7 +626,7 @@ namespace AeroByte.Menu
 
         private void SetInitialPanelState()
         {
-            if (_mainPanel == null || _levelSelectPanel == null || _optionsPanel == null || _creditsPanel == null || _exitPanel == null || _profileEditorPanel == null || _loadingScreen == null) return;
+            if (_mainPanel == null || _levelSelectPanel == null || _optionsPanel == null || _creditsPanel == null || _exitPanel == null || _profileEditorPanel == null || _loadingScreen == null || _startupScreen == null) return;
             SetPanelImmediate(_mainPanel, true);
             SetPanelImmediate(_levelSelectPanel, false);
             SetPanelImmediate(_optionsPanel, false);
@@ -578,6 +634,8 @@ namespace AeroByte.Menu
             SetPanelImmediate(_exitPanel, false);
             SetPanelImmediate(_profileEditorPanel, false);
             _loadingScreen.SetImmediate(false);
+            if (Application.isPlaying) _startupScreen.ShowOnce();
+            else _startupScreen.SetImmediate(false);
             _panelsInitialized = true;
         }
 
