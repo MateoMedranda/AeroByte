@@ -10,8 +10,10 @@ namespace AeroByte.Menu.Loading
     public sealed class LoadingScreenView : MonoBehaviour
     {
         private const string BackgroundPath = "Assets/_Game/Menu/Art/Backgrounds/LOAD SCREENS/BG-LOADSCREEN.png";
-        private const float MinimumDisplayTime = 3f;
-        private const float TipInterval = 4.5f;
+        private const float MinimumDisplayTime = 8f;
+        private const float TipInterval = 3.5f;
+        private const float VisualProgressSpeed = 0.16f;
+        private const float ReadyDisplayTime = 1f;
 
         private static readonly string[] Tips =
         {
@@ -105,8 +107,9 @@ namespace AeroByte.Menu.Loading
                 float dt = Time.unscaledDeltaTime;
                 _canvasGroup.alpha = Mathf.MoveTowards(_canvasGroup.alpha, 1f, dt * 3.2f);
                 float actualProgress = Mathf.Clamp01(operation.progress / 0.9f);
-                displayedProgress = Mathf.MoveTowards(displayedProgress, actualProgress, dt * 0.48f);
+                displayedProgress = Mathf.MoveTowards(displayedProgress, actualProgress, dt * VisualProgressSpeed);
                 SetProgress(displayedProgress);
+                UpdateStatus(displayedProgress);
                 UpdateTip(dt);
                 if (spinner != null) spinner.Rotate(0f, 0f, -100f * dt);
 
@@ -118,8 +121,19 @@ namespace AeroByte.Menu.Loading
 
             SetProgress(1f);
             statusText.text = "LISTO PARA DESPEGAR";
-            yield return new WaitForSecondsRealtime(0.25f);
+            yield return new WaitForSecondsRealtime(ReadyDisplayTime);
             operation.allowSceneActivation = true;
+        }
+
+        private void UpdateStatus(float progress)
+        {
+            statusText.text = progress switch
+            {
+                < 0.22f => "PREPARANDO RECURSOS DE VUELO",
+                < 0.50f => "CARGANDO ESCENARIO Y OBJETOS",
+                < 0.78f => "CONFIGURANDO AERONAVE Y SISTEMAS",
+                _ => "VERIFICANDO RUTA DE VUELO"
+            };
         }
 
         private void UpdateTip(float deltaTime)

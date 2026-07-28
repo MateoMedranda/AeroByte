@@ -13,12 +13,18 @@ namespace AeroByte.Menu.LevelSelection
         private const string CityPath = "Assets/_Game/Menu/Art/Backgrounds/LEVEL SELECTOR/CIUDAD/BGE-CIUDAD.png";
         private const string DesertPath = "Assets/_Game/Menu/Art/Backgrounds/LEVEL SELECTOR/DESIERTO/BGE-DESIERTO.png";
         private const string ForestPath = "Assets/_Game/Menu/Art/Backgrounds/LEVEL SELECTOR/BOSQUE/BGE-BOSQUE.png";
+        private const string CessnaPath = "Assets/_Game/Menu/Missions/A-CESSNA.png";
+        private const string BoeingPath = "Assets/_Game/Menu/Missions/A-BOEING.png";
+        private const string TomcatPath = "Assets/_Game/Menu/Missions/A-F14TOMCAT.png";
 
         [SerializeField] private Texture2D selectorBackground;
         [SerializeField] private Texture2D beachBackground;
         [SerializeField] private Texture2D cityBackground;
         [SerializeField] private Texture2D desertBackground;
         [SerializeField] private Texture2D forestBackground;
+        [SerializeField] private Texture2D cessnaArtwork;
+        [SerializeField] private Texture2D boeingArtwork;
+        [SerializeField] private Texture2D tomcatArtwork;
 
         private Font _displayFont;
         private Font _bodyFont;
@@ -26,10 +32,37 @@ namespace AeroByte.Menu.LevelSelection
         private Action _onBack;
         [SerializeField] private PilotAvatarGraphic pilotAvatar;
         [SerializeField] private Text pilotName;
+        private GameObject _selectionPage;
+        private GameObject _detailPage;
+        private RawImage _detailBackground;
+        private RawImage[] _detailBlurLayers;
+        private RawImage _detailEnvironment;
+        private RawImage _detailAircraft;
+        private Text _detailEyebrow;
+        private Text _detailTitle;
+        private Text _detailDifficulty;
+        private Text _detailAircraftName;
+        private Text _detailObjective;
+        private Text _detailHazards;
+        private MenuIconGraphic _detailHazardIcon;
+        private MenuIconGraphic _missionBadgeIcon;
+        private string _selectedScene;
 
         private void OnEnable()
         {
             RefreshPilotProfile();
+        }
+
+        public void ConfigureTextures(Texture2D selector, Texture2D beach, Texture2D city, Texture2D desert, Texture2D forest, Texture2D cessna, Texture2D boeing, Texture2D tomcat)
+        {
+            selectorBackground = selector;
+            beachBackground = beach;
+            cityBackground = city;
+            desertBackground = desert;
+            forestBackground = forest;
+            cessnaArtwork = cessna;
+            boeingArtwork = boeing;
+            tomcatArtwork = tomcat;
         }
 
         public void Initialize(Font displayFont, Font bodyFont, Action<string> onLevelSelected, Action onBack)
@@ -52,30 +85,298 @@ namespace AeroByte.Menu.LevelSelection
             _onLevelSelected = onLevelSelected;
             _onBack = onBack;
 
-            foreach (var card in GetComponentsInChildren<LevelSelectionCard>(true)) card.Bind(_onLevelSelected);
+            CachePageReferences();
+            foreach (var card in GetComponentsInChildren<LevelSelectionCard>(true)) card.Bind(ShowMissionDetail);
             var backButton = FindDescendant(transform, "Level Selection Back Button")?.GetComponent<Button>();
-            if (backButton == null) return;
-            backButton.onClick.RemoveAllListeners();
-            if (_onBack != null) backButton.onClick.AddListener(() => _onBack());
+            if (backButton != null)
+            {
+                backButton.onClick.RemoveAllListeners();
+                if (_onBack != null) backButton.onClick.AddListener(() => _onBack());
+            }
+
+            BindDetailButton("Mission Detail Back Button", ShowSelection);
+            BindDetailButton("Mission Detail Start Button", StartSelectedMission);
         }
 
         private void Build()
         {
             var content = CreateRect(transform, "Level Selection Content", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var background = CreateRawImage(content, "Level Selector Background", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, Color.white);
+            _selectionPage = CreateRect(content, "Level Selection Page", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero).gameObject;
+            var background = CreateRawImage(_selectionPage.transform, "Level Selector Background", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, Color.white);
             background.texture = selectorBackground;
-            CreateImage(content, "Background Shade", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0.005f, 0.025f, 0.045f, 0.34f));
-            CreateImage(content, "Top Glow", new Vector2(0f, 0.76f), Vector2.one, Vector2.zero, Vector2.zero, new Color(0.02f, 0.20f, 0.34f, 0.38f));
+            background.color = new Color(1f, 1f, 1f, 0.58f);
+            CreateSelectorBlurLayer(_selectionPage.transform, "Selector Blur Left", selectorBackground, new Vector2(-8f, 0f));
+            CreateSelectorBlurLayer(_selectionPage.transform, "Selector Blur Right", selectorBackground, new Vector2(8f, 0f));
+            CreateSelectorBlurLayer(_selectionPage.transform, "Selector Blur Up", selectorBackground, new Vector2(0f, 8f));
+            CreateSelectorBlurLayer(_selectionPage.transform, "Selector Blur Down", selectorBackground, new Vector2(0f, -8f));
+            CreateSelectorBlurLayer(_selectionPage.transform, "Selector Blur Upper Left", selectorBackground, new Vector2(-6f, 6f));
+            CreateSelectorBlurLayer(_selectionPage.transform, "Selector Blur Upper Right", selectorBackground, new Vector2(6f, 6f));
+            CreateSelectorBlurLayer(_selectionPage.transform, "Selector Blur Lower Left", selectorBackground, new Vector2(-6f, -6f));
+            CreateSelectorBlurLayer(_selectionPage.transform, "Selector Blur Lower Right", selectorBackground, new Vector2(6f, -6f));
+            CreateImage(_selectionPage.transform, "Background Shade", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0.005f, 0.025f, 0.045f, 0.34f));
+            CreateImage(_selectionPage.transform, "Top Glow", new Vector2(0f, 0.76f), Vector2.one, Vector2.zero, Vector2.zero, new Color(0.02f, 0.20f, 0.34f, 0.38f));
 
-            CreateText(content, "Level Selection Eyebrow", "AEROBYTE  /  CENTRO DE OPERACIONES", 14, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(0f, -52f), new Vector2(900f, 28f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Color(0.28f, 0.76f, 1f, 1f));
-            CreateText(content, "Level Selection Heading", "SELECCIONA TU DESTINO", 42, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(0f, -86f), new Vector2(1000f, 58f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Color.white);
-            CreatePilotSummary(content);
-            CreateCard(content, 0, "PLAYA", "Beach", "OPERACION LITORAL", LevelTheme.Beach, beachBackground, 208f);
-            CreateCard(content, 1, "CIUDAD", "Ciudad", "RUTA URBANA", LevelTheme.City, cityBackground, 584f);
-            CreateCard(content, 2, "DESIERTO", "Desert", "TRAVESIA ENTRE DUNAS", LevelTheme.Desert, desertBackground, 960f);
-            CreateCard(content, 3, "BOSQUE", "Forest", "VUELO DE MONTANA", LevelTheme.Forest, forestBackground, 1336f);
-            CreateBackButton(content);
+            CreateText(_selectionPage.transform, "Level Selection Eyebrow", "AEROBYTE  /  CENTRO DE OPERACIONES", 18, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(0f, -48f), new Vector2(900f, 32f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Color(0.28f, 0.76f, 1f, 1f));
+            CreateText(_selectionPage.transform, "Level Selection Heading", "SELECCIONA TU DESTINO", 50, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(0f, -84f), new Vector2(1100f, 68f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Color.white);
+            CreatePilotSummary(_selectionPage.transform);
+            CreateCard(_selectionPage.transform, 0, "COSTA", "Beach", "CESSNA 172", LevelTheme.Beach, beachBackground, 208f);
+            CreateCard(_selectionPage.transform, 1, "CIUDAD", "Ciudad", "CESSNA 172", LevelTheme.City, cityBackground, 584f);
+            CreateCard(_selectionPage.transform, 2, "DESIERTO", "Desert", "BOEING DE CARGA", LevelTheme.Desert, desertBackground, 960f);
+            CreateCard(_selectionPage.transform, 3, "BOSQUE", "Forest", "F-14 TOMCAT", LevelTheme.Forest, forestBackground, 1336f);
+            CreateBackButton(_selectionPage.transform);
+            BuildMissionDetail(content);
+            ShowSelection();
             RefreshPilotProfile();
+        }
+
+        public void ShowSelection()
+        {
+            CachePageReferences();
+            if (_selectionPage != null) _selectionPage.SetActive(true);
+            if (_detailPage != null) _detailPage.SetActive(false);
+            _selectedScene = null;
+        }
+
+        private void ShowMissionDetail(string sceneName)
+        {
+            MissionDetails details = GetMissionDetails(sceneName);
+            CachePageReferences();
+            _selectedScene = sceneName;
+
+            ApplyCover(_detailBackground, details.Environment);
+            if (_detailBlurLayers != null)
+            {
+                foreach (var layer in _detailBlurLayers) ApplyCover(layer, details.Environment);
+            }
+            ApplyCover(_detailEnvironment, details.Environment);
+            ApplyCover(_detailAircraft, details.AircraftArtwork);
+            if (_detailEyebrow != null) _detailEyebrow.text = details.Eyebrow;
+            if (_detailTitle != null) _detailTitle.text = details.Title;
+            if (_detailDifficulty != null) _detailDifficulty.text = details.Difficulty;
+            if (_detailAircraftName != null) _detailAircraftName.text = details.Aircraft;
+            if (_detailObjective != null) _detailObjective.text = details.Objective;
+            if (_detailHazards != null) _detailHazards.text = details.Hazards;
+            if (_detailHazardIcon != null) _detailHazardIcon.IconType = details.HazardIcon;
+            if (_missionBadgeIcon != null) _missionBadgeIcon.IconType = details.ObjectiveIcon;
+
+            if (_selectionPage != null) _selectionPage.SetActive(false);
+            if (_detailPage != null) _detailPage.SetActive(true);
+        }
+
+        private static void ApplyCover(RawImage image, Texture2D texture)
+        {
+            if (image == null || texture == null) return;
+
+            image.texture = texture;
+            float targetAspect = image.rectTransform.rect.width / image.rectTransform.rect.height;
+            float textureAspect = texture.width / (float)texture.height;
+            if (textureAspect > targetAspect)
+            {
+                float width = targetAspect / textureAspect;
+                image.uvRect = new Rect((1f - width) * 0.5f, 0f, width, 1f);
+            }
+            else
+            {
+                float height = textureAspect / targetAspect;
+                image.uvRect = new Rect(0f, (1f - height) * 0.5f, 1f, height);
+            }
+        }
+
+        private static RawImage CreateBlurLayer(Transform parent, int index, Vector2 offset)
+        {
+            var layer = CreateRawImage(parent, $"Mission Background Blur {index}", Vector2.zero, Vector2.one, offset, offset, new Color(1f, 1f, 1f, 0.09f));
+            layer.raycastTarget = false;
+            return layer;
+        }
+
+        private static void CreateSelectorBlurLayer(Transform parent, string objectName, Texture2D texture, Vector2 offset)
+        {
+            var layer = CreateRawImage(parent, objectName, Vector2.zero, Vector2.one, offset, offset, new Color(1f, 1f, 1f, 0.075f));
+            layer.texture = texture;
+            layer.raycastTarget = false;
+        }
+
+        private void StartSelectedMission()
+        {
+            if (!string.IsNullOrEmpty(_selectedScene)) _onLevelSelected?.Invoke(_selectedScene);
+        }
+
+        private MissionDetails GetMissionDetails(string sceneName)
+        {
+            return sceneName switch
+            {
+                "Beach" => new MissionDetails("MISIÓN  /  COSTA", "ENVÍO DE HELADOS DE SALCEDO", "<size=52>★☆☆☆☆</size>   <size=34>(FÁCIL)</size>", "CESSNA 172", "Aprende a despegar, navegar y aterrizar mientras entregas una carga ligera.", "Tormentas aisladas sobre el mar.", beachBackground, cessnaArtwork, MenuIconType.Storm, MenuIconType.IceCream),
+                "Ciudad" => new MissionDetails("NIVEL  /  CIUDAD", "CIUDAD", "<size=52>★★☆☆☆</size>   <size=34>(MEDIA)</size>", "CESSNA 172", "Transporta animales entre edificios manteniendo una altitud precisa y evitando obstáculos urbanos.", "Ráfagas de viento y rascacielos.", cityBackground, cessnaArtwork, MenuIconType.UrbanWind, MenuIconType.Animal),
+                "Desert" => new MissionDetails("NIVEL  /  DESIERTO", "DESIERTO", "<size=52>★★★☆☆</size>   <size=34>(MEDIA-ALTA)</size>", "BOEING DE CARGA", "Entrega suministros a bases remotas atravesando largas rutas comerciales.", "Tormentas de arena y baja visibilidad.", desertBackground, boeingArtwork, MenuIconType.Sandstorm, MenuIconType.Supplies),
+                "Forest" => new MissionDetails("NIVEL  /  BOSQUE", "BOSQUE", "<size=52>★★★★★</size>   <size=34>(EXTREMA)</size>", "F-14 TOMCAT", "Completa una misión de combate a baja altitud destruyendo objetivos enemigos y esquivando obstáculos.", "Árboles gigantes, montañas e impactos enemigos.", forestBackground, tomcatArtwork, MenuIconType.Combat, MenuIconType.Combat),
+                _ => default
+            };
+        }
+
+        private void BuildMissionDetail(Transform parent)
+        {
+            _detailPage = CreateRect(parent, "Mission Detail Page", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero).gameObject;
+            _detailBackground = CreateRawImage(_detailPage.transform, "Mission Detail Background", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, Color.white);
+            _detailBackground.color = new Color(1f, 1f, 1f, 0.48f);
+            _detailBlurLayers = new[]
+            {
+                CreateBlurLayer(_detailPage.transform, 0, new Vector2(-10f, 0f)),
+                CreateBlurLayer(_detailPage.transform, 1, new Vector2(10f, 0f)),
+                CreateBlurLayer(_detailPage.transform, 2, new Vector2(0f, -10f)),
+                CreateBlurLayer(_detailPage.transform, 3, new Vector2(0f, 10f)),
+                CreateBlurLayer(_detailPage.transform, 4, new Vector2(-7f, -7f)),
+                CreateBlurLayer(_detailPage.transform, 5, new Vector2(7f, 7f)),
+                CreateBlurLayer(_detailPage.transform, 6, new Vector2(-7f, 7f)),
+                CreateBlurLayer(_detailPage.transform, 7, new Vector2(7f, -7f))
+            };
+            CreateImage(_detailPage.transform, "Mission Detail Shade", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0.002f, 0.025f, 0.045f, 0.76f));
+            CreateImage(_detailPage.transform, "Mission Detail Top Glow", new Vector2(0f, 0.74f), Vector2.one, Vector2.zero, Vector2.zero, new Color(0.02f, 0.30f, 0.48f, 0.25f));
+
+            _detailEyebrow = CreateText(_detailPage.transform, "Mission Detail Eyebrow", "MISIÓN", 22, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(82f, -32f), new Vector2(900f, 38f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.32f, 0.82f, 1f, 1f));
+            _detailTitle = CreateText(_detailPage.transform, "Mission Detail Title", "DETALLES DE NIVEL", 62, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(80f, -68f), new Vector2(1500f, 82f), new Vector2(0f, 1f), new Vector2(0f, 1f), Color.white);
+            CreateText(_detailPage.transform, "Mission Detail Number", "INFORMACIÓN DE VUELO", 20, FontStyle.Bold, TextAnchor.MiddleRight, new Vector2(-82f, -50f), new Vector2(400f, 40f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Color(0.62f, 0.80f, 0.90f, 1f));
+
+            var overview = CreateRoundedPanel(_detailPage.transform, "Mission Overview Card", new Vector2(80f, -158f), new Vector2(1080f, 750f));
+            _detailEnvironment = CreateRawImage(overview.transform, "Mission Environment", Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero, Color.white);
+            SetRect(_detailEnvironment.rectTransform, new Vector2(16f, -16f), new Vector2(1048f, 386f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+            CreateImage(overview.transform, "Mission Environment Shade", new Vector2(0f, 0.47f), new Vector2(1f, 1f), new Vector2(16f, 0f), new Vector2(-16f, -16f), new Color(0f, 0.025f, 0.05f, 0.18f)).raycastTarget = false;
+            var missionBadge = CreateRoundedPanel(overview.transform, "Mission Objective Badge", new Vector2(932f, -34f), new Vector2(104f, 104f), new Color(0.22f, 0.76f, 0.94f, 0.98f), new Color(0.03f, 0.30f, 0.48f, 0.98f));
+            _missionBadgeIcon = CreateMissionIcon(missionBadge.transform, "Mission Objective Icon", MenuIconType.IceCream, Vector2.zero, new Vector2(72f, 72f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Color.white);
+
+            var aircraftCard = CreateRoundedPanel(overview.transform, "Aircraft Card", new Vector2(16f, -420f), new Vector2(1048f, 306f), new Color(0.018f, 0.105f, 0.16f, 0.98f), new Color(0.006f, 0.04f, 0.07f, 1f));
+            _detailAircraft = CreateRawImage(aircraftCard.transform, "Mission Aircraft Artwork", Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero, Color.white);
+            SetRect(_detailAircraft.rectTransform, new Vector2(14f, -14f), new Vector2(480f, 270f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+            CreateText(aircraftCard.transform, "Aircraft Label", "AERONAVE ASIGNADA", 21, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(530f, -38f), new Vector2(470f, 38f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.35f, 0.78f, 0.96f, 1f));
+            _detailAircraftName = CreateText(aircraftCard.transform, "Mission Aircraft Name", "AERONAVE", 52, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(528f, -84f), new Vector2(500f, 72f), new Vector2(0f, 1f), new Vector2(0f, 1f), Color.white);
+            CreateText(aircraftCard.transform, "Aircraft Caption", "LISTA PARA LA MISIÓN", 21, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(530f, -168f), new Vector2(470f, 38f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.36f, 0.86f, 0.60f, 1f));
+
+            var briefing = CreateRoundedPanel(_detailPage.transform, "Mission Briefing Card", new Vector2(1190f, -158f), new Vector2(650f, 750f));
+            CreateText(briefing.transform, "Briefing Heading", "DETALLES DEL NIVEL", 30, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(34f, -20f), new Vector2(570f, 50f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.86f, 0.94f, 0.98f, 1f));
+            var briefingLine = CreateImage(briefing.transform, "Briefing Line", Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero, new Color(0.18f, 0.66f, 0.92f, 0.45f));
+            SetRect(briefingLine.rectTransform, new Vector2(34f, -76f), new Vector2(582f, 2f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+
+            CreateInfoBlock(briefing.transform, "Difficulty", "DIFICULTAD", out _detailDifficulty, -96f, 126f, new Color(1f, 0.76f, 0.25f, 1f));
+            CreateInfoBlock(briefing.transform, "Objective", "OBJETIVO", out _detailObjective, -242f, 222f, new Color(0.28f, 0.82f, 1f, 1f));
+            CreateInfoBlock(briefing.transform, "Hazards", "PELIGROS", out _detailHazards, -484f, 218f, new Color(1f, 0.40f, 0.30f, 1f));
+
+            CreateDetailButton(_detailPage.transform, "Mission Detail Back Button", "<  VOLVER A NIVELES", new Vector2(80f, -932f), new Vector2(330f, 76f), false);
+            CreateDetailButton(_detailPage.transform, "Mission Detail Start Button", "INICIAR NIVEL  >", new Vector2(-80f, -932f), new Vector2(390f, 76f), true);
+        }
+
+        private GameObject CreateRoundedPanel(Transform parent, string objectName, Vector2 position, Vector2 size, Color? top = null, Color? bottom = null)
+        {
+            var panel = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(MenuRoundedGraphic));
+            panel.transform.SetParent(parent, false);
+            SetRect(panel.GetComponent<RectTransform>(), position, size, new Vector2(0f, 1f), new Vector2(0f, 1f));
+            panel.GetComponent<MenuRoundedGraphic>().SetStyle(top ?? new Color(0.025f, 0.12f, 0.18f, 0.98f), bottom ?? new Color(0.006f, 0.04f, 0.07f, 1f), 22f, new Color(0.18f, 0.64f, 0.90f, 0.42f), 2f);
+            return panel;
+        }
+
+        private void CreateInfoBlock(Transform parent, string objectName, string labelValue, out Text value, float y, float height, Color accent)
+        {
+            var block = CreateRoundedPanel(parent, $"{objectName} Block", new Vector2(28f, y), new Vector2(594f, height), new Color(0.03f, 0.15f, 0.21f, 0.96f), new Color(0.01f, 0.065f, 0.10f, 0.98f));
+            CreateImage(block.transform, $"{objectName} Accent", Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero, accent).raycastTarget = false;
+            SetRect(FindDescendant(block.transform, $"{objectName} Accent").GetComponent<RectTransform>(), new Vector2(16f, -18f), new Vector2(4f, height - 36f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+            CreateText(block.transform, $"{objectName} Label", labelValue, 21, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(38f, -8f), new Vector2(520f, 34f), new Vector2(0f, 1f), new Vector2(0f, 1f), accent);
+            bool hasDangerIcon = objectName == "Hazards";
+            if (hasDangerIcon)
+            {
+                _detailHazardIcon = CreateMissionIcon(block.transform, "Mission Hazard Icon", MenuIconType.Storm, new Vector2(34f, -58f), new Vector2(70f, 70f), new Vector2(0f, 1f), new Vector2(0f, 1f), accent);
+            }
+
+            float valueX = hasDangerIcon ? 122f : 38f;
+            float valueWidth = hasDangerIcon ? 436f : 520f;
+            value = CreateText(block.transform, $"Mission {objectName} Value", string.Empty, objectName == "Difficulty" ? 34 : 30, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(valueX, -46f), new Vector2(valueWidth, height - 52f), new Vector2(0f, 1f), new Vector2(0f, 1f), Color.white);
+            value.supportRichText = true;
+            value.horizontalOverflow = HorizontalWrapMode.Wrap;
+            value.verticalOverflow = VerticalWrapMode.Truncate;
+            value.lineSpacing = 1.15f;
+        }
+
+        private void CreateDetailButton(Transform parent, string objectName, string label, Vector2 position, Vector2 size, bool primary)
+        {
+            var buttonObject = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(MenuRoundedGraphic), typeof(Button));
+            buttonObject.transform.SetParent(parent, false);
+            Vector2 anchor = primary ? new Vector2(1f, 1f) : new Vector2(0f, 1f);
+            Vector2 pivot = anchor;
+            SetRect(buttonObject.GetComponent<RectTransform>(), position, size, anchor, pivot);
+            var background = buttonObject.GetComponent<MenuRoundedGraphic>();
+            background.SetStyle(primary ? new Color(0.05f, 0.62f, 0.94f, 1f) : new Color(0.03f, 0.13f, 0.20f, 0.98f), primary ? new Color(0.015f, 0.31f, 0.55f, 1f) : new Color(0.01f, 0.06f, 0.10f, 1f), 14f, new Color(0.30f, 0.82f, 1f, 0.62f), 2f);
+            var button = buttonObject.GetComponent<Button>();
+            button.targetGraphic = background;
+            button.transition = Selectable.Transition.ColorTint;
+            CreateText(buttonObject.transform, $"{objectName} Label", label, 26, FontStyle.Bold, TextAnchor.MiddleCenter, Vector2.zero, size, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Color.white).raycastTarget = false;
+        }
+
+        private static MenuIconGraphic CreateMissionIcon(Transform parent, string objectName, MenuIconType type, Vector2 position, Vector2 size, Vector2 anchor, Vector2 pivot, Color color)
+        {
+            var iconObject = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(MenuIconGraphic));
+            iconObject.transform.SetParent(parent, false);
+            SetRect(iconObject.GetComponent<RectTransform>(), position, size, anchor, pivot);
+            var icon = iconObject.GetComponent<MenuIconGraphic>();
+            icon.Configure(type, color, 3.2f);
+            return icon;
+        }
+
+        private void CachePageReferences()
+        {
+            _selectionPage ??= FindDescendant(transform, "Level Selection Page")?.gameObject;
+            _detailPage ??= FindDescendant(transform, "Mission Detail Page")?.gameObject;
+            _detailBackground ??= FindDescendant(transform, "Mission Detail Background")?.GetComponent<RawImage>();
+            if (_detailBlurLayers == null)
+            {
+                _detailBlurLayers = new RawImage[8];
+                for (int i = 0; i < _detailBlurLayers.Length; i++)
+                {
+                    _detailBlurLayers[i] = FindDescendant(transform, $"Mission Background Blur {i}")?.GetComponent<RawImage>();
+                }
+            }
+            _detailEnvironment ??= FindDescendant(transform, "Mission Environment")?.GetComponent<RawImage>();
+            _detailAircraft ??= FindDescendant(transform, "Mission Aircraft Artwork")?.GetComponent<RawImage>();
+            _detailEyebrow ??= FindDescendant(transform, "Mission Detail Eyebrow")?.GetComponent<Text>();
+            _detailTitle ??= FindDescendant(transform, "Mission Detail Title")?.GetComponent<Text>();
+            _detailDifficulty ??= FindDescendant(transform, "Mission Difficulty Value")?.GetComponent<Text>();
+            _detailAircraftName ??= FindDescendant(transform, "Mission Aircraft Name")?.GetComponent<Text>();
+            _detailObjective ??= FindDescendant(transform, "Mission Objective Value")?.GetComponent<Text>();
+            _detailHazards ??= FindDescendant(transform, "Mission Hazards Value")?.GetComponent<Text>();
+            _detailHazardIcon ??= FindDescendant(transform, "Mission Hazard Icon")?.GetComponent<MenuIconGraphic>();
+            _missionBadgeIcon ??= FindDescendant(transform, "Mission Objective Icon")?.GetComponent<MenuIconGraphic>();
+        }
+
+        private void BindDetailButton(string objectName, Action action)
+        {
+            var button = FindDescendant(transform, objectName)?.GetComponent<Button>();
+            if (button == null) return;
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => action());
+        }
+
+        private readonly struct MissionDetails
+        {
+            public MissionDetails(string eyebrow, string title, string difficulty, string aircraft, string objective, string hazards, Texture2D environment, Texture2D aircraftArtwork, MenuIconType hazardIcon, MenuIconType objectiveIcon)
+            {
+                Eyebrow = eyebrow;
+                Title = title;
+                Difficulty = difficulty;
+                Aircraft = aircraft;
+                Objective = objective;
+                Hazards = hazards;
+                Environment = environment;
+                AircraftArtwork = aircraftArtwork;
+                HazardIcon = hazardIcon;
+                ObjectiveIcon = objectiveIcon;
+            }
+
+            public string Eyebrow { get; }
+            public string Title { get; }
+            public string Difficulty { get; }
+            public string Aircraft { get; }
+            public string Objective { get; }
+            public string Hazards { get; }
+            public Texture2D Environment { get; }
+            public Texture2D AircraftArtwork { get; }
+            public MenuIconType HazardIcon { get; }
+            public MenuIconType ObjectiveIcon { get; }
         }
 
         private void CreatePilotSummary(Transform parent)
@@ -101,11 +402,6 @@ namespace AeroByte.Menu.LevelSelection
             pilotName = CreateText(summary.transform, "Pilot Summary Name", PilotProfileService.PilotName, 20, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(92f, -40f), new Vector2(226f, 32f), new Vector2(0f, 1f), new Vector2(0f, 1f), Color.white);
             pilotName.raycastTarget = false;
 
-            var statusBadge = new GameObject("Pilot Active Badge", typeof(RectTransform), typeof(CanvasRenderer), typeof(MenuRoundedGraphic));
-            statusBadge.transform.SetParent(summary.transform, false);
-            SetRect(statusBadge.GetComponent<RectTransform>(), new Vector2(254f, -14f), new Vector2(70f, 22f), new Vector2(0f, 1f), new Vector2(0f, 1f));
-            statusBadge.GetComponent<MenuRoundedGraphic>().SetStyle(new Color(0.10f, 0.48f, 0.32f, 0.96f), new Color(0.03f, 0.23f, 0.16f, 0.98f), 11f, new Color(0.26f, 0.92f, 0.60f, 0.50f), 1f);
-            CreateText(statusBadge.transform, "Active Badge Label", "ACTIVO", 9, FontStyle.Bold, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(70f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Color(0.72f, 1f, 0.84f, 1f)).raycastTarget = false;
         }
 
         private void RefreshPilotProfile()
@@ -149,16 +445,26 @@ namespace AeroByte.Menu.LevelSelection
 
             var vignette = CreateImage(cardObject.transform, "Artwork Vignette", new Vector2(0f, 0.49f), new Vector2(1f, 0.76f), new Vector2(10f, 0f), new Vector2(-10f, 0f), new Color(0f, 0.03f, 0.06f, 0.22f));
             vignette.raycastTarget = false;
+            MenuIconType objectiveIcon = sceneName switch
+            {
+                "Beach" => MenuIconType.IceCream,
+                "Ciudad" => MenuIconType.Animal,
+                "Desert" => MenuIconType.Supplies,
+                "Forest" => MenuIconType.Combat,
+                _ => MenuIconType.Supplies
+            };
+            var objectiveBadge = CreateRoundedPanel(cardObject.transform, "Level Objective Badge", new Vector2(244f, -26f), new Vector2(70f, 70f), new Color(0.22f, 0.76f, 0.94f, 0.98f), new Color(0.03f, 0.30f, 0.48f, 0.98f));
+            CreateMissionIcon(objectiveBadge.transform, "Level Objective Icon", objectiveIcon, Vector2.zero, new Vector2(48f, 48f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Color.white);
             var glow = CreateImage(cardObject.transform, "Selection Glow", new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(22f, 8f), new Vector2(-22f, 13f), new Color(0.15f, 0.72f, 1f, 0.08f));
             glow.raycastTarget = false;
 
-            var number = CreateText(cardObject.transform, "Route Number", $"0{order + 1}", 13, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(24f, -552f), new Vector2(80f, 24f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.24f, 0.76f, 1f, 1f));
+            var number = CreateText(cardObject.transform, "Route Number", $"0{order + 1}", 22, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(24f, -542f), new Vector2(90f, 34f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.24f, 0.76f, 1f, 1f));
             number.raycastTarget = false;
-            var title = CreateText(cardObject.transform, "Route Title", titleValue, 28, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(24f, -582f), new Vector2(280f, 42f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.88f, 0.94f, 0.98f, 1f));
+            var title = CreateText(cardObject.transform, "Route Title", titleValue, 44, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(24f, -578f), new Vector2(292f, 56f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.88f, 0.94f, 0.98f, 1f));
             title.raycastTarget = false;
-            var subtitle = CreateText(cardObject.transform, "Route Subtitle", subtitleValue, 12, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(24f, -628f), new Vector2(280f, 26f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.56f, 0.70f, 0.79f, 1f));
+            var subtitle = CreateText(cardObject.transform, "Route Subtitle", subtitleValue, 20, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(24f, -636f), new Vector2(292f, 38f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.72f, 0.84f, 0.91f, 1f));
             subtitle.raycastTarget = false;
-            var status = CreateText(cardObject.transform, "Route Status", "DISPONIBLE   >", 12, FontStyle.Bold, TextAnchor.MiddleRight, new Vector2(136f, -674f), new Vector2(176f, 24f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.30f, 0.84f, 0.58f, 1f));
+            var status = CreateText(cardObject.transform, "Route Status", "DISPONIBLE   >", 19, FontStyle.Bold, TextAnchor.MiddleRight, new Vector2(92f, -680f), new Vector2(220f, 32f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.30f, 0.92f, 0.62f, 1f));
             status.raycastTarget = false;
 
             cardObject.GetComponent<LevelSelectionCard>().Configure(sceneName, order, frame, artwork, glow, title);
@@ -172,6 +478,9 @@ namespace AeroByte.Menu.LevelSelection
             cityBackground = LoadTexture(cityBackground, CityPath);
             desertBackground = LoadTexture(desertBackground, DesertPath);
             forestBackground = LoadTexture(forestBackground, ForestPath);
+            cessnaArtwork = LoadTexture(cessnaArtwork, CessnaPath);
+            boeingArtwork = LoadTexture(boeingArtwork, BoeingPath);
+            tomcatArtwork = LoadTexture(tomcatArtwork, TomcatPath);
             UnityEditor.EditorUtility.SetDirty(this);
         }
 

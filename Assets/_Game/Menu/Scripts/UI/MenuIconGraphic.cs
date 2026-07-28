@@ -16,7 +16,14 @@ namespace AeroByte.Menu.UI
         Project,
         Calendar,
         Back,
-        Mute
+        Mute,
+        IceCream,
+        Storm,
+        UrbanWind,
+        Sandstorm,
+        Combat,
+        Animal,
+        Supplies
     }
 
     [ExecuteAlways, RequireComponent(typeof(CanvasRenderer))]
@@ -121,6 +128,58 @@ namespace AeroByte.Menu.UI
                 case MenuIconType.Back:
                     AddLine(vh, center + new Vector2(half * 0.38f, half * 0.58f), center + new Vector2(-half * 0.30f, 0f), stroke * 1.4f);
                     AddLine(vh, center + new Vector2(-half * 0.30f, 0f), center + new Vector2(half * 0.38f, -half * 0.58f), stroke * 1.4f);
+                    break;
+                case MenuIconType.IceCream:
+                    AddTriangle(vh, center + new Vector2(-half * 0.38f, half * 0.05f), center + new Vector2(half * 0.38f, half * 0.05f), center + new Vector2(0f, -half * 0.76f));
+                    AddCircle(vh, center + new Vector2(-half * 0.20f, half * 0.22f), half * 0.29f, 14);
+                    AddCircle(vh, center + new Vector2(half * 0.20f, half * 0.22f), half * 0.29f, 14);
+                    AddCircle(vh, center + new Vector2(0f, half * 0.48f), half * 0.29f, 14);
+                    break;
+                case MenuIconType.Storm:
+                    AddCircle(vh, center + new Vector2(-half * 0.30f, half * 0.24f), half * 0.28f, 14);
+                    AddCircle(vh, center + new Vector2(0f, half * 0.38f), half * 0.36f, 16);
+                    AddCircle(vh, center + new Vector2(half * 0.34f, half * 0.22f), half * 0.27f, 14);
+                    AddRect(vh, new Rect(center.x - half * 0.56f, center.y + half * 0.02f, half * 1.12f, half * 0.28f));
+                    AddTriangle(vh, center + new Vector2(half * 0.02f, half * 0.02f), center + new Vector2(-half * 0.27f, -half * 0.42f), center + new Vector2(half * 0.02f, -half * 0.36f));
+                    AddTriangle(vh, center + new Vector2(half * 0.02f, -half * 0.26f), center + new Vector2(half * 0.30f, -half * 0.20f), center + new Vector2(-half * 0.10f, -half * 0.76f));
+                    break;
+                case MenuIconType.UrbanWind:
+                    AddRect(vh, new Rect(center.x - half * 0.66f, center.y - half * 0.66f, half * 0.28f, half * 0.70f));
+                    AddRect(vh, new Rect(center.x - half * 0.24f, center.y - half * 0.66f, half * 0.32f, half * 1.05f));
+                    AddRect(vh, new Rect(center.x + half * 0.24f, center.y - half * 0.66f, half * 0.34f, half * 0.84f));
+                    AddLine(vh, center + new Vector2(-half * 0.72f, half * 0.58f), center + new Vector2(half * 0.48f, half * 0.58f), stroke);
+                    AddArc(vh, center + new Vector2(half * 0.46f, half * 0.42f), half * 0.18f, -90f, 90f, stroke, 7);
+                    AddLine(vh, center + new Vector2(-half * 0.55f, half * 0.30f), center + new Vector2(half * 0.66f, half * 0.30f), stroke);
+                    break;
+                case MenuIconType.Sandstorm:
+                    AddArc(vh, center + new Vector2(-half * 0.10f, half * 0.35f), half * 0.72f, -25f, 45f, stroke, 10);
+                    AddArc(vh, center + new Vector2(half * 0.05f, 0f), half * 0.76f, -35f, 35f, stroke, 10);
+                    AddArc(vh, center + new Vector2(-half * 0.12f, -half * 0.34f), half * 0.68f, -45f, 25f, stroke, 10);
+                    AddCircle(vh, center + new Vector2(-half * 0.52f, half * 0.16f), stroke * 0.75f, 8);
+                    AddCircle(vh, center + new Vector2(half * 0.45f, -half * 0.18f), stroke * 0.65f, 8);
+                    break;
+                case MenuIconType.Combat:
+                    AddRing(vh, center, half * 0.52f, half * 0.42f, 24);
+                    AddCircle(vh, center, half * 0.09f, 12);
+                    AddLine(vh, center + new Vector2(-half * 0.78f, 0f), center + new Vector2(-half * 0.28f, 0f), stroke);
+                    AddLine(vh, center + new Vector2(half * 0.28f, 0f), center + new Vector2(half * 0.78f, 0f), stroke);
+                    AddLine(vh, center + new Vector2(0f, -half * 0.78f), center + new Vector2(0f, -half * 0.28f), stroke);
+                    AddLine(vh, center + new Vector2(0f, half * 0.28f), center + new Vector2(0f, half * 0.78f), stroke);
+                    break;
+                case MenuIconType.Animal:
+                    AddTriangle(vh, center + new Vector2(-half * 0.52f, half * 0.62f), center + new Vector2(-half * 0.16f, half * 0.42f), center + new Vector2(-half * 0.46f, half * 0.08f));
+                    AddTriangle(vh, center + new Vector2(half * 0.52f, half * 0.62f), center + new Vector2(half * 0.16f, half * 0.42f), center + new Vector2(half * 0.46f, half * 0.08f));
+                    AddRing(vh, center, half * 0.56f, half * 0.47f, 20);
+                    AddCircle(vh, center + new Vector2(-half * 0.20f, half * 0.12f), half * 0.07f, 8);
+                    AddCircle(vh, center + new Vector2(half * 0.20f, half * 0.12f), half * 0.07f, 8);
+                    AddTriangle(vh, center + new Vector2(-half * 0.10f, -half * 0.12f), center + new Vector2(half * 0.10f, -half * 0.12f), center + new Vector2(0f, -half * 0.28f));
+                    break;
+                case MenuIconType.Supplies:
+                    AddRectOutline(vh, new Rect(center.x - half * 0.62f, center.y - half * 0.52f, half * 1.24f, half * 1.04f), stroke * 1.2f);
+                    AddLine(vh, center + new Vector2(-half * 0.62f, half * 0.52f), center + new Vector2(0f, half * 0.76f), stroke);
+                    AddLine(vh, center + new Vector2(half * 0.62f, half * 0.52f), center + new Vector2(0f, half * 0.76f), stroke);
+                    AddLine(vh, center + new Vector2(0f, half * 0.76f), center + new Vector2(0f, -half * 0.52f), stroke);
+                    AddLine(vh, center + new Vector2(-half * 0.62f, half * 0.08f), center + new Vector2(half * 0.62f, half * 0.08f), stroke);
                     break;
             }
         }
