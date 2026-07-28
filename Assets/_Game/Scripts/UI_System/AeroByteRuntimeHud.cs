@@ -903,11 +903,12 @@ namespace AeroByte.UI_System
             _warningText.color = stallWarning ? new Color(1f, 0.35f, 0.2f, 1f) : new Color(1f, 0.85f, 0.2f, 1f);
             _warningText.text = _builder.ToString();
 
-            // Animal Cargo & Out Of Bounds Logic
+            // Animal Cargo, Out Of Bounds & Altitude Danger Logic
             bool isOOB = MissionSystem.Adapters.OutOfBoundsManager.Instance != null && MissionSystem.Adapters.OutOfBoundsManager.Instance.IsOOB;
             bool isAnimalStressed = MissionSystem.Adapters.AnimalCargoManager.Instance != null && MissionSystem.Adapters.AnimalCargoManager.Instance.IsAnimalStressed;
+            bool isAltitudeDanger = MissionSystem.Adapters.AeroByteAltitudeManager.Instance != null && MissionSystem.Adapters.AeroByteAltitudeManager.Instance.IsAltitudeDanger;
 
-            if (isOOB || isAnimalStressed)
+            if (isOOB || isAnimalStressed || isAltitudeDanger)
             {
                 float timeLeft = 0f;
                 string message = "";
@@ -917,6 +918,24 @@ namespace AeroByte.UI_System
                     timeLeft = MissionSystem.Adapters.OutOfBoundsManager.Instance.CurrentTimer;
                     message = "¡REGRESA AL ÁREA DE JUEGO!";
                     if (_animalAlertImage != null && _animalAlertImage.color.a > 0f) _animalAlertImage.color = new Color(1f, 1f, 1f, 0f);
+                }
+                else if (isAltitudeDanger)
+                {
+                    timeLeft = MissionSystem.Adapters.AeroByteAltitudeManager.Instance.CurrentDangerTimer;
+                    message = "¡ALERTA RADAR / ANTIAÉREA! ALTURA PELIGROSA";
+
+                    if (_animalAlertImage != null)
+                    {
+                        Sprite alertSprite = MissionSystem.Adapters.AeroByteAltitudeManager.Instance.GetAlertSprite();
+                        if (alertSprite != null)
+                        {
+                            _animalAlertImage.sprite = alertSprite;
+                            float pulseIcon = (Mathf.Sin(Time.time * 14f) + 1f) / 2f;
+                            _animalAlertImage.color = new Color(1f, 0.2f, 0.2f, 0.7f + (pulseIcon * 0.3f));
+                            float scaleIcon = 1f + (Mathf.Sin(Time.time * 14f) * 0.15f);
+                            _animalAlertImage.rectTransform.localScale = new Vector3(scaleIcon, scaleIcon, 1f);
+                        }
+                    }
                 }
                 else if (isAnimalStressed)
                 {
@@ -1001,6 +1020,24 @@ namespace AeroByte.UI_System
                 else
                 {
                     if (_racePanelGo.activeSelf) _racePanelGo.SetActive(false);
+                }
+            }
+            else if (MissionSystem.Adapters.AeroByteAttackManager.Instance != null)
+            {
+                var atkMgr = MissionSystem.Adapters.AeroByteAttackManager.Instance;
+                if (!atkMgr.IsMissionComplete)
+                {
+                    if (!_racePanelGo.activeSelf) _racePanelGo.SetActive(true);
+                    _raceCheckpointsText.text = $"ZONAS DESTRUIDAS: {atkMgr.DestroyedZones} / {atkMgr.TotalZones}";
+                    _raceTimerText.text = "OBJETIVO: BOMBARDEAR";
+                    _raceTimerText.color = new Color(1f, 0.45f, 0.15f, 1f);
+                }
+                else
+                {
+                    if (!_racePanelGo.activeSelf) _racePanelGo.SetActive(true);
+                    _raceCheckpointsText.text = $"¡ZONAS DESTRUIDAS: {atkMgr.TotalZones} / {atkMgr.TotalZones}!";
+                    _raceTimerText.text = "¡MISIÓN COMPLETADA!";
+                    _raceTimerText.color = new Color(0.2f, 1f, 0.4f, 1f);
                 }
             }
             else

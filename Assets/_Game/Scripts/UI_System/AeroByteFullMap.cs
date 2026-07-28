@@ -129,6 +129,10 @@ namespace AeroByte.UI_System
                     {
                         targetTransform = MissionSystem.Adapters.CheckpointRaceManager.Instance.GetCurrentActiveCheckpointTransform();
                     }
+                    else if (MissionSystem.Adapters.AeroByteAttackManager.Instance != null && !MissionSystem.Adapters.AeroByteAttackManager.Instance.IsMissionComplete)
+                    {
+                        targetTransform = MissionSystem.Adapters.AeroByteAttackManager.Instance.GetCurrentActiveZoneTransform();
+                    }
                     else if (MissionSystem.Adapters.AeroByteDeliveryManager.Instance != null)
                     {
                         var currentZone = MissionSystem.Adapters.AeroByteDeliveryManager.Instance.GetCurrentActiveZone();
