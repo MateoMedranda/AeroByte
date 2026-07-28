@@ -21,9 +21,35 @@ namespace AeroByte.CheckpointSystem.Adapters
         [Tooltip("Lista de colores específicos por checkpoint. El elemento 0 corresponde al Checkpoint 1, etc.")]
         [SerializeField] private List<Color> checkpointColors = new List<Color>();
 
+        [Header("Carrera Contra el Reloj (Time Trial)")]
+        [Tooltip("Si está activo, habilitará el contador en el HUD y se perderá la carrera si el tiempo llega a 0.")]
+        [SerializeField] private bool isTimeTrialRace = true;
+        [Tooltip("Tiempo límite de la carrera en segundos (ej. 120 = 2 minutos).")]
+        [SerializeField] private float raceTimeLimit = 120f;
+        [Tooltip("Si está activo, inicia el contador automáticamente al empezar la escena.")]
+        [SerializeField] private bool autoStartRace = true;
+
+        public static CheckpointSequenceController ActiveInstance { get; private set; }
+        public bool IsRaceActive { get; private set; }
+        public bool IsRaceWon { get; private set; }
+        public bool IsRaceFailed { get; private set; }
+        public float RemainingTime { get; private set; }
+        public int CurrentCheckpointIndex => _sequenceState != null ? _sequenceState.ActiveIndex : 0;
+        public int TotalCheckpoints => checkpointObjects != null ? checkpointObjects.Count : 0;
+
         private CheckpointSequence _sequenceState;
         private ICheckpointPresenter _presenter;
         private ReachCheckpointUseCase _reachUseCase;
+
+        private void Awake()
+        {
+            ActiveInstance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (ActiveInstance == this) ActiveInstance = null;
+        }
 
         private void Start()
         {
@@ -42,6 +68,7 @@ namespace AeroByte.CheckpointSystem.Adapters
 
             // Inicializar las entidades lógicas
             _sequenceState = new CheckpointSequence(checkpointObjects.Count);
+            _sequenceState.OnCheckpointSequenceCompleted += OnSequenceCompleted;
             
             // Inicializar el caso de uso
             _reachUseCase = new ReachCheckpointUseCase(
@@ -72,6 +99,45 @@ namespace AeroByte.CheckpointSystem.Adapters
             Color initialColor = checkpointColors.Count > 0 ? checkpointColors[0] : defaultColor;
             _presenter.ActivateCheckpointVisual(0, initialColor);
             Debug.Log("[CheckpointSequenceController] Inicializado. Primer checkpoint activado.");
+
+            if (isTimeTrialRace && autoStartRace)
+            {
+                StartRace();
+            }
+            else
+            {
+                IsRaceActive = true;
+            }
+        }
+
+        public void StartRace()
+        {
+            RemainingTime = raceTimeLimit;
+            IsRaceActive = true;
+            IsRaceWon = false;
+            IsRaceFailed = false;
+            Debug.Log($"[CheckpointSequenceController] ¡Carrera iniciada! Tiempo límite: {raceTimeLimit}s");
+        }
+
+        private void Update()
+        {
+            if (!isTimeTrialRace || !IsRaceActive) return;
+
+            RemainingTime -= Time.deltaTime;
+            if (RemainingTime <= 0f)
+            {
+                RemainingTime = 0f;
+                IsRaceActive = false;
+                IsRaceFailed = true;
+                Debug.LogWarning("[CheckpointSequenceController] ¡TIEMPO AGOTADO! Has perdido la carrera.");
+            }
+        }
+
+        private void OnSequenceCompleted()
+        {
+            IsRaceActive = false;
+            IsRaceWon = true;
+            Debug.Log("[CheckpointSequenceController] ¡TODOS LOS CHECKPOINTS COMPLETADOS! Carrera Ganada.");
         }
 
         // Método que es llamado desde los CheckpointTrigger cuando son tocados
@@ -79,6 +145,17 @@ namespace AeroByte.CheckpointSystem.Adapters
         {
             // Delegar al caso de uso la decisión lógica y visual
             _reachUseCase.Execute(index);
+        }
+
+        public Transform GetCurrentActiveCheckpointTransform()
+        {
+            if (_sequenceState == null || _sequenceState.IsCompleted) return null;
+            int idx = _sequenceState.ActiveIndex;
+            if (idx >= 0 && idx < checkpointObjects.Count && checkpointObjects[idx] != null)
+            {
+                return checkpointObjects[idx].transform;
+            }
+            return null;
         }
     }
 }
