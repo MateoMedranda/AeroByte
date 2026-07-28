@@ -5695,6 +5695,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4542762706779648682, guid: 824dbfdae8f0a904ebf48156ebe50280, type: 3}
   m_PrefabInstance: {fileID: 1527261683}
   m_PrefabAsset: {fileID: 0}
+--- !u!198 &142151762 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 467065992774449963, guid: 824dbfdae8f0a904ebf48156ebe50280, type: 3}
+  m_PrefabInstance: {fileID: 1527261683}
+  m_PrefabAsset: {fileID: 0}
 --- !u!134 &142378211
 PhysicsMaterial:
   m_ObjectHideFlags: 0
@@ -58223,6 +58228,22 @@ PrefabInstance:
       propertyPath: fogTransitionSpeed
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4017547114446232800, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
+      propertyPath: stormParticles.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4017547114446232800, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
+      propertyPath: stormAudioClips.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4017547114446232800, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
+      propertyPath: 'stormParticles.Array.data[0]'
+      value: 
+      objectReference: {fileID: 142151762}
+    - target: {fileID: 4017547114446232800, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
+      propertyPath: 'stormAudioClips.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: eb201910e8f3efb4ba08eeb0199342a9, type: 3}
     - target: {fileID: 5533962165815132281, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
       propertyPath: m_LocalScale.x
       value: 15000
@@ -69956,6 +69977,22 @@ PrefabInstance:
       propertyPath: weatherConfig
       value: 
       objectReference: {fileID: 11400000, guid: d7cb251a737571e469c083b3ff1b39c2, type: 2}
+    - target: {fileID: 4017547114446232800, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
+      propertyPath: stormParticles.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4017547114446232800, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
+      propertyPath: stormAudioClips.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4017547114446232800, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
+      propertyPath: 'stormParticles.Array.data[0]'
+      value: 
+      objectReference: {fileID: 142151762}
+    - target: {fileID: 4017547114446232800, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
+      propertyPath: 'stormAudioClips.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: eb201910e8f3efb4ba08eeb0199342a9, type: 3}
     - target: {fileID: 5533962165815132281, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
       propertyPath: m_LocalScale.x
       value: 10000
@@ -91159,8 +91196,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 1
-      value: 1
+      time: 0.9666748
+      value: 0.7404747
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -91171,7 +91208,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   minVolume: 0
-  maxVolume: 0.3
+  maxVolume: 0.4
   pitchSpeed: 0.5
 --- !u!1 &1454268816
 GameObject:
@@ -93783,6 +93820,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7344027226357101407, guid: 824dbfdae8f0a904ebf48156ebe50280, type: 3}
+      propertyPath: explosionSoundClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 0dc95b9c1f8649c4b87372d5eeba878d, type: 3}
     - target: {fileID: 8537269522800859263, guid: 824dbfdae8f0a904ebf48156ebe50280, type: 3}
       propertyPath: m_Name
       value: AvionFisicas3.0
@@ -96039,6 +96080,22 @@ PrefabInstance:
       propertyPath: weatherConfig
       value: 
       objectReference: {fileID: 11400000, guid: 40d6469a8bcdaaa44b61d0f4169eecf9, type: 2}
+    - target: {fileID: 4017547114446232800, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
+      propertyPath: stormParticles.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4017547114446232800, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
+      propertyPath: stormAudioClips.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4017547114446232800, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
+      propertyPath: 'stormParticles.Array.data[0]'
+      value: 
+      objectReference: {fileID: 142151762}
+    - target: {fileID: 4017547114446232800, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
+      propertyPath: 'stormAudioClips.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: eb201910e8f3efb4ba08eeb0199342a9, type: 3}
     - target: {fileID: 5533962165815132281, guid: 5ef8f67285c59ea4383479eba9de6292, type: 3}
       propertyPath: m_LocalScale.x
       value: 10000

@@ -55,6 +55,7 @@ namespace AeroByte.UI_System
 
         private Image _oobOverlayImage;
         private Text _oobCenterText;
+        private Image _animalAlertImage;
 
         private static Sprite _panelSprite;
         private static Texture2D _panelTexture;
@@ -309,6 +310,19 @@ namespace AeroByte.UI_System
             var oobOutline = _oobCenterText.gameObject.AddComponent<Outline>();
             oobOutline.effectColor = Color.black;
             oobOutline.effectDistance = new Vector2(2f, -2f);
+
+            // Animal Alert Icon Image
+            GameObject animalIconGo = new GameObject("AnimalAlertIcon", typeof(RectTransform), typeof(Image));
+            animalIconGo.transform.SetParent(canvasGo.transform, false);
+            var animalRect = animalIconGo.GetComponent<RectTransform>();
+            animalRect.anchorMin = new Vector2(0.5f, 0.5f);
+            animalRect.anchorMax = new Vector2(0.5f, 0.5f);
+            animalRect.sizeDelta = new Vector2(160f, 160f);
+            animalRect.anchoredPosition = new Vector2(0f, 40f); // Justo encima del texto de alerta
+            _animalAlertImage = animalIconGo.GetComponent<Image>();
+            _animalAlertImage.color = new Color(1f, 1f, 1f, 0f); // Hidden by default
+            _animalAlertImage.raycastTarget = false;
+            _animalAlertImage.preserveAspect = true;
         }
 
         private static Font GetHudFont()
@@ -833,11 +847,25 @@ namespace AeroByte.UI_System
                 {
                     timeLeft = MissionSystem.Adapters.OutOfBoundsManager.Instance.CurrentTimer;
                     message = "¡REGRESA AL ÁREA DE JUEGO!";
+                    if (_animalAlertImage != null && _animalAlertImage.color.a > 0f) _animalAlertImage.color = new Color(1f, 1f, 1f, 0f);
                 }
                 else if (isAnimalStressed)
                 {
                     timeLeft = MissionSystem.Adapters.AnimalCargoManager.Instance.CurrentStressTimer;
                     message = "¡ALTITUD CRÍTICA! ANIMAL ESTRESADO";
+
+                    if (_animalAlertImage != null)
+                    {
+                        Sprite alertSprite = MissionSystem.Adapters.AnimalCargoManager.Instance.GetAlertSprite();
+                        if (alertSprite != null)
+                        {
+                            _animalAlertImage.sprite = alertSprite;
+                            float pulseIcon = (Mathf.Sin(Time.time * 12f) + 1f) / 2f;
+                            _animalAlertImage.color = new Color(1f, 1f, 1f, 0.6f + (pulseIcon * 0.4f));
+                            float scaleIcon = 1f + (Mathf.Sin(Time.time * 12f) * 0.12f);
+                            _animalAlertImage.rectTransform.localScale = new Vector3(scaleIcon, scaleIcon, 1f);
+                        }
+                    }
                 }
                 
                 // Pulsing red effect
@@ -851,6 +879,7 @@ namespace AeroByte.UI_System
             {
                 if (_oobOverlayImage.color.a > 0f) _oobOverlayImage.color = new Color(1f, 0f, 0f, 0f);
                 if (_oobCenterText.color.a > 0f) _oobCenterText.color = new Color(1f, 0.15f, 0.15f, 0f);
+                if (_animalAlertImage != null && _animalAlertImage.color.a > 0f) _animalAlertImage.color = new Color(1f, 1f, 1f, 0f);
             }
         }
 
