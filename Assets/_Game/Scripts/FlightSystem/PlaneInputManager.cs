@@ -33,6 +33,7 @@ public class PlaneInputManager : MonoBehaviour
         controles.Vuelo.ToggleLights.performed += OnLightsInput;
         controles.Vuelo.ToggleLandingGear.performed += OnLandingGearInput;
         controles.Vuelo.ToggleMusic.performed += OnToggleMusicInput;
+        controles.Vuelo.DropCargo.performed += OnDropCargoInput;
         
         var resetAction = controles.asset.FindAction("Vuelo/ResetCamera");
         if (resetAction != null) {
@@ -47,6 +48,7 @@ public class PlaneInputManager : MonoBehaviour
         controles.Vuelo.ToggleLights.performed -= OnLightsInput;
         controles.Vuelo.ToggleLandingGear.performed -= OnLandingGearInput;
         controles.Vuelo.ToggleMusic.performed -= OnToggleMusicInput;
+        controles.Vuelo.DropCargo.performed -= OnDropCargoInput;
         
         var resetAction = controles.asset.FindAction("Vuelo/ResetCamera");
         if (resetAction != null) {
@@ -67,19 +69,6 @@ public class PlaneInputManager : MonoBehaviour
         avion.OnControlInput(controlInput);
         avion.OnThrottleInput(throttle);
 
-        // Detect M key to drop cargo box
-        if (Keyboard.current != null)
-        {
-            if (Keyboard.current.mKey.wasPressedThisFrame)
-            {
-                var deliveryController = GetComponent<PlaneDeliveryController>();
-                if (deliveryController != null)
-                {
-                    deliveryController.TryDropCargo();
-                }
-            }
-        }
-        
         if (cameraController != null) {
             var lookAction = controles.asset.FindAction("Vuelo/LookEnable");
             bool isLooking = lookAction != null && lookAction.ReadValue<float>() > 0.5f;
@@ -127,6 +116,12 @@ public class PlaneInputManager : MonoBehaviour
                 radioManager.ToggleMusic();
             }
         }
+    }
+
+    public void OnDropCargoInput(InputAction.CallbackContext context)
+    {
+        if (context.phase != InputActionPhase.Performed) return;
+        GetComponent<PlaneDeliveryController>()?.TryDropCargo();
     }
     
     public void OnResetCamera(InputAction.CallbackContext context) {

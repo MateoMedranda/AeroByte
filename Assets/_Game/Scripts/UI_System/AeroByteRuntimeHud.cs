@@ -1,6 +1,10 @@
+using System.Collections;
 using System.Text;
+using AeroByte.FlightSystem.Framework.Audio;
 using FlightSystem.Adapters;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace AeroByte.UI_System
@@ -26,6 +30,7 @@ namespace AeroByte.UI_System
         private CameraController _cameraController;
 
         private Canvas _canvas;
+        private GameObject _flightPanelGo;
         private Text _flightText;
         private Text _warningText;
         private GameObject _racePanelGo;
@@ -59,6 +64,10 @@ namespace AeroByte.UI_System
         private Image _oobOverlayImage;
         private Text _oobCenterText;
         private Image _animalAlertImage;
+        private GameObject _resultOverlay;
+        private Text _resultTitle;
+        private Text _resultDetail;
+        private bool _resultShown;
 
         private static Sprite _panelSprite;
         private static Texture2D _panelTexture;
@@ -90,6 +99,13 @@ namespace AeroByte.UI_System
 
             _instance = this;
             BuildHud();
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDestroy()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            if (_instance == this) _instance = null;
         }
 
         private void Update()
@@ -102,6 +118,11 @@ namespace AeroByte.UI_System
             if (_cameraController == null)
             {
                 _cameraController = Object.FindFirstObjectByType<CameraController>();
+            }
+
+            if (Keyboard.current != null && Keyboard.current.jKey.wasPressedThisFrame)
+            {
+                NextRadioTrack();
             }
 
             UpdateHud();
@@ -281,6 +302,7 @@ namespace AeroByte.UI_System
             _centerHorizonText = CreateText(attitudeFrame.transform, "Horizon Info", font, 12, TextAnchor.UpperCenter, new Vector2(10f, 12f), new Vector2(-10f, -120f), new Color(0.15f, 1f, 0.15f, 0.70f));
 
             var flightPanel = CreatePanel(canvasGo.transform, "Flight Panel", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -240f), new Vector2(360f, -18f), new Color(0.03f, 0.06f, 0.14f, 0.85f));
+            _flightPanelGo = flightPanel;
             _flightText = CreateText(flightPanel.transform, "Flight Text", font, 16, TextAnchor.UpperLeft, new Vector2(14f, 14f), new Vector2(-14f, -14f), new Color(0.92f, 1f, 0.92f, 1f));
 
             var warningPanel = CreatePanel(canvasGo.transform, "Warning Panel", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-340f, -18f), new Vector2(-18f, -120f), new Color(0.45f, 0.45f, 0.45f, 0.24f));
@@ -294,6 +316,8 @@ namespace AeroByte.UI_System
 
             var miniMapPanel = CreatePanel(canvasGo.transform, "MiniMap Panel", new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(10f, 10f), new Vector2(350f, 350f), new Color(0.38f, 0.38f, 0.38f, 0.22f));
             miniMapPanel.AddComponent<AeroByteMiniMap>();
+
+            BuildResultOverlay(font);
 
             // OOB Overlay
             var oobOverlay = new GameObject("OOB Overlay", typeof(RectTransform), typeof(Image));
@@ -332,6 +356,100 @@ namespace AeroByte.UI_System
             _animalAlertImage.color = new Color(1f, 1f, 1f, 0f); // Hidden by default
             _animalAlertImage.raycastTarget = false;
             _animalAlertImage.preserveAspect = true;
+        }
+
+        private void BuildResultOverlay(Font font)
+        {
+            var overlay = new GameObject("Mission Result Overlay", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            overlay.transform.SetParent(transform, false);
+            var canvas = overlay.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 33000;
+            var scaler = overlay.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+
+            var shade = CreatePanel(overlay.transform, "Result Shade", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0f, 0.01f, 0.03f, 0.90f));
+            shade.GetComponent<Image>().raycastTarget = true;
+            var panel = CreatePanel(shade.transform, "Result Panel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-360f, -190f), new Vector2(360f, 190f), new Color(0.025f, 0.11f, 0.19f, 0.98f));
+            _resultTitle = CreateText(panel.transform, "Result Title", font, 48, TextAnchor.MiddleCenter, new Vector2(35f, 108f), new Vector2(-35f, -12f), Color.white);
+            _resultDetail = CreateText(panel.transform, "Result Detail", font, 21, TextAnchor.MiddleCenter, new Vector2(60f, 42f), new Vector2(-60f, -82f), new Color(0.75f, 0.88f, 0.95f, 1f));
+            CreateButton(panel.transform, "Return To Main Menu", "VOLVER AL MENU PRINCIPAL", new Vector2(0f, -112f), new Vector2(360f, 64f), ReturnToMainMenu, new Color(0.04f, 0.48f, 0.84f, 1f));
+            _resultOverlay = overlay;
+            _resultOverlay.SetActive(false);
+        }
+
+        private static void CreateButton(Transform parent, string name, string label, Vector2 position, Vector2 size, UnityEngine.Events.UnityAction action, Color color)
+        {
+            var buttonObject = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            buttonObject.transform.SetParent(parent, false);
+            var rect = buttonObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = size;
+            rect.anchoredPosition = position;
+            var image = buttonObject.GetComponent<Image>();
+            image.sprite = GetPanelSprite();
+            image.type = Image.Type.Sliced;
+            image.color = color;
+            var button = buttonObject.GetComponent<Button>();
+            button.targetGraphic = image;
+            button.onClick.AddListener(action);
+            var text = CreateText(buttonObject.transform, "Label", GetHudFont(), 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.zero, Color.white);
+            text.text = label;
+            text.raycastTarget = false;
+        }
+
+        private void NextRadioTrack()
+        {
+            Object.FindFirstObjectByType<RadioManager>()?.NextTrack();
+        }
+
+        private void ReturnToMainMenu()
+        {
+            Time.timeScale = 1f;
+            AudioListener.pause = false;
+            if (_resultOverlay != null) _resultOverlay.SetActive(false);
+            if (_canvas != null) _canvas.enabled = false;
+            SceneManager.LoadScene("MainMenu");
+        }
+
+        private void OnSceneLoaded(Scene _, LoadSceneMode __)
+        {
+            StopAllCoroutines();
+            _plane = null;
+            _cameraController = null;
+            _resultShown = false;
+            if (_canvas != null) _canvas.enabled = true;
+            if (_flightPanelGo != null) _flightPanelGo.SetActive(true);
+            if (_resultOverlay != null) _resultOverlay.SetActive(false);
+        }
+
+        private void ShowResult(string title, string detail, Color titleColor)
+        {
+            if (_resultShown || _resultOverlay == null) return;
+
+            _resultShown = true;
+            _resultTitle.text = title;
+            _resultTitle.color = titleColor;
+            _resultDetail.text = detail;
+            if (_canvas != null) _canvas.enabled = false;
+            _resultOverlay.SetActive(true);
+        }
+
+        private void ShowGameOver(string detail)
+        {
+            if (_resultShown) return;
+
+            ShowResult("GAME OVER", detail + "\nREGRESANDO AL MENU PRINCIPAL...", new Color(1f, 0.28f, 0.20f, 1f));
+            StartCoroutine(ReturnToMainMenuAfterDelay());
+        }
+
+        private IEnumerator ReturnToMainMenuAfterDelay()
+        {
+            yield return new WaitForSecondsRealtime(3f);
+            ReturnToMainMenu();
         }
 
         private static Font GetHudFont()
@@ -774,6 +892,16 @@ namespace AeroByte.UI_System
             }
 
             var state = _plane.GetState();
+            UpdateMissionResult();
+            if (_resultShown) return;
+
+            if (_flightPanelGo != null)
+            {
+                bool hasRaceMission = AeroByte.CheckpointSystem.Adapters.CheckpointSequenceController.ActiveInstance != null ||
+                                      MissionSystem.Adapters.CheckpointRaceManager.Instance != null;
+                _flightPanelGo.SetActive(MissionSystem.Adapters.AeroByteAttackManager.Instance == null && !hasRaceMission);
+            }
+
             var rb = _plane.Body;
 
             float airspeed = state != null ? state.velocity.magnitude : rb.linearVelocity.magnitude;
@@ -973,6 +1101,57 @@ namespace AeroByte.UI_System
             UpdateRaceBanner();
         }
 
+        private void UpdateMissionResult()
+        {
+            var state = _plane.State;
+            if (state != null && state.isCrashed)
+            {
+                ShowGameOver("LA AERONAVE HA SIDO DESTRUIDA.");
+                return;
+            }
+
+            var sequence = AeroByte.CheckpointSystem.Adapters.CheckpointSequenceController.ActiveInstance;
+            if (sequence != null)
+            {
+                if (sequence.IsRaceWon)
+                {
+                    ShowResult("MISION COMPLETADA", "TODOS LOS CHECKPOINTS FUERON COMPLETADOS.", new Color(0.25f, 1f, 0.48f, 1f));
+                }
+                else if (sequence.IsRaceFailed)
+                {
+                    ShowGameOver("EL TIEMPO DE LA MISION SE AGOTO.");
+                }
+                return;
+            }
+
+            var race = MissionSystem.Adapters.CheckpointRaceManager.Instance;
+            if (race != null)
+            {
+                if (race.IsRaceWon)
+                {
+                    ShowResult("MISION COMPLETADA", "TODOS LOS CHECKPOINTS FUERON COMPLETADOS.", new Color(0.25f, 1f, 0.48f, 1f));
+                }
+                else if (race.IsRaceFailed)
+                {
+                    ShowGameOver("EL TIEMPO DE LA MISION SE AGOTO.");
+                }
+                return;
+            }
+
+            var attack = MissionSystem.Adapters.AeroByteAttackManager.Instance;
+            if (attack != null && attack.TotalZones > 0 && attack.IsMissionComplete)
+            {
+                ShowResult("MISION COMPLETADA", "TODAS LAS ZONAS DE ATAQUE FUERON DESTRUIDAS.", new Color(0.25f, 1f, 0.48f, 1f));
+                return;
+            }
+
+            var delivery = MissionSystem.Adapters.AeroByteDeliveryManager.Instance;
+            if (delivery != null && delivery.TotalZones > 0 && delivery.CurrentZoneIndex >= delivery.TotalZones)
+            {
+                ShowResult("MISION COMPLETADA", "TODAS LAS ENTREGAS FUERON COMPLETADAS.", new Color(0.25f, 1f, 0.48f, 1f));
+            }
+        }
+
         private void UpdateRaceBanner()
         {
             if (_racePanelGo == null || _raceCheckpointsText == null || _raceTimerText == null) return;
@@ -1029,7 +1208,10 @@ namespace AeroByte.UI_System
                 {
                     if (!_racePanelGo.activeSelf) _racePanelGo.SetActive(true);
                     _raceCheckpointsText.text = $"ZONAS DESTRUIDAS: {atkMgr.DestroyedZones} / {atkMgr.TotalZones}";
-                    _raceTimerText.text = "OBJETIVO: BOMBARDEAR";
+                    var deliveryController = _plane != null ? _plane.GetComponent<MissionSystem.Adapters.PlaneDeliveryController>() : null;
+                    _raceTimerText.text = deliveryController != null && deliveryController.CurrentAttackZone != null
+                        ? "PRESIONA M PARA BOMBARDEAR"
+                        : "OBJETIVO: BOMBARDEAR";
                     _raceTimerText.color = new Color(1f, 0.45f, 0.15f, 1f);
                 }
                 else

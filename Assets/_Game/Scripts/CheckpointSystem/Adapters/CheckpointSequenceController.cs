@@ -29,6 +29,12 @@ namespace AeroByte.CheckpointSystem.Adapters
         [Tooltip("Si está activo, inicia el contador automáticamente al empezar la escena.")]
         [SerializeField] private bool autoStartRace = true;
 
+        [Header("Audio de Checkpoint")]
+        [Tooltip("Sonido que se reproduce al cruzar correctamente el checkpoint activo.")]
+        [SerializeField] private AudioClip checkpointReachedSound;
+        [Range(0f, 1f)]
+        [SerializeField] private float checkpointSoundVolume = 1f;
+
         public static CheckpointSequenceController ActiveInstance { get; private set; }
         public bool IsRaceActive { get; private set; }
         public bool IsRaceWon { get; private set; }
@@ -40,10 +46,14 @@ namespace AeroByte.CheckpointSystem.Adapters
         private CheckpointSequence _sequenceState;
         private ICheckpointPresenter _presenter;
         private ReachCheckpointUseCase _reachUseCase;
+        private AudioSource _checkpointAudioSource;
 
         private void Awake()
         {
             ActiveInstance = this;
+            _checkpointAudioSource = gameObject.AddComponent<AudioSource>();
+            _checkpointAudioSource.playOnAwake = false;
+            _checkpointAudioSource.spatialBlend = 0f;
         }
 
         private void OnDestroy()
@@ -143,8 +153,13 @@ namespace AeroByte.CheckpointSystem.Adapters
         // Método que es llamado desde los CheckpointTrigger cuando son tocados
         public void OnCheckpointTriggered(int index)
         {
-            // Delegar al caso de uso la decisión lógica y visual
+            if (!IsRaceActive || _sequenceState == null || index != _sequenceState.ActiveIndex) return;
+
             _reachUseCase.Execute(index);
+            if (checkpointReachedSound != null)
+            {
+                _checkpointAudioSource.PlayOneShot(checkpointReachedSound, checkpointSoundVolume);
+            }
         }
 
         public Transform GetCurrentActiveCheckpointTransform()

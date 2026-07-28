@@ -1,4 +1,5 @@
 using UnityEngine;
+using AeroByte.Menu;
 
 namespace AeroByte.FlightSystem.Framework.Audio
 {
@@ -15,6 +16,12 @@ namespace AeroByte.FlightSystem.Framework.Audio
         private void Awake()
         {
             SetupRadio();
+            MenuSettingsService.VolumesChanged += RefreshVolume;
+        }
+
+        private void OnDestroy()
+        {
+            MenuSettingsService.VolumesChanged -= RefreshVolume;
         }
 
         private void SetupRadio()
@@ -25,7 +32,8 @@ namespace AeroByte.FlightSystem.Framework.Audio
             _radioSource.spatialBlend = 0.0f; // Fully 2D
             _radioSource.loop = true;
             _radioSource.playOnAwake = false;
-            _radioSource.volume = defaultVolume;
+            _radioSource.ignoreListenerVolume = true;
+            RefreshVolume();
 
             if (musicTracks != null && musicTracks.Length > 0)
             {
@@ -84,6 +92,14 @@ namespace AeroByte.FlightSystem.Framework.Audio
             {
                 _radioSource.Play();
                 Debug.Log($"[RadioManager] Playing track: {_radioSource.clip.name}");
+            }
+        }
+
+        private void RefreshVolume()
+        {
+            if (_radioSource != null)
+            {
+                _radioSource.volume = defaultVolume * (MenuSettingsService.IsMuted ? 0f : MenuSettingsService.MusicVolume);
             }
         }
     }

@@ -45,7 +45,8 @@ namespace AeroByte.UI_System
         {
             if (_instance != null && _instance != this)
             {
-                Destroy(gameObject);
+                _instance.mapScale = mapScale;
+                Destroy(this);
                 return;
             }
 
@@ -156,6 +157,11 @@ namespace AeroByte.UI_System
 
         private void OnDestroy()
         {
+            if (_instance == this)
+            {
+                _instance = null;
+            }
+
             if (_cameraObject != null)
             {
                 Destroy(_cameraObject);
@@ -219,6 +225,7 @@ namespace AeroByte.UI_System
 
             // Create Camera
             _cameraObject = new GameObject("AeroByte FullMap Camera");
+            _cameraObject.transform.SetParent(transform, false);
             _mapCamera = _cameraObject.AddComponent<Camera>();
             _mapCamera.enabled = false; // We render manually in LateUpdate
             _mapCamera.orthographic = true;

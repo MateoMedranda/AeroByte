@@ -28,6 +28,11 @@ namespace AeroByte.CheckpointSystem.Framework
             {
                 _audioSource = gameObject.AddComponent<AudioSource>();
             }
+            if (_audioSource != null)
+            {
+                _audioSource.playOnAwake = false;
+                _audioSource.spatialBlend = 0f;
+            }
         }
 
         public void Initialize(List<GameObject> checkpointObjects)

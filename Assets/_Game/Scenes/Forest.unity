@@ -3707,6 +3707,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2453115697661963162, guid: ab9969ae1b9fa6f4b8d6c08cfdc5f418, type: 3}
+      propertyPath: explosionSoundClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 0dc95b9c1f8649c4b87372d5eeba878d, type: 3}
     - target: {fileID: 3477156735067752215, guid: ab9969ae1b9fa6f4b8d6c08cfdc5f418, type: 3}
       propertyPath: m_LocalPosition.x
       value: 7230.43
@@ -3747,6 +3751,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5075658843593945148, guid: ab9969ae1b9fa6f4b8d6c08cfdc5f418, type: 3}
+      propertyPath: musicTracks.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 5075658843593945148, guid: ab9969ae1b9fa6f4b8d6c08cfdc5f418, type: 3}
+      propertyPath: 'musicTracks.Array.data[1]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 167d9726d3b1e314999ccdbecb2e0f05, type: 3}
+    - target: {fileID: 5075658843593945148, guid: ab9969ae1b9fa6f4b8d6c08cfdc5f418, type: 3}
+      propertyPath: 'musicTracks.Array.data[2]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 2b25ed99c7d77364d8f363aa10fb739c, type: 3}
+    - target: {fileID: 5075658843593945148, guid: ab9969ae1b9fa6f4b8d6c08cfdc5f418, type: 3}
+      propertyPath: 'musicTracks.Array.data[3]'
+      value: 
+      objectReference: {fileID: 8300000, guid: bc175e74e6d9af14a9e4cfd3016cf595, type: 3}
     - target: {fileID: 6386409651632869229, guid: ab9969ae1b9fa6f4b8d6c08cfdc5f418, type: 3}
       propertyPath: m_Name
       value: AvionFisicas4.0

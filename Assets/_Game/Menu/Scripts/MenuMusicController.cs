@@ -4,7 +4,7 @@ namespace AeroByte.Menu.Audio
 {
     public sealed class MenuMusicController : MonoBehaviour
     {
-        private const float MusicVolume = 0.52f;
+        private const float BaseMusicVolume = 0.52f;
         private const float DefaultFadeDuration = 1.8f;
 
         private static MenuMusicController _instance;
@@ -21,11 +21,13 @@ namespace AeroByte.Menu.Audio
         {
             _instance = this;
             EnsureSources();
+            MenuSettingsService.VolumesChanged += RefreshVolume;
         }
 
         private void OnDestroy()
         {
             if (_instance == this) _instance = null;
+            MenuSettingsService.VolumesChanged -= RefreshVolume;
         }
 
         private void Update()
@@ -66,7 +68,7 @@ namespace AeroByte.Menu.Audio
         private void SwitchToMain(float fadeDuration)
         {
             EnsurePlaying(_mainSource, ref _mainStarted);
-            _mainTarget = MusicVolume;
+            _mainTarget = 1f;
             _levelInfoTarget = 0f;
             SetFadeSpeed(fadeDuration);
         }
@@ -75,13 +77,13 @@ namespace AeroByte.Menu.Audio
         {
             EnsurePlaying(_levelInfoSource, ref _levelInfoStarted);
             _mainTarget = 0f;
-            _levelInfoTarget = MusicVolume;
+            _levelInfoTarget = 1f;
             SetFadeSpeed(fadeDuration);
         }
 
         private void SetFadeSpeed(float duration)
         {
-            _fadeSpeed = MusicVolume / Mathf.Max(0.05f, duration);
+            _fadeSpeed = BaseMusicVolume / Mathf.Max(0.05f, duration);
         }
 
         private static void EnsurePlaying(AudioSource source, ref bool started)
@@ -98,8 +100,9 @@ namespace AeroByte.Menu.Audio
         private static void UpdateSource(AudioSource source, ref bool started, float target, float step)
         {
             if (source == null || source.clip == null) return;
-            if (target > 0f) EnsurePlaying(source, ref started);
-            source.volume = Mathf.MoveTowards(source.volume, target, step);
+            float targetVolume = target * BaseMusicVolume * (MenuSettingsService.IsMuted ? 0f : MenuSettingsService.MusicVolume);
+            if (targetVolume > 0f) EnsurePlaying(source, ref started);
+            source.volume = Mathf.MoveTowards(source.volume, targetVolume, step);
             if (target <= 0f && source.volume <= 0.001f && source.isPlaying) source.Pause();
         }
 
@@ -123,8 +126,14 @@ namespace AeroByte.Menu.Audio
             source.loop = true;
             source.spatialBlend = 0f;
             source.ignoreListenerPause = true;
+            source.ignoreListenerVolume = true;
             source.volume = 0f;
             return source;
+        }
+
+        private void RefreshVolume()
+        {
+            // Update applies the current category value without interrupting fades or playback.
         }
     }
 }

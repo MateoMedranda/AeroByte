@@ -18091,6 +18091,8 @@ GameObject:
   - component: {fileID: 2453115697661963162}
   - component: {fileID: 2844182861185878569}
   - component: {fileID: 5075658843593945148}
+  - component: {fileID: 7184932058261740391}
+  - component: {fileID: 7184932058261740392}
   m_Layer: 2
   m_Name: AvionFisicas4.0
   m_TagString: Untagged
@@ -18360,6 +18362,37 @@ MonoBehaviour:
   musicTracks:
   - {fileID: 8300000, guid: 0c5d677956fddd74a9ead606ad2cf0bd, type: 3}
   defaultVolume: 0.5
+--- !u!114 &7184932058261740391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6386409651632869229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5d2b7eb234c5174284dbb1edabc5309, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MissionSystem.Adapters.PlaneDeliveryController
+  deliveryPresenterObject: {fileID: 0}
+--- !u!114 &7184932058261740392
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6386409651632869229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d93b7a465643430439d9dd0644a3fb7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MissionSystem.Framework.UnityDeliveryPresenter
+  blinkingEmission: {fileID: 0}
+  pendingColor: {r: 1, g: 0, b: 0, a: 1}
+  completedColor: {r: 0, g: 1, b: 0, a: 1}
+  cargoBoxPrefab: {fileID: 0}
+  dropPoint: {fileID: 0}
+  boxScale: {x: 1, y: 1, z: 1}
 --- !u!1 &6390825032596311481
 GameObject:
   m_ObjectHideFlags: 0

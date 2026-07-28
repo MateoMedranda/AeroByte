@@ -39,6 +39,8 @@ namespace AeroByte.Menu.Pause
         private CanvasGroup _overlayGroup;
         private Slider _volumeSlider;
         private Text _volumeValue;
+        private Slider _musicVolumeSlider;
+        private Text _musicVolumeValue;
         private Text _muteLabel;
         private MenuIconGraphic _muteIcon;
         private GameObject _ownedEventSystem;
@@ -102,6 +104,15 @@ namespace AeroByte.Menu.Pause
         {
             if (scene.name == MainMenuSceneName)
             {
+                StopAllCoroutines();
+                _paused = false;
+                _closing = false;
+                Time.timeScale = 1f;
+                AudioListener.pause = false;
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+                _overlayGroup.blocksRaycasts = false;
+                _overlayGroup.interactable = false;
                 ReleaseOwnedEventSystem();
                 _overlay.SetActive(false);
                 return;
@@ -279,7 +290,7 @@ namespace AeroByte.Menu.Pause
 
         private GameObject BuildOptionsPanel(Transform parent)
         {
-            var panel = CreateRounded(parent, "Pause Options Panel", Vector2.zero, new Vector2(780f, 690f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), _panelTop, _panelBottom, 28f, new Color(0.20f, 0.72f, 0.98f, 0.42f), 2f);
+            var panel = CreateRounded(parent, "Pause Options Panel", Vector2.zero, new Vector2(780f, 760f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), _panelTop, _panelBottom, 28f, new Color(0.20f, 0.72f, 0.98f, 0.42f), 2f);
             var shadow = panel.AddComponent<Shadow>();
             shadow.effectColor = new Color(0f, 0.01f, 0.02f, 0.72f);
             shadow.effectDistance = new Vector2(0f, -14f);
@@ -288,24 +299,35 @@ namespace AeroByte.Menu.Pause
             CreateText(panel.transform, "Options Title", "OPCIONES", 42, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(60f, -84f), new Vector2(660f, 58f), _text);
             CreateLocalImage(panel.transform, "Options Divider", new Vector2(70f, -160f), new Vector2(640f, 2f), new Color(0.20f, 0.72f, 1f, 0.38f));
 
-            CreateText(panel.transform, "Volume Label", "VOLUMEN MAESTRO", 15, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(80f, -218f), new Vector2(360f, 30f), _text);
+            CreateText(panel.transform, "Volume Label", "VOLUMEN DE EFECTOS", 15, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(80f, -218f), new Vector2(360f, 30f), _text);
             _volumeValue = CreateText(panel.transform, "Volume Value", "100%", 20, FontStyle.Bold, TextAnchor.MiddleRight, new Vector2(590f, -214f), new Vector2(110f, 34f), _text);
             _volumeSlider = CreateSlider(panel.transform, new Vector2(80f, -270f), new Vector2(620f, 42f));
             _volumeSlider.onValueChanged.AddListener(OnVolumeChanged);
 
-            var muteButton = CreateButton(panel.transform, "SILENCIAR", new Vector2(80f, -354f), new Vector2(620f, 76f), ToggleMute, false, MenuIconType.Mute, 0f);
+            CreateText(panel.transform, "Music Volume Label", "VOLUMEN DE MÚSICA", 15, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(80f, -326f), new Vector2(360f, 30f), _text);
+            _musicVolumeValue = CreateText(panel.transform, "Music Volume Value", "100%", 20, FontStyle.Bold, TextAnchor.MiddleRight, new Vector2(590f, -322f), new Vector2(110f, 34f), _text);
+            _musicVolumeSlider = CreateSlider(panel.transform, new Vector2(80f, -378f), new Vector2(620f, 42f));
+            _musicVolumeSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
+
+            var muteButton = CreateButton(panel.transform, "SILENCIAR", new Vector2(80f, -454f), new Vector2(620f, 70f), ToggleMute, false, MenuIconType.Mute, 0f);
             _muteLabel = muteButton.transform.Find("Label")?.GetComponent<Text>();
             _muteIcon = muteButton.transform.Find("Icon")?.GetComponent<MenuIconGraphic>();
-            CreateButton(panel.transform, "RESTAURAR", new Vector2(80f, -450f), new Vector2(290f, 70f), RestoreDefaults, false, MenuIconType.Settings, 0.04f);
-            CreateButton(panel.transform, "VOLVER", new Vector2(410f, -450f), new Vector2(290f, 70f), ShowPausePanel, true, MenuIconType.Back, 0.08f);
-            CreateText(panel.transform, "Options Hint", "LOS CAMBIOS SE GUARDAN AUTOMATICAMENTE", 12, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(80f, -570f), new Vector2(620f, 28f), _muted);
+            CreateButton(panel.transform, "RESTAURAR", new Vector2(80f, -544f), new Vector2(290f, 70f), RestoreDefaults, false, MenuIconType.Settings, 0.04f);
+            CreateButton(panel.transform, "VOLVER", new Vector2(410f, -544f), new Vector2(290f, 70f), ShowPausePanel, true, MenuIconType.Back, 0.08f);
+            CreateText(panel.transform, "Options Hint", "LOS CAMBIOS SE GUARDAN AUTOMATICAMENTE", 12, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(80f, -650f), new Vector2(620f, 28f), _muted);
             RefreshOptions();
             return panel;
         }
 
         private void OnVolumeChanged(float value)
         {
-            MenuSettingsService.SetMasterVolume(value);
+            MenuSettingsService.SetEffectsVolume(value);
+            RefreshOptions();
+        }
+
+        private void OnMusicVolumeChanged(float value)
+        {
+            MenuSettingsService.SetMusicVolume(value);
             RefreshOptions();
         }
 
@@ -323,9 +345,11 @@ namespace AeroByte.Menu.Pause
 
         private void RefreshOptions()
         {
-            if (_volumeSlider == null) return;
-            _volumeSlider.SetValueWithoutNotify(MenuSettingsService.MasterVolume);
-            _volumeValue.text = $"{Mathf.RoundToInt(MenuSettingsService.MasterVolume * 100f)}%";
+            if (_volumeSlider == null || _musicVolumeSlider == null) return;
+            _volumeSlider.SetValueWithoutNotify(MenuSettingsService.EffectsVolume);
+            _volumeValue.text = $"{Mathf.RoundToInt(MenuSettingsService.EffectsVolume * 100f)}%";
+            _musicVolumeSlider.SetValueWithoutNotify(MenuSettingsService.MusicVolume);
+            _musicVolumeValue.text = $"{Mathf.RoundToInt(MenuSettingsService.MusicVolume * 100f)}%";
             _muteLabel.text = MenuSettingsService.IsMuted ? "ACTIVAR SONIDO" : "SILENCIAR";
             if (_muteIcon != null) _muteIcon.IconType = MenuSettingsService.IsMuted ? MenuIconType.Sound : MenuIconType.Mute;
         }
@@ -385,15 +409,20 @@ namespace AeroByte.Menu.Pause
 
         private Slider CreateSlider(Transform parent, Vector2 position, Vector2 size)
         {
-            var root = new GameObject("Pause Volume Slider", typeof(RectTransform), typeof(Slider));
+            var root = new GameObject("Pause Volume Slider", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Slider));
             root.transform.SetParent(parent, false);
             SetRect(root.GetComponent<RectTransform>(), position, size, new Vector2(0f, 1f), new Vector2(0f, 1f));
-            CreateStretchImage(root.transform, "Background", new Color(0.002f, 0.02f, 0.035f, 0.92f), new Vector2(0f, 0.32f), new Vector2(1f, 0.68f), Vector2.zero, Vector2.zero);
+            root.GetComponent<Image>().color = Color.clear;
+            var hitArea = root.GetComponent<Image>();
+            hitArea.raycastTarget = true;
+            var background = CreateStretchImage(root.transform, "Background", new Color(0.002f, 0.02f, 0.035f, 0.92f), new Vector2(0f, 0.32f), new Vector2(1f, 0.68f), Vector2.zero, Vector2.zero);
+            background.raycastTarget = false;
 
             var fillArea = new GameObject("Fill Area", typeof(RectTransform));
             fillArea.transform.SetParent(root.transform, false);
             SetStretchRect(fillArea.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, new Vector2(8f, 13f), new Vector2(-8f, -13f));
             var fill = CreateStretchImage(fillArea.transform, "Fill", _accent);
+            fill.raycastTarget = false;
 
             var handleArea = new GameObject("Handle Area", typeof(RectTransform));
             handleArea.transform.SetParent(root.transform, false);
@@ -406,6 +435,7 @@ namespace AeroByte.Menu.Pause
             slider.targetGraphic = handle;
             slider.minValue = 0f;
             slider.maxValue = 1f;
+            slider.interactable = true;
             return slider;
         }
 

@@ -185,6 +185,7 @@ namespace AeroByte.UI_System
             rimImg.color = new Color(0.85f, 0.85f, 0.88f, 0.22f);
 
             _cameraObject = new GameObject("AeroByte MiniMap Camera");
+            _cameraObject.transform.SetParent(transform.root, false);
             _mapCamera = _cameraObject.AddComponent<Camera>();
             _mapCamera.enabled = false;
             _mapCamera.orthographic = true;

@@ -58,11 +58,19 @@ namespace MissionSystem.Adapters
         public UnityEvent OnRaceWon;
         public UnityEvent OnRaceTimeout;
 
+        [Header("Sonido de Checkpoint")]
+        [Tooltip("Sonido que se reproduce al pasar correctamente por un checkpoint.")]
+        [SerializeField] private AudioClip checkpointSound;
+        [Range(0f, 1f)]
+        [SerializeField] private float checkpointSoundVolume = 1f;
+
         public bool IsRaceActive { get; private set; }
         public bool IsRaceWon { get; private set; }
         public bool IsRaceFailed { get; private set; }
         public float RemainingTime { get; private set; }
         public int CurrentCheckpointIndex { get; private set; } = 0;
+
+        private AudioSource _checkpointAudioSource;
 
         private void Awake()
         {
@@ -72,6 +80,10 @@ namespace MissionSystem.Adapters
                 return;
             }
             Instance = this;
+
+            _checkpointAudioSource = gameObject.AddComponent<AudioSource>();
+            _checkpointAudioSource.playOnAwake = false;
+            _checkpointAudioSource.spatialBlend = 0f;
         }
 
         private void Start()
@@ -134,6 +146,10 @@ namespace MissionSystem.Adapters
             {
                 CurrentCheckpointIndex++;
                 OnCheckpointReached?.Invoke();
+                if (checkpointSound != null)
+                {
+                    _checkpointAudioSource.PlayOneShot(checkpointSound, checkpointSoundVolume);
+                }
                 Debug.Log($"[CheckpointRaceManager] ¡Checkpoint {index + 1}/{checkpoints.Count} alcanzado!");
 
                 if (CurrentCheckpointIndex >= checkpoints.Count)

@@ -1,18 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 126eed947adcc07408fce2077fe4ba9e, type: 3}
-  m_Name: Clima_Playa
-  m_EditorClassIdentifier: Assembly-CSharp::AeroByte.WeatherSystem.Framework.Config.WeatherStatsConfig
-  constantWindVelocity: {x: 8000, y: 0, z: 2000}
-  windGustIntensity: 3000
-  turbulenceTorqueIntensity: 500
-  noiseScale: 0.3
+version https://git-lfs.github.com/spec/v1
+oid sha256:2101e69bb67f045b48ffb7b01d923aa667ba7f36d50e490af1c6c4fb942c4e11
+size 601

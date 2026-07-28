@@ -1,18 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 126eed947adcc07408fce2077fe4ba9e, type: 3}
-  m_Name: Clima_TormentaArena
-  m_EditorClassIdentifier: Assembly-CSharp::AeroByte.WeatherSystem.Framework.Config.WeatherStatsConfig
-  constantWindVelocity: {x: 1000, y: 0, z: 500}
-  windGustIntensity: 4500
-  turbulenceTorqueIntensity: 2000
-  noiseScale: 18
+version https://git-lfs.github.com/spec/v1
+oid sha256:3ad109a1d871b66084e564cbb2ebd08a05f6d3edf4636941fa0e61af6b2204b4
+size 608

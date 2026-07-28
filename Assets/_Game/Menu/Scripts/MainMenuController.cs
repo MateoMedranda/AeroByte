@@ -60,6 +60,8 @@ namespace AeroByte.Menu
         private GameObject _profileEditorPanel;
         private Slider _volumeSlider;
         private Text _volumeValue;
+        private Slider _musicVolumeSlider;
+        private Text _musicVolumeValue;
         private Text _muteLabel;
         private MenuIconGraphic _muteIcon;
         private Text _pilotNameText;
@@ -88,6 +90,8 @@ namespace AeroByte.Menu
                 return;
             }
 
+            Time.timeScale = 1f;
+            AudioListener.pause = false;
             MenuSettingsService.Load();
             EnsureHierarchy();
             BindExistingHierarchy();
@@ -272,21 +276,33 @@ namespace AeroByte.Menu
 
         private void BuildInput()
         {
-            var existingEventSystem = transform.Find("Menu EventSystem");
-            if (existingEventSystem != null) DestroyImmediate(existingEventSystem.gameObject);
+            foreach (var existingEventSystem in Object.FindObjectsByType<EventSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (existingEventSystem.transform.IsChildOf(transform))
+                {
+                    existingEventSystem.gameObject.SetActive(false);
+                    Destroy(existingEventSystem.gameObject);
+                }
+                else
+                {
+                    existingEventSystem.gameObject.SetActive(false);
+                }
+            }
 
             var eventSystemObject = new GameObject("Menu EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
             eventSystemObject.transform.SetParent(transform, false);
+            var menuEventSystem = eventSystemObject.GetComponent<EventSystem>();
             var module = eventSystemObject.GetComponent<InputSystemUIInputModule>();
             module.AssignDefaultActions();
+            EventSystem.current = menuEventSystem;
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
 
             var canvasRoot = transform.Find("AeroByte Main Menu");
             var playButton = canvasRoot == null ? null : FindDescendant(canvasRoot, "JUGAR Button");
-            if (playButton != null && EventSystem.current != null)
+            if (playButton != null)
             {
-                EventSystem.current.SetSelectedGameObject(playButton.gameObject);
+                menuEventSystem.SetSelectedGameObject(playButton.gameObject);
             }
         }
 
@@ -370,6 +386,7 @@ namespace AeroByte.Menu
             if (canvasRoot == null) return;
 
             RepairUiComponents(canvasRoot);
+            EnsureOptionsRuntimeLayout(canvasRoot);
 
             _mainPanel = FindDescendant(canvasRoot, "Main Panel")?.gameObject;
             _levelSelectPanel = FindDescendant(canvasRoot, "Level Select Panel")?.gameObject;
@@ -381,6 +398,10 @@ namespace AeroByte.Menu
             _profileEditorPanel = FindDescendant(canvasRoot, "Profile Editor Shade")?.gameObject;
             _volumeSlider = FindDescendant(canvasRoot, "Master Volume Slider")?.GetComponent<Slider>();
             _volumeValue = FindDescendant(canvasRoot, "Volume Value")?.GetComponent<Text>();
+            _musicVolumeSlider = FindDescendant(canvasRoot, "Music Volume Slider")?.GetComponent<Slider>();
+            _musicVolumeValue = FindDescendant(canvasRoot, "Music Volume Value")?.GetComponent<Text>();
+            EnsureSliderInput(_volumeSlider);
+            EnsureSliderInput(_musicVolumeSlider);
             _muteLabel = FindDescendant(canvasRoot, "SILENCIAR Label")?.GetComponent<Text>();
             _muteIcon = FindDescendant(canvasRoot, "SILENCIAR Icon")?.GetComponent<MenuIconGraphic>();
             _pilotNameText = FindDescendant(canvasRoot, "Pilot Name")?.GetComponent<Text>();
@@ -413,6 +434,11 @@ namespace AeroByte.Menu
             {
                 _volumeSlider.onValueChanged.RemoveAllListeners();
                 _volumeSlider.onValueChanged.AddListener(OnVolumeChanged);
+            }
+            if (_musicVolumeSlider != null)
+            {
+                _musicVolumeSlider.onValueChanged.RemoveAllListeners();
+                _musicVolumeSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
             }
             RefreshSoundControls();
             RefreshPilotProfile();
@@ -534,22 +560,19 @@ namespace AeroByte.Menu
             CreateIcon(soundCard.transform, "Sound Icon", MenuIconType.Sound, new Vector2(32f, -30f), new Vector2(38f, 38f), new Vector2(0f, 1f), new Vector2(0f, 1f), _accentColor);
             CreateText(soundCard.transform, "Sound Title", 23, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(86f, -28f), new Vector2(300f, 38f), "SONIDO");
             CreateText(soundCard.transform, "Sound Caption", 12, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(88f, -64f), new Vector2(320f, 24f), "SALIDA GENERAL DEL SIMULADOR").color = _mutedTextColor;
-            CreateText(soundCard.transform, "Volume Label", 14, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(32f, -124f), new Vector2(260f, 28f), "VOLUMEN MAESTRO");
+            CreateText(soundCard.transform, "Volume Label", 14, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(32f, -124f), new Vector2(260f, 28f), "VOLUMEN DE EFECTOS");
             _volumeValue = CreateText(soundCard.transform, "Volume Value", 18, FontStyle.Bold, TextAnchor.MiddleRight, new Vector2(354f, -122f), new Vector2(92f, 30f), "100%");
-            _volumeSlider = CreateSlider(soundCard.transform, new Vector2(32f, -174f), new Vector2(414f, 36f), OnVolumeChanged);
-            _muteLabel = CreateButton(soundCard.transform, "SILENCIAR", new Vector2(32f, -250f), new Vector2(414f, 64f), ToggleMute, false, MenuIconType.Mute, 0.05f).GetComponentInChildren<Text>();
-            CreateText(soundCard.transform, "Sound Hint", 12, FontStyle.Normal, TextAnchor.UpperLeft, new Vector2(32f, -342f), new Vector2(410f, 50f), "Los cambios se guardan automáticamente\ny se aplican durante toda la sesión.").color = _mutedTextColor;
+            _volumeSlider = CreateSlider(soundCard.transform, "Master Volume Slider", new Vector2(32f, -174f), new Vector2(414f, 36f), OnVolumeChanged);
+            CreateText(soundCard.transform, "Music Volume Label", 14, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(32f, -224f), new Vector2(260f, 28f), "VOLUMEN DE MÚSICA");
+            _musicVolumeValue = CreateText(soundCard.transform, "Music Volume Value", 18, FontStyle.Bold, TextAnchor.MiddleRight, new Vector2(354f, -222f), new Vector2(92f, 30f), "100%");
+            _musicVolumeSlider = CreateSlider(soundCard.transform, "Music Volume Slider", new Vector2(32f, -274f), new Vector2(414f, 36f), OnMusicVolumeChanged);
+            CreateText(soundCard.transform, "Sound Hint", 12, FontStyle.Normal, TextAnchor.UpperLeft, new Vector2(32f, -338f), new Vector2(410f, 28f), "LOS CAMBIOS SE GUARDAN AUTOMÁTICAMENTE.").color = _mutedTextColor;
 
             var controlsCard = CreateFixedPanel(panel.transform, "Controls Card", new Vector2(614f, -180f), new Vector2(488f, 440f), new Vector2(0f, 1f), new Vector2(0f, 1f), _secondaryPanelColor);
             CreateIcon(controlsCard.transform, "Controls Icon", MenuIconType.Controls, new Vector2(32f, -30f), new Vector2(38f, 38f), new Vector2(0f, 1f), new Vector2(0f, 1f), _accentColor);
             CreateText(controlsCard.transform, "Controls Title", 23, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(86f, -28f), new Vector2(320f, 38f), "CONTROLES");
             CreateText(controlsCard.transform, "Controls Caption", 12, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(88f, -64f), new Vector2(320f, 24f), "CONFIGURACIÓN ACTUAL DE VUELO").color = _mutedTextColor;
-            CreateControlRow(controlsCard.transform, "W / S", "INCLINACIÓN", -112f);
-            CreateControlRow(controlsCard.transform, "A / D", "ALABEO", -164f);
-            CreateControlRow(controlsCard.transform, "Q / E", "GUIÑADA", -216f);
-            CreateControlRow(controlsCard.transform, "SHIFT / CTRL", "ACELERADOR", -268f);
-            CreateControlRow(controlsCard.transform, "R", "FLAPS", -320f);
-            CreateControlRow(controlsCard.transform, "ESPACIO / L", "CÁMARA / LUCES", -372f);
+            CreateControlRows(controlsCard.transform);
 
             CreateButton(panel.transform, "RESTAURAR PREDETERMINADOS", new Vector2(58f, -680f), new Vector2(390f, 66f), RestoreDefaults, false, MenuIconType.Settings, 0.05f);
             CreateButton(panel.transform, "VOLVER AL MENÚ", new Vector2(712f, -680f), new Vector2(390f, 66f), ShowMain, true, MenuIconType.Back, 0.09f);
@@ -618,18 +641,90 @@ namespace AeroByte.Menu
             CreateText(parent, $"{action} Action", 13, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(202f, y), new Vector2(230f, 36f), action).color = _mutedTextColor;
         }
 
+        private void CreateControlRows(Transform parent)
+        {
+            CreateControlRow(parent, "W / S  ·  A / D", "INCLINACIÓN / ALABEO", -112f);
+            CreateControlRow(parent, "Q / E  ·  SHIFT / CTRL", "GUIÑADA / ACELERADOR", -164f);
+            CreateControlRow(parent, "R  ·  K", "FLAPS / TREN DE ATERRIZAJE", -216f);
+            CreateControlRow(parent, "ESPACIO  ·  RMB / MMB", "CÁMARA / VISTA / REINICIAR", -268f);
+            CreateControlRow(parent, "M  ·  U / J", "BOMBA / RADIO / SIGUIENTE", -320f);
+            CreateControlRow(parent, "G + RUEDA  ·  ESC / P", "MAPA / ZOOM / ARRASTRAR / PAUSA", -372f);
+        }
+
+        private void EnsureOptionsRuntimeLayout(Transform canvasRoot)
+        {
+            var soundCard = FindDescendant(canvasRoot, "Sound Card");
+            if (soundCard != null && FindDescendant(soundCard, "Music Volume Slider") == null)
+            {
+                var effectsLabel = FindDescendant(soundCard, "Volume Label")?.GetComponent<Text>();
+                if (effectsLabel != null) effectsLabel.text = "VOLUMEN DE EFECTOS";
+                CreateText(soundCard, "Music Volume Label", 14, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(32f, -270f), new Vector2(260f, 28f), "VOLUMEN DE MÚSICA");
+                CreateText(soundCard, "Music Volume Value", 18, FontStyle.Bold, TextAnchor.MiddleRight, new Vector2(354f, -268f), new Vector2(92f, 30f), "100%");
+                CreateSlider(soundCard, "Music Volume Slider", new Vector2(32f, -316f), new Vector2(414f, 36f), OnMusicVolumeChanged);
+            }
+
+            if (soundCard != null)
+            {
+                SetRectIfPresent(FindDescendant(soundCard, "Volume Label"), new Vector2(32f, -124f), new Vector2(260f, 28f));
+                SetRectIfPresent(FindDescendant(soundCard, "Volume Value"), new Vector2(354f, -122f), new Vector2(92f, 30f));
+                SetRectIfPresent(FindDescendant(soundCard, "Master Volume Slider"), new Vector2(32f, -174f), new Vector2(414f, 36f));
+                SetRectIfPresent(FindDescendant(soundCard, "Music Volume Label"), new Vector2(32f, -224f), new Vector2(260f, 28f));
+                SetRectIfPresent(FindDescendant(soundCard, "Music Volume Value"), new Vector2(354f, -222f), new Vector2(92f, 30f));
+                SetRectIfPresent(FindDescendant(soundCard, "Music Volume Slider"), new Vector2(32f, -274f), new Vector2(414f, 36f));
+                SetRectIfPresent(FindDescendant(soundCard, "Sound Hint"), new Vector2(32f, -338f), new Vector2(410f, 28f));
+                var muteButton = FindDescendant(soundCard, "SILENCIAR Button");
+                if (muteButton != null) muteButton.gameObject.SetActive(false);
+            }
+
+            var controlsCard = FindDescendant(canvasRoot, "Controls Card");
+            if (controlsCard == null) return;
+            string[] keys = { "W / S", "A / D", "Q / E", "SHIFT / CTRL", "R", "ESPACIO / L" };
+            string[] updatedKeys = { "W / S  ·  A / D", "Q / E  ·  SHIFT / CTRL", "R  ·  K", "ESPACIO  ·  RMB / MMB", "M  ·  U / J", "G + RUEDA  ·  ESC / P" };
+            string[] actions = { "INCLINACIÓN / ALABEO", "GUIÑADA / ACELERADOR", "FLAPS / TREN DE ATERRIZAJE", "CÁMARA / VISTA / REINICIAR", "BOMBA / RADIO / SIGUIENTE", "MAPA / ZOOM / ARRASTRAR / PAUSA" };
+            for (int i = 0; i < keys.Length; i++)
+            {
+                var keyText = FindDescendant(controlsCard, $"{keys[i]} Key Text")?.GetComponent<Text>();
+                if (keyText != null) keyText.text = updatedKeys[i];
+                var actionText = FindDescendant(controlsCard, $"{new[] { "INCLINACIÓN", "ALABEO", "GUIÑADA", "ACELERADOR", "FLAPS", "CÁMARA / LUCES" }[i]} Action")?.GetComponent<Text>();
+                if (actionText != null) actionText.text = actions[i];
+            }
+        }
+
         private void OnVolumeChanged(float value)
         {
-            MenuSettingsService.SetMasterVolume(value);
+            MenuSettingsService.SetEffectsVolume(value);
             RefreshSoundControls();
+        }
+
+        private void OnMusicVolumeChanged(float value)
+        {
+            MenuSettingsService.SetMusicVolume(value);
+            RefreshSoundControls();
+        }
+
+        private static void EnsureSliderInput(Slider slider)
+        {
+            if (slider == null) return;
+            if (slider.GetComponent<CanvasRenderer>() == null) slider.gameObject.AddComponent<CanvasRenderer>();
+            var hitArea = slider.GetComponent<Image>() ?? slider.gameObject.AddComponent<Image>();
+            hitArea.color = Color.clear;
+            hitArea.raycastTarget = true;
+            slider.interactable = true;
+
+            foreach (var image in slider.GetComponentsInChildren<Image>(true))
+            {
+                if (image.gameObject != slider.gameObject && image.gameObject.name != "Handle") image.raycastTarget = false;
+            }
         }
 
         private void RefreshSoundControls()
         {
-            if (_volumeSlider == null) return;
-            _volumeSlider.SetValueWithoutNotify(MenuSettingsService.MasterVolume);
-            _volumeValue.text = $"{Mathf.RoundToInt(MenuSettingsService.MasterVolume * 100f)}%";
-            _muteLabel.text = MenuSettingsService.IsMuted ? "ACTIVAR SONIDO" : "SILENCIAR";
+            if (_volumeSlider == null || _musicVolumeSlider == null) return;
+            _volumeSlider.SetValueWithoutNotify(MenuSettingsService.EffectsVolume);
+            _volumeValue.text = $"{Mathf.RoundToInt(MenuSettingsService.EffectsVolume * 100f)}%";
+            _musicVolumeSlider.SetValueWithoutNotify(MenuSettingsService.MusicVolume);
+            _musicVolumeValue.text = $"{Mathf.RoundToInt(MenuSettingsService.MusicVolume * 100f)}%";
+            if (_muteLabel != null) _muteLabel.text = MenuSettingsService.IsMuted ? "ACTIVAR SONIDO" : "SILENCIAR";
             if (_muteIcon != null) _muteIcon.IconType = MenuSettingsService.IsMuted ? MenuIconType.Sound : MenuIconType.Mute;
         }
 
@@ -744,17 +839,20 @@ namespace AeroByte.Menu
             return button;
         }
 
-        private Slider CreateSlider(Transform parent, Vector2 position, Vector2 size, UnityEngine.Events.UnityAction<float> onChanged)
+        private Slider CreateSlider(Transform parent, string objectName, Vector2 position, Vector2 size, UnityEngine.Events.UnityAction<float> onChanged)
         {
-            var root = new GameObject("Master Volume Slider", typeof(RectTransform), typeof(Slider));
+            var root = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Slider));
             root.transform.SetParent(parent, false);
             SetRect(root.GetComponent<RectTransform>(), position, size, new Vector2(0f, 1f), new Vector2(0f, 1f));
+            root.GetComponent<Image>().color = Color.clear;
 
-            CreateStretchImage(root.transform, "Background", Vector2.zero, Vector2.one, new Vector2(0f, 11f), new Vector2(0f, -11f), new Color(0f, 0.025f, 0.05f, 0.75f));
+            var background = CreateStretchImage(root.transform, "Background", Vector2.zero, Vector2.one, new Vector2(0f, 11f), new Vector2(0f, -11f), new Color(0f, 0.025f, 0.05f, 0.75f));
+            background.raycastTarget = false;
             var fillArea = new GameObject("Fill Area", typeof(RectTransform));
             fillArea.transform.SetParent(root.transform, false);
             SetStretchRect(fillArea.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, new Vector2(8f, 11f), new Vector2(-8f, -11f));
             var fill = CreateStretchImage(fillArea.transform, "Fill", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, _accentColor);
+            fill.raycastTarget = false;
 
             var handleArea = new GameObject("Handle Area", typeof(RectTransform));
             handleArea.transform.SetParent(root.transform, false);
@@ -767,6 +865,7 @@ namespace AeroByte.Menu
             slider.targetGraphic = handle;
             slider.minValue = 0f;
             slider.maxValue = 1f;
+            EnsureSliderInput(slider);
             slider.onValueChanged.AddListener(onChanged);
             return slider;
         }
@@ -865,6 +964,11 @@ namespace AeroByte.Menu
             rect.pivot = pivot;
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
+        }
+
+        private static void SetRectIfPresent(Transform transform, Vector2 position, Vector2 size)
+        {
+            if (transform != null) SetRect(transform.GetComponent<RectTransform>(), position, size, new Vector2(0f, 1f), new Vector2(0f, 1f));
         }
 
         private static void SetStretchRect(RectTransform rect, Vector2 anchorMin, Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax)

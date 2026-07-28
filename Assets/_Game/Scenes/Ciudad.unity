@@ -7748,6 +7748,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: AvionFisicas2.0 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4318845108612636248, guid: 3c272b1c52072f94db8c062de8a5cef9, type: 3}
+      propertyPath: musicTracks.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4318845108612636248, guid: 3c272b1c52072f94db8c062de8a5cef9, type: 3}
+      propertyPath: 'musicTracks.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 0c5d677956fddd74a9ead606ad2cf0bd, type: 3}
+    - target: {fileID: 4318845108612636248, guid: 3c272b1c52072f94db8c062de8a5cef9, type: 3}
+      propertyPath: 'musicTracks.Array.data[1]'
+      value: 
+      objectReference: {fileID: 8300000, guid: ef21c1dbe51ff844dacc001434cac1b5, type: 3}
+    - target: {fileID: 4318845108612636248, guid: 3c272b1c52072f94db8c062de8a5cef9, type: 3}
+      propertyPath: 'musicTracks.Array.data[2]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 2b6eb8faef31a874c87e684250ac11ea, type: 3}
+    - target: {fileID: 4318845108612636248, guid: 3c272b1c52072f94db8c062de8a5cef9, type: 3}
+      propertyPath: 'musicTracks.Array.data[3]'
+      value: 
+      objectReference: {fileID: 8300000, guid: bc175e74e6d9af14a9e4cfd3016cf595, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

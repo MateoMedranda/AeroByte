@@ -1,26 +1,38 @@
+using System;
 using UnityEngine;
 
 namespace AeroByte.Menu
 {
     public static class MenuSettingsService
     {
-        private const string MasterVolumeKey = "AeroByte.Menu.MasterVolume";
+        private const string EffectsVolumeKey = "AeroByte.Menu.MasterVolume";
+        private const string MusicVolumeKey = "AeroByte.Menu.MusicVolume";
         private const string MutedKey = "AeroByte.Menu.Muted";
         private const float DefaultVolume = 1f;
 
-        public static float MasterVolume { get; private set; } = DefaultVolume;
+        public static float EffectsVolume { get; private set; } = DefaultVolume;
+        public static float MusicVolume { get; private set; } = DefaultVolume;
         public static bool IsMuted { get; private set; }
+        public static event Action VolumesChanged;
 
         public static void Load()
         {
-            MasterVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(MasterVolumeKey, DefaultVolume));
+            EffectsVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(EffectsVolumeKey, DefaultVolume));
+            MusicVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(MusicVolumeKey, DefaultVolume));
             IsMuted = PlayerPrefs.GetInt(MutedKey, 0) == 1;
             Apply();
         }
 
-        public static void SetMasterVolume(float value)
+        public static void SetEffectsVolume(float value)
         {
-            MasterVolume = Mathf.Clamp01(value);
+            EffectsVolume = Mathf.Clamp01(value);
+            IsMuted = false;
+            SaveAndApply();
+        }
+
+        public static void SetMusicVolume(float value)
+        {
+            MusicVolume = Mathf.Clamp01(value);
             IsMuted = false;
             SaveAndApply();
         }
@@ -33,14 +45,16 @@ namespace AeroByte.Menu
 
         public static void RestoreDefaults()
         {
-            MasterVolume = DefaultVolume;
+            EffectsVolume = DefaultVolume;
+            MusicVolume = DefaultVolume;
             IsMuted = false;
             SaveAndApply();
         }
 
         private static void SaveAndApply()
         {
-            PlayerPrefs.SetFloat(MasterVolumeKey, MasterVolume);
+            PlayerPrefs.SetFloat(EffectsVolumeKey, EffectsVolume);
+            PlayerPrefs.SetFloat(MusicVolumeKey, MusicVolume);
             PlayerPrefs.SetInt(MutedKey, IsMuted ? 1 : 0);
             PlayerPrefs.Save();
             Apply();
@@ -48,7 +62,9 @@ namespace AeroByte.Menu
 
         private static void Apply()
         {
-            AudioListener.volume = IsMuted ? 0f : MasterVolume;
+            // Effects use the listener; music sources opt out and apply MusicVolume directly.
+            AudioListener.volume = IsMuted ? 0f : EffectsVolume;
+            VolumesChanged?.Invoke();
         }
     }
 }

@@ -392,7 +392,7 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""b417527f-4b0c-4f34-982e-3ae83d0e3bc2"",
-                    ""path"": ""<Keyboard>/p"",
+                    ""path"": ""<Keyboard>/u"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
