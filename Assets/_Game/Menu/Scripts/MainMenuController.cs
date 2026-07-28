@@ -1,4 +1,5 @@
 using AeroByte.Menu.Credits;
+using AeroByte.Menu.Audio;
 using AeroByte.Menu.LevelSelection;
 using AeroByte.Menu.Loading;
 using AeroByte.Menu.Profile;
@@ -16,7 +17,7 @@ namespace AeroByte.Menu
     [ExecuteAlways]
     public sealed class MainMenuController : MonoBehaviour
     {
-        private const string LayoutMarkerName = "AeroByte Startup Screen Layout v34";
+        private const string LayoutMarkerName = "AeroByte Credits Layout v36";
         private const string MenuBackgroundPath = "Assets/_Game/Menu/Art/Backgrounds/MAIN MENU/BG-MAINMENU.png";
         private const string SelectorBackgroundPath = "Assets/_Game/Menu/Art/Backgrounds/LEVEL SELECTOR/BG- LEVEL SELECTOR.png";
         private const string BeachBackgroundPath = "Assets/_Game/Menu/Art/Backgrounds/LEVEL SELECTOR/PLAYA/BGE-PLAYA.png";
@@ -27,6 +28,8 @@ namespace AeroByte.Menu
         private const string BoeingArtworkPath = "Assets/_Game/Menu/Missions/A-BOEING.png";
         private const string TomcatArtworkPath = "Assets/_Game/Menu/Missions/A-F14TOMCAT.png";
         private const string StartupBackgroundPath = "Assets/_Game/Menu/STARTGAME/BG-STARTGAME.png";
+        private const string MainMenuMusicPath = "Assets/_Game/Menu/OST/MAINMENU.mp3";
+        private const string LevelInfoMusicPath = "Assets/_Game/Menu/OST/INFOLEVEL.mp3";
 
         [SerializeField] private Texture2D menuBackground;
         [SerializeField] private Texture2D selectorBackground;
@@ -38,6 +41,8 @@ namespace AeroByte.Menu
         [SerializeField] private Texture2D boeingArtwork;
         [SerializeField] private Texture2D tomcatArtwork;
         [SerializeField] private Texture2D startupBackground;
+        [SerializeField] private AudioClip mainMenuMusic;
+        [SerializeField] private AudioClip levelInfoMusic;
 
         private readonly Color _panelColor = new Color(0.018f, 0.075f, 0.125f, 0.89f);
         private readonly Color _secondaryPanelColor = new Color(0.025f, 0.12f, 0.19f, 0.92f);
@@ -63,6 +68,7 @@ namespace AeroByte.Menu
         private LevelSelectionView _levelSelectionView;
         private LoadingScreenView _loadingScreen;
         private StartupScreenView _startupScreen;
+        private MenuMusicController _menuMusic;
         private bool _panelsInitialized;
 
         private void OnEnable()
@@ -98,7 +104,7 @@ namespace AeroByte.Menu
 
         private void ResolveConfiguredBackground()
         {
-            if (menuBackground != null && selectorBackground != null && beachBackground != null && cityBackground != null && desertBackground != null && forestBackground != null && cessnaArtwork != null && boeingArtwork != null && tomcatArtwork != null && startupBackground != null) return;
+            if (menuBackground != null && selectorBackground != null && beachBackground != null && cityBackground != null && desertBackground != null && forestBackground != null && cessnaArtwork != null && boeingArtwork != null && tomcatArtwork != null && startupBackground != null && mainMenuMusic != null && levelInfoMusic != null) return;
 
             menuBackground = LoadTexture(menuBackground, MenuBackgroundPath);
             selectorBackground = LoadTexture(selectorBackground, SelectorBackgroundPath);
@@ -110,6 +116,8 @@ namespace AeroByte.Menu
             boeingArtwork = LoadTexture(boeingArtwork, BoeingArtworkPath);
             tomcatArtwork = LoadTexture(tomcatArtwork, TomcatArtworkPath);
             startupBackground = LoadTexture(startupBackground, StartupBackgroundPath);
+            mainMenuMusic = LoadAudioClip(mainMenuMusic, MainMenuMusicPath);
+            levelInfoMusic = LoadAudioClip(levelInfoMusic, LevelInfoMusicPath);
 
             UnityEditor.EditorUtility.SetDirty(this);
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
@@ -118,6 +126,11 @@ namespace AeroByte.Menu
         private static Texture2D LoadTexture(Texture2D current, string path)
         {
             return current != null ? current : UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        private static AudioClip LoadAudioClip(AudioClip current, string path)
+        {
+            return current != null ? current : UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(path);
         }
 
         private void ApplyConfiguredBackground()
@@ -186,21 +199,40 @@ namespace AeroByte.Menu
 
         public void Play()
         {
+            MenuMusicController.PlayMain();
             _levelSelectionView?.ShowSelection();
             ShowPanel(_levelSelectPanel, false);
         }
-        public void ShowMain() => ShowPanel(_mainPanel, false);
+        public void ShowMain()
+        {
+            MenuMusicController.PlayMain();
+            ShowPanel(_mainPanel, false);
+        }
         public void LoadLevel(string sceneName)
         {
+            MenuMusicController.FadeToSilence();
             if (_loadingScreen != null) _loadingScreen.BeginLoad(sceneName);
             else SceneManager.LoadScene(sceneName);
         }
-        public void ShowOptions() => ShowPanel(_optionsPanel, false);
-        public void ShowCredits() => ShowPanel(_creditsPanel, false);
-        public void ShowExitConfirmation() => ShowPanel(_exitPanel, false);
+        public void ShowOptions()
+        {
+            MenuMusicController.PlayMain();
+            ShowPanel(_optionsPanel, false);
+        }
+        public void ShowCredits()
+        {
+            MenuMusicController.PlayMain();
+            ShowPanel(_creditsPanel, false);
+        }
+        public void ShowExitConfirmation()
+        {
+            MenuMusicController.PlayMain();
+            ShowPanel(_exitPanel, false);
+        }
 
         public void ShowProfileEditor()
         {
+            MenuMusicController.PlayMain();
             _profileEditorView?.Prepare();
             ShowPanel(_profileEditorPanel, false);
         }
@@ -272,6 +304,8 @@ namespace AeroByte.Menu
             var canvasObject = new GameObject("AeroByte Main Menu", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvasObject.transform.SetParent(transform, false);
             canvasObject.AddComponent<MenuUiAudio>();
+            _menuMusic = canvasObject.AddComponent<MenuMusicController>();
+            _menuMusic.Initialize(mainMenuMusic, levelInfoMusic);
             var layoutMarker = new GameObject(LayoutMarkerName, typeof(RectTransform));
             layoutMarker.transform.SetParent(canvasObject.transform, false);
             var canvas = canvasObject.GetComponent<Canvas>();
@@ -354,6 +388,8 @@ namespace AeroByte.Menu
             _profileEditorView = FindDescendant(canvasRoot, "Profile Editor Card")?.GetComponent<PilotProfileEditorView>();
             _loadingScreen = FindDescendant(canvasRoot, "Loading Screen")?.GetComponent<LoadingScreenView>();
             _startupScreen = FindDescendant(canvasRoot, "Startup Screen")?.GetComponent<StartupScreenView>();
+            _menuMusic = canvasRoot.GetComponent<MenuMusicController>();
+            _menuMusic?.Initialize(mainMenuMusic, levelInfoMusic);
             ApplyFonts(canvasRoot);
 
             if (!bindActions) return;
@@ -523,7 +559,7 @@ namespace AeroByte.Menu
 
         private GameObject BuildCreditsPanel(Transform parent)
         {
-            var panel = CreateFixedPanel(parent, "Credits Panel", Vector2.zero, new Vector2(1220f, 850f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), _panelColor);
+            var panel = CreateFixedPanel(parent, "Credits Panel", Vector2.zero, new Vector2(1700f, 940f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), _panelColor);
             panel.AddComponent<MenuPanelTransition>().Configure(new Vector2(0f, 34f));
             AddPanelShadow(panel);
             panel.AddComponent<MenuCreditsView>().Initialize(_displayFont, _bodyFont, _textColor, _accentColor, ShowMain);

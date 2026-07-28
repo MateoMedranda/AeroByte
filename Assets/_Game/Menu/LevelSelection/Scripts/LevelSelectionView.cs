@@ -1,4 +1,5 @@
 using System;
+using AeroByte.Menu.Audio;
 using AeroByte.Menu.Profile;
 using AeroByte.Menu.UI;
 using UnityEngine;
@@ -131,6 +132,7 @@ namespace AeroByte.Menu.LevelSelection
 
         public void ShowSelection()
         {
+            MenuMusicController.PlayMain();
             CachePageReferences();
             if (_selectionPage != null) _selectionPage.SetActive(true);
             if (_detailPage != null) _detailPage.SetActive(false);
@@ -139,6 +141,7 @@ namespace AeroByte.Menu.LevelSelection
 
         private void ShowMissionDetail(string sceneName)
         {
+            MenuMusicController.PlayLevelInfo();
             MissionDetails details = GetMissionDetails(sceneName);
             CachePageReferences();
             _selectedScene = sceneName;
@@ -198,7 +201,9 @@ namespace AeroByte.Menu.LevelSelection
 
         private void StartSelectedMission()
         {
-            if (!string.IsNullOrEmpty(_selectedScene)) _onLevelSelected?.Invoke(_selectedScene);
+            if (string.IsNullOrEmpty(_selectedScene)) return;
+            MenuMusicController.FadeToSilence();
+            _onLevelSelected?.Invoke(_selectedScene);
         }
 
         private MissionDetails GetMissionDetails(string sceneName)
