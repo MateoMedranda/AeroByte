@@ -49,6 +49,15 @@ namespace AeroByte.Menu.LevelSelection
         private MenuIconGraphic _missionBadgeIcon;
         private string _selectedScene;
 
+        private GameObject _colorCustomizationPanel;
+        private Image _colorPreviewSwatch;
+        private Text _colorPreviewHexText;
+        private Text _customColorStatusText;
+        private Slider _rSlider;
+        private Slider _gSlider;
+        private Slider _bSlider;
+        private bool _suppressColorSliderCallback;
+
         private void OnEnable()
         {
             RefreshPilotProfile();
@@ -87,6 +96,7 @@ namespace AeroByte.Menu.LevelSelection
             _onBack = onBack;
 
             CachePageReferences();
+            EnsureColorCustomizerUIExists();
             foreach (var card in GetComponentsInChildren<LevelSelectionCard>(true)) card.Bind(ShowMissionDetail);
             var backButton = FindDescendant(transform, "Level Selection Back Button")?.GetComponent<Button>();
             if (backButton != null)
@@ -97,6 +107,10 @@ namespace AeroByte.Menu.LevelSelection
 
             BindDetailButton("Mission Detail Back Button", ShowSelection);
             BindDetailButton("Mission Detail Start Button", StartSelectedMission);
+            BindDetailButton("Mission Detail Customize Color Button", () => ShowColorCustomizer(true));
+            BindDetailButton("Color Modal Close Button", () => ShowColorCustomizer(false));
+            BindDetailButton("Reset Original Color Button", () => ResetToDefaultPlaneColor());
+            BindDetailButton("Color Modal Apply Button", () => ShowColorCustomizer(false));
         }
 
         private void Build()
@@ -136,6 +150,7 @@ namespace AeroByte.Menu.LevelSelection
             CachePageReferences();
             if (_selectionPage != null) _selectionPage.SetActive(true);
             if (_detailPage != null) _detailPage.SetActive(false);
+            if (_colorCustomizationPanel != null) _colorCustomizationPanel.SetActive(false);
             _selectedScene = null;
         }
 
@@ -164,6 +179,8 @@ namespace AeroByte.Menu.LevelSelection
 
             if (_selectionPage != null) _selectionPage.SetActive(false);
             if (_detailPage != null) _detailPage.SetActive(true);
+            EnsureColorCustomizerUIExists();
+            UpdateCustomColorStatusDisplay();
         }
 
         private static void ApplyCover(RawImage image, Texture2D texture)
@@ -254,6 +271,8 @@ namespace AeroByte.Menu.LevelSelection
             CreateText(aircraftCard.transform, "Aircraft Label", "AERONAVE ASIGNADA", 21, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(530f, -38f), new Vector2(470f, 38f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.35f, 0.78f, 0.96f, 1f));
             _detailAircraftName = CreateText(aircraftCard.transform, "Mission Aircraft Name", "AERONAVE", 52, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(528f, -84f), new Vector2(500f, 72f), new Vector2(0f, 1f), new Vector2(0f, 1f), Color.white);
             CreateText(aircraftCard.transform, "Aircraft Caption", "LISTA PARA LA MISIÓN", 21, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(530f, -168f), new Vector2(470f, 38f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.36f, 0.86f, 0.60f, 1f));
+            _customColorStatusText = CreateText(aircraftCard.transform, "Aircraft Color Status", "COLOR: ORIGINAL (POR DEFECTO)", 18, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(530f, -204f), new Vector2(470f, 24f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.85f, 0.95f, 1f, 1f));
+            CreateDetailButton(aircraftCard.transform, "Mission Detail Customize Color Button", "🎨  PERSONALIZAR COLOR", new Vector2(530f, -234f), new Vector2(440f, 52f), false);
 
             var briefing = CreateRoundedPanel(_detailPage.transform, "Mission Briefing Card", new Vector2(1190f, -158f), new Vector2(650f, 750f));
             CreateText(briefing.transform, "Briefing Heading", "DETALLES DEL NIVEL", 30, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(34f, -20f), new Vector2(570f, 50f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.86f, 0.94f, 0.98f, 1f));
@@ -266,6 +285,7 @@ namespace AeroByte.Menu.LevelSelection
 
             CreateDetailButton(_detailPage.transform, "Mission Detail Back Button", "<  VOLVER A NIVELES", new Vector2(80f, -932f), new Vector2(330f, 76f), false);
             CreateDetailButton(_detailPage.transform, "Mission Detail Start Button", "INICIAR NIVEL  >", new Vector2(-80f, -932f), new Vector2(390f, 76f), true);
+            BuildColorCustomizationPanel(_detailPage.transform);
         }
 
         private GameObject CreateRoundedPanel(Transform parent, string objectName, Vector2 position, Vector2 size, Color? top = null, Color? bottom = null)
@@ -346,6 +366,13 @@ namespace AeroByte.Menu.LevelSelection
             _detailHazards ??= FindDescendant(transform, "Mission Hazards Value")?.GetComponent<Text>();
             _detailHazardIcon ??= FindDescendant(transform, "Mission Hazard Icon")?.GetComponent<MenuIconGraphic>();
             _missionBadgeIcon ??= FindDescendant(transform, "Mission Objective Icon")?.GetComponent<MenuIconGraphic>();
+            _customColorStatusText ??= FindDescendant(transform, "Aircraft Color Status")?.GetComponent<Text>();
+            _colorCustomizationPanel ??= FindDescendant(transform, "Color Customizer Panel")?.gameObject;
+            _colorPreviewSwatch ??= FindDescendant(transform, "Color Preview Swatch")?.GetComponent<Image>();
+            _colorPreviewHexText ??= FindDescendant(transform, "Color RGB Text")?.GetComponent<Text>();
+            _rSlider ??= FindDescendant(transform, "R Slider Container")?.GetComponentInChildren<Slider>(true);
+            _gSlider ??= FindDescendant(transform, "G Slider Container")?.GetComponentInChildren<Slider>(true);
+            _bSlider ??= FindDescendant(transform, "B Slider Container")?.GetComponentInChildren<Slider>(true);
         }
 
         private void BindDetailButton(string objectName, Action action)
@@ -508,8 +535,31 @@ namespace AeroByte.Menu.LevelSelection
             CreateText(buttonObject.transform, "Back Label", "<  VOLVER", 17, FontStyle.Bold, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(240f, 68f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Color(0.82f, 0.91f, 0.96f, 1f)).raycastTarget = false;
         }
 
+        private void EnsureFontsLoaded()
+        {
+            if (_displayFont != null && _bodyFont != null) return;
+
+            foreach (var t in GetComponentsInChildren<Text>(true))
+            {
+                if (t != null && t.font != null)
+                {
+                    _displayFont ??= t.font;
+                    _bodyFont ??= t.font;
+                    break;
+                }
+            }
+
+            if (_displayFont == null)
+            {
+                _displayFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                if (_displayFont == null) _displayFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            }
+            if (_bodyFont == null) _bodyFont = _displayFont;
+        }
+
         private Text CreateText(Transform parent, string objectName, string value, int fontSize, FontStyle style, TextAnchor alignment, Vector2 position, Vector2 size, Vector2 anchor, Vector2 pivot, Color color)
         {
+            EnsureFontsLoaded();
             var textObject = new GameObject(objectName, typeof(RectTransform), typeof(Text));
             textObject.transform.SetParent(parent, false);
             SetRect(textObject.GetComponent<RectTransform>(), position, size, anchor, pivot);
@@ -579,6 +629,305 @@ namespace AeroByte.Menu.LevelSelection
             rect.anchorMax = anchorMax;
             rect.offsetMin = offsetMin;
             rect.offsetMax = offsetMax;
+        }
+
+        private void EnsureColorCustomizerUIExists()
+        {
+            EnsureFontsLoaded();
+            foreach (var t in GetComponentsInChildren<Text>(true))
+            {
+                if (t != null && t.font == null)
+                {
+                    t.font = _displayFont;
+                }
+            }
+
+            var aircraftCard = FindDescendant(transform, "Aircraft Card");
+            if (aircraftCard != null)
+            {
+                var existingBtn = FindDescendant(aircraftCard, "Mission Detail Customize Color Button");
+                if (existingBtn == null)
+                {
+                    _customColorStatusText = CreateText(aircraftCard, "Aircraft Color Status", "COLOR: ORIGINAL (POR DEFECTO)", 17, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(760f, -168f), new Vector2(270f, 28f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.85f, 0.95f, 1f, 1f));
+                    CreateDetailButton(aircraftCard, "Mission Detail Customize Color Button", "🎨  PERSONALIZAR COLOR", new Vector2(530f, -205f), new Vector2(460f, 44f), false);
+                }
+                else
+                {
+                    _customColorStatusText ??= FindDescendant(aircraftCard, "Aircraft Color Status")?.GetComponent<Text>();
+                    if (_customColorStatusText != null)
+                    {
+                        SetRect(_customColorStatusText.rectTransform, new Vector2(760f, -168f), new Vector2(270f, 28f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+                    }
+                    var rect = existingBtn.GetComponent<RectTransform>();
+                    if (rect != null)
+                    {
+                        SetRect(rect, new Vector2(530f, -205f), new Vector2(460f, 44f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+                    }
+                }
+            }
+
+            var detailPage = FindDescendant(transform, "Mission Detail Page");
+            if (detailPage != null)
+            {
+                var existingPanel = FindDescendant(detailPage, "Color Customizer Panel");
+                if (existingPanel == null)
+                {
+                    BuildColorCustomizationPanel(detailPage);
+                }
+            }
+
+            CachePageReferences();
+            BindDetailButton("Mission Detail Customize Color Button", () => ShowColorCustomizer(true));
+            BindDetailButton("Color Modal Close Button", () => ShowColorCustomizer(false));
+            BindDetailButton("Reset Original Color Button", () => ResetToDefaultPlaneColor());
+            BindDetailButton("Color Modal Apply Button", () => ShowColorCustomizer(false));
+        }
+
+        private void BuildColorCustomizationPanel(Transform parent)
+        {
+            _colorCustomizationPanel = CreateRect(parent, "Color Customizer Panel", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero).gameObject;
+            var shade = CreateImage(_colorCustomizationPanel.transform, "Color Customizer Shade", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0.005f, 0.02f, 0.045f, 0.90f));
+            shade.raycastTarget = true;
+
+            var modal = CreateRoundedPanel(_colorCustomizationPanel.transform, "Color Customizer Modal Card", new Vector2(520f, -180f), new Vector2(880f, 720f), new Color(0.02f, 0.11f, 0.18f, 0.99f), new Color(0.007f, 0.04f, 0.07f, 1f));
+
+            CreateText(modal.transform, "Color Eyebrow", "TALLER DE PINTURA  /  AERONAVE", 20, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(36f, -24f), new Vector2(500f, 30f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.32f, 0.82f, 1f, 1f));
+            CreateText(modal.transform, "Color Title", "COLOR DEL MATERIAL", 38, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(36f, -56f), new Vector2(650f, 48f), new Vector2(0f, 1f), new Vector2(0f, 1f), Color.white);
+
+            CreateDetailButton(modal.transform, "Color Modal Close Button", "✕", new Vector2(790f, -24f), new Vector2(64f, 64f), false);
+
+            CreateText(modal.transform, "Preview Label", "VISTA PREVIA DE COLOR:", 19, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(36f, -126f), new Vector2(360f, 28f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.75f, 0.88f, 0.96f, 1f));
+            _colorPreviewSwatch = CreateFixedImage(modal.transform, "Color Preview Swatch", new Vector2(36f, -160f), new Vector2(360f, 240f), Color.white, new Vector2(0f, 1f), new Vector2(0f, 1f));
+
+            var swatchGlow = CreateFixedImage(modal.transform, "Swatch Glow Border", new Vector2(34f, -158f), new Vector2(364f, 244f), new Color(0.32f, 0.82f, 1f, 0.35f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+            swatchGlow.transform.SetSiblingIndex(_colorPreviewSwatch.transform.GetSiblingIndex());
+
+            _colorPreviewHexText = CreateText(modal.transform, "Color RGB Text", "RGB: (255, 255, 255)", 20, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(36f, -415f), new Vector2(360f, 36f), new Vector2(0f, 1f), new Vector2(0f, 1f), Color.white);
+
+            CreateDetailButton(modal.transform, "Reset Original Color Button", "🔄  COLOR ORIGINAL DEL AVIÓN", new Vector2(36f, -470f), new Vector2(360f, 64f), false);
+
+            CreateText(modal.transform, "RGB Sliders Label", "AJUSTE LIBRE RGB (0 - 255):", 19, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(430f, -126f), new Vector2(410f, 28f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.75f, 0.88f, 0.96f, 1f));
+
+            _rSlider = CreateColorSlider(modal.transform, "R Slider Container", "ROJO (R)", new Vector2(430f, -165f), new Color(1f, 0.28f, 0.28f, 1f));
+            _gSlider = CreateColorSlider(modal.transform, "G Slider Container", "VERDE (G)", new Vector2(430f, -240f), new Color(0.28f, 0.92f, 0.45f, 1f));
+            _bSlider = CreateColorSlider(modal.transform, "B Slider Container", "AZUL (B)", new Vector2(430f, -315f), new Color(0.28f, 0.65f, 1f, 1f));
+
+            CreateText(modal.transform, "Presets Label", "COLORES PREDEFINIDOS:", 19, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(430f, -390f), new Vector2(410f, 28f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Color(0.75f, 0.88f, 0.96f, 1f));
+
+            CreateColorPresetButton(modal.transform, "Preset Blanco", new Vector2(430f, -428f), new Color(1f, 1f, 1f, 1f));
+            CreateColorPresetButton(modal.transform, "Preset Rojo", new Vector2(534f, -428f), new Color(0.92f, 0.18f, 0.18f, 1f));
+            CreateColorPresetButton(modal.transform, "Preset Azul", new Vector2(638f, -428f), new Color(0.08f, 0.58f, 0.95f, 1f));
+            CreateColorPresetButton(modal.transform, "Preset Amarillo", new Vector2(742f, -428f), new Color(0.98f, 0.82f, 0.12f, 1f));
+
+            CreateColorPresetButton(modal.transform, "Preset Verde", new Vector2(430f, -488f), new Color(0.18f, 0.76f, 0.32f, 1f));
+            CreateColorPresetButton(modal.transform, "Preset Naranja", new Vector2(534f, -488f), new Color(0.98f, 0.48f, 0.10f, 1f));
+            CreateColorPresetButton(modal.transform, "Preset Morado", new Vector2(638f, -488f), new Color(0.68f, 0.22f, 0.95f, 1f));
+            CreateColorPresetButton(modal.transform, "Preset Negro", new Vector2(742f, -488f), new Color(0.15f, 0.16f, 0.20f, 1f));
+
+            CreateDetailButton(modal.transform, "Color Modal Apply Button", "✓  APLICAR COLOR Y REGRESAR", new Vector2(36f, -615f), new Vector2(808f, 74f), true);
+
+            _colorCustomizationPanel.SetActive(false);
+        }
+
+        private void ShowColorCustomizer(bool show)
+        {
+            MenuUiAudio.PlayClick();
+            if (_colorCustomizationPanel == null)
+            {
+                _colorCustomizationPanel = FindDescendant(transform, "Color Customizer Panel")?.gameObject;
+            }
+            if (_colorCustomizationPanel != null)
+            {
+                _colorCustomizationPanel.SetActive(show);
+                if (show)
+                {
+                    bool isCustom = PlayerPrefs.GetInt("CustomPlaneColor_Enabled", 0) == 1;
+                    float r = isCustom ? PlayerPrefs.GetFloat("CustomPlaneColor_R", 1f) : 1f;
+                    float g = isCustom ? PlayerPrefs.GetFloat("CustomPlaneColor_G", 1f) : 1f;
+                    float b = isCustom ? PlayerPrefs.GetFloat("CustomPlaneColor_B", 1f) : 1f;
+
+                    _suppressColorSliderCallback = true;
+                    if (_rSlider != null) _rSlider.value = r;
+                    if (_gSlider != null) _gSlider.value = g;
+                    if (_bSlider != null) _bSlider.value = b;
+                    _suppressColorSliderCallback = false;
+
+                    if (_colorPreviewSwatch != null) _colorPreviewSwatch.color = isCustom ? new Color(r, g, b, 1f) : Color.white;
+                    if (_colorPreviewHexText != null)
+                    {
+                        if (isCustom)
+                        {
+                            int rInt = Mathf.RoundToInt(r * 255f);
+                            int gInt = Mathf.RoundToInt(g * 255f);
+                            int bInt = Mathf.RoundToInt(b * 255f);
+                            _colorPreviewHexText.text = $"RGB: ({rInt}, {gInt}, {bInt}) - PERSONALIZADO";
+                        }
+                        else
+                        {
+                            _colorPreviewHexText.text = "COLOR: ORIGINAL DEL AVIÓN (POR DEFECTO)";
+                        }
+                    }
+                }
+            }
+            UpdateCustomColorStatusDisplay();
+        }
+
+        private void OnColorSliderChanged()
+        {
+            if (_suppressColorSliderCallback || _rSlider == null || _gSlider == null || _bSlider == null) return;
+
+            float r = _rSlider.value;
+            float g = _gSlider.value;
+            float b = _bSlider.value;
+            Color customColor = new Color(r, g, b, 1f);
+
+            PlayerPrefs.SetFloat("CustomPlaneColor_R", r);
+            PlayerPrefs.SetFloat("CustomPlaneColor_G", g);
+            PlayerPrefs.SetFloat("CustomPlaneColor_B", b);
+            PlayerPrefs.SetInt("CustomPlaneColor_Enabled", 1);
+            PlayerPrefs.Save();
+
+            if (_colorPreviewSwatch != null) _colorPreviewSwatch.color = customColor;
+            if (_colorPreviewHexText != null)
+            {
+                int rInt = Mathf.RoundToInt(r * 255f);
+                int gInt = Mathf.RoundToInt(g * 255f);
+                int bInt = Mathf.RoundToInt(b * 255f);
+                _colorPreviewHexText.text = $"RGB: ({rInt}, {gInt}, {bInt}) - PERSONALIZADO";
+            }
+
+            UpdateCustomColorStatusDisplay();
+        }
+
+        private void ApplyColorPreset(Color color)
+        {
+            _suppressColorSliderCallback = true;
+            if (_rSlider != null) _rSlider.value = color.r;
+            if (_gSlider != null) _gSlider.value = color.g;
+            if (_bSlider != null) _bSlider.value = color.b;
+            _suppressColorSliderCallback = false;
+            OnColorSliderChanged();
+        }
+
+        private void ResetToDefaultPlaneColor()
+        {
+            MenuUiAudio.PlayClick();
+            PlayerPrefs.SetInt("CustomPlaneColor_Enabled", 0);
+            PlayerPrefs.Save();
+
+            _suppressColorSliderCallback = true;
+            if (_rSlider != null) _rSlider.value = 1f;
+            if (_gSlider != null) _gSlider.value = 1f;
+            if (_bSlider != null) _bSlider.value = 1f;
+            _suppressColorSliderCallback = false;
+
+            if (_colorPreviewSwatch != null) _colorPreviewSwatch.color = Color.white;
+            if (_colorPreviewHexText != null) _colorPreviewHexText.text = "COLOR: ORIGINAL DEL AVIÓN (POR DEFECTO)";
+
+            UpdateCustomColorStatusDisplay();
+        }
+
+        private void UpdateCustomColorStatusDisplay()
+        {
+            bool isCustom = PlayerPrefs.GetInt("CustomPlaneColor_Enabled", 0) == 1;
+            if (isCustom)
+            {
+                float r = PlayerPrefs.GetFloat("CustomPlaneColor_R", 1f);
+                float g = PlayerPrefs.GetFloat("CustomPlaneColor_G", 1f);
+                float b = PlayerPrefs.GetFloat("CustomPlaneColor_B", 1f);
+                Color c = new Color(r, g, b, 1f);
+
+                int rInt = Mathf.RoundToInt(r * 255f);
+                int gInt = Mathf.RoundToInt(g * 255f);
+                int bInt = Mathf.RoundToInt(b * 255f);
+
+                if (_customColorStatusText != null)
+                {
+                    _customColorStatusText.text = $"COLOR: PERSONALIZADO ({rInt}, {gInt}, {bInt})  ■";
+                    _customColorStatusText.color = new Color(Mathf.Max(0.5f, r), Mathf.Max(0.5f, g), Mathf.Max(0.5f, b), 1f);
+                }
+                if (_detailAircraft != null)
+                {
+                    _detailAircraft.color = Color.Lerp(Color.white, c, 0.65f);
+                }
+            }
+            else
+            {
+                if (_customColorStatusText != null)
+                {
+                    _customColorStatusText.text = "COLOR: ORIGINAL (POR DEFECTO)";
+                    _customColorStatusText.color = new Color(0.85f, 0.95f, 1f, 1f);
+                }
+                if (_detailAircraft != null)
+                {
+                    _detailAircraft.color = Color.white;
+                }
+            }
+        }
+
+        private Slider CreateColorSlider(Transform parent, string objectName, string labelText, Vector2 position, Color fillTint)
+        {
+            var container = new GameObject(objectName, typeof(RectTransform));
+            container.transform.SetParent(parent, false);
+            SetRect(container.GetComponent<RectTransform>(), position, new Vector2(410f, 56f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+
+            CreateText(container.transform, "Label", labelText, 17, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(0f, 0f), new Vector2(300f, 22f), new Vector2(0f, 1f), new Vector2(0f, 1f), Color.white);
+
+            var root = new GameObject("Slider Control", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Slider));
+            root.transform.SetParent(container.transform, false);
+            SetRect(root.GetComponent<RectTransform>(), new Vector2(0f, -24f), new Vector2(410f, 28f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+            root.GetComponent<Image>().color = Color.clear;
+
+            var background = CreateImage(root.transform, "Background", new Vector2(0f, 0.2f), new Vector2(1f, 0.8f), Vector2.zero, Vector2.zero, new Color(0.003f, 0.02f, 0.04f, 0.94f));
+            background.raycastTarget = false;
+
+            var fillArea = new GameObject("Fill Area", typeof(RectTransform));
+            fillArea.transform.SetParent(root.transform, false);
+            SetStretchRect(fillArea.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, new Vector2(6f, 8f), new Vector2(-6f, -8f));
+            var fill = CreateImage(fillArea.transform, "Fill", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, fillTint);
+            fill.raycastTarget = false;
+
+            var handleArea = new GameObject("Handle Area", typeof(RectTransform));
+            handleArea.transform.SetParent(root.transform, false);
+            SetStretchRect(handleArea.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, new Vector2(10f, 0f), new Vector2(-10f, 0f));
+            var handle = CreateFixedImage(handleArea.transform, "Handle", Vector2.zero, new Vector2(22f, 32f), Color.white, new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f));
+
+            var slider = root.GetComponent<Slider>();
+            slider.fillRect = fill.rectTransform;
+            slider.handleRect = handle.rectTransform;
+            slider.targetGraphic = handle;
+            slider.minValue = 0f;
+            slider.maxValue = 1f;
+            slider.interactable = true;
+            slider.onValueChanged.AddListener(_ => OnColorSliderChanged());
+            return slider;
+        }
+
+        private void CreateColorPresetButton(Transform parent, string objectName, Vector2 position, Color presetColor)
+        {
+            var buttonObject = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(MenuRoundedGraphic), typeof(Button));
+            buttonObject.transform.SetParent(parent, false);
+            SetRect(buttonObject.GetComponent<RectTransform>(), position, new Vector2(94f, 52f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+            var background = buttonObject.GetComponent<MenuRoundedGraphic>();
+            background.SetStyle(presetColor, presetColor * 0.7f, 12f, Color.white * 0.5f, 2f);
+            var button = buttonObject.GetComponent<Button>();
+            button.targetGraphic = background;
+            button.transition = Selectable.Transition.ColorTint;
+            button.onClick.AddListener(() =>
+            {
+                MenuUiAudio.PlayClick();
+                ApplyColorPreset(presetColor);
+            });
+        }
+
+        private static Image CreateFixedImage(Transform parent, string objectName, Vector2 position, Vector2 size, Color color, Vector2 anchor, Vector2 pivot)
+        {
+            var imageObject = new GameObject(objectName, typeof(RectTransform), typeof(Image));
+            imageObject.transform.SetParent(parent, false);
+            SetRect(imageObject.GetComponent<RectTransform>(), position, size, anchor, pivot);
+            var image = imageObject.GetComponent<Image>();
+            image.color = color;
+            return image;
         }
     }
 }

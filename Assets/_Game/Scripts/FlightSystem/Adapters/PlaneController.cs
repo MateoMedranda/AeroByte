@@ -45,6 +45,48 @@ namespace FlightSystem.Adapters
             _planeState.OnLandingGearStateChanged += HandleLandingGearStateChanged;
         }
 
+        private void Start()
+        {
+            ApplyCustomPlaneColor();
+        }
+
+        public void ApplyCustomPlaneColor()
+        {
+            if (PlayerPrefs.GetInt("CustomPlaneColor_Enabled", 0) == 1)
+            {
+                float r = PlayerPrefs.GetFloat("CustomPlaneColor_R", 1f);
+                float g = PlayerPrefs.GetFloat("CustomPlaneColor_G", 1f);
+                float b = PlayerPrefs.GetFloat("CustomPlaneColor_B", 1f);
+                Color customColor = new Color(r, g, b, 1f);
+
+                Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+                foreach (var rend in renderers)
+                {
+                    if (rend == null) continue;
+                    if (rend is ParticleSystemRenderer || rend is TrailRenderer || rend is LineRenderer) continue;
+
+                    foreach (var mat in rend.materials)
+                    {
+                        if (mat == null) continue;
+                        string matName = mat.name.ToLower();
+                        if (matName.Contains("glass") || matName.Contains("vidrio") || matName.Contains("windshield") ||
+                            matName.Contains("transparent") || matName.Contains("glow") || matName.Contains("trail") ||
+                            matName.Contains("fire") || matName.Contains("light") || matName.Contains("foco") ||
+                            matName.Contains("cristal") || matName.Contains("smoke"))
+                        {
+                            continue;
+                        }
+
+                        if (mat.HasProperty("_BaseColor"))
+                            mat.SetColor("_BaseColor", customColor);
+                        if (mat.HasProperty("_Color"))
+                            mat.SetColor("_Color", customColor);
+                    }
+                }
+                Debug.Log($"[PlaneController] Color personalizado de aeronave aplicado: RGB({r:F2}, {g:F2}, {b:F2})");
+            }
+        }
+
         private void OnDestroy() {
             if (_planeState != null) {
                 _planeState.OnLandingGearStateChanged -= HandleLandingGearStateChanged;
