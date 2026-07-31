@@ -1,3 +1,4 @@
+using System.Collections;
 using AeroByte.Menu.Credits;
 using AeroByte.Menu.Audio;
 using AeroByte.Menu.LevelSelection;
@@ -71,6 +72,7 @@ namespace AeroByte.Menu
         private LoadingScreenView _loadingScreen;
         private StartupScreenView _startupScreen;
         private MenuMusicController _menuMusic;
+        private InputAction _menuCancelAction;
         private bool _panelsInitialized;
 
         private void OnEnable()
@@ -276,6 +278,7 @@ namespace AeroByte.Menu
 
         private void BuildInput()
         {
+            if (_menuCancelAction != null) _menuCancelAction.performed -= OnMenuCancel;
             foreach (var existingEventSystem in Object.FindObjectsByType<EventSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 if (existingEventSystem.transform.IsChildOf(transform))
@@ -294,6 +297,9 @@ namespace AeroByte.Menu
             var menuEventSystem = eventSystemObject.GetComponent<EventSystem>();
             var module = eventSystemObject.GetComponent<InputSystemUIInputModule>();
             module.AssignDefaultActions();
+            menuEventSystem.sendNavigationEvents = true;
+            _menuCancelAction = module.cancel?.action;
+            if (_menuCancelAction != null) _menuCancelAction.performed += OnMenuCancel;
             EventSystem.current = menuEventSystem;
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
@@ -302,7 +308,9 @@ namespace AeroByte.Menu
             var playButton = canvasRoot == null ? null : FindDescendant(canvasRoot, "JUGAR Button");
             if (playButton != null)
             {
+                menuEventSystem.firstSelectedGameObject = playButton.gameObject;
                 menuEventSystem.SetSelectedGameObject(playButton.gameObject);
+                StartCoroutine(SelectWhenInputReady(playButton.gameObject));
             }
         }
 
@@ -571,7 +579,7 @@ namespace AeroByte.Menu
             var controlsCard = CreateFixedPanel(panel.transform, "Controls Card", new Vector2(614f, -180f), new Vector2(488f, 440f), new Vector2(0f, 1f), new Vector2(0f, 1f), _secondaryPanelColor);
             CreateIcon(controlsCard.transform, "Controls Icon", MenuIconType.Controls, new Vector2(32f, -30f), new Vector2(38f, 38f), new Vector2(0f, 1f), new Vector2(0f, 1f), _accentColor);
             CreateText(controlsCard.transform, "Controls Title", 23, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(86f, -28f), new Vector2(320f, 38f), "CONTROLES");
-            CreateText(controlsCard.transform, "Controls Caption", 12, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(88f, -64f), new Vector2(320f, 24f), "CONFIGURACIÓN ACTUAL DE VUELO").color = _mutedTextColor;
+            CreateText(controlsCard.transform, "Controls Caption", 12, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(88f, -64f), new Vector2(320f, 24f), "TECLADO  /  GAMEPAD").color = _mutedTextColor;
             CreateControlRows(controlsCard.transform);
 
             CreateButton(panel.transform, "RESTAURAR PREDETERMINADOS", new Vector2(58f, -680f), new Vector2(390f, 66f), RestoreDefaults, false, MenuIconType.Settings, 0.05f);
@@ -641,14 +649,27 @@ namespace AeroByte.Menu
             CreateText(parent, $"{action} Action", 13, FontStyle.Bold, TextAnchor.MiddleLeft, new Vector2(202f, y), new Vector2(230f, 36f), action).color = _mutedTextColor;
         }
 
+        private void OnMenuCancel(InputAction.CallbackContext context)
+        {
+            if (context.phase != InputActionPhase.Performed || _loadingScreen != null && _loadingScreen.IsLoading) return;
+
+            if (_levelSelectPanel != null && _levelSelectPanel.activeSelf && _levelSelectionView != null)
+            {
+                _levelSelectionView.HandleCancel();
+                return;
+            }
+
+            if (_mainPanel != null && !_mainPanel.activeSelf) ShowMain();
+        }
+
         private void CreateControlRows(Transform parent)
         {
-            CreateControlRow(parent, "W / S  ·  A / D", "INCLINACIÓN / ALABEO", -112f);
-            CreateControlRow(parent, "Q / E  ·  SHIFT / CTRL", "GUIÑADA / ACELERADOR", -164f);
-            CreateControlRow(parent, "R  ·  K", "FLAPS / TREN DE ATERRIZAJE", -216f);
-            CreateControlRow(parent, "ESPACIO  ·  RMB / MMB", "CÁMARA / VISTA / REINICIAR", -268f);
-            CreateControlRow(parent, "M  ·  U / J", "BOMBA / RADIO / SIGUIENTE", -320f);
-            CreateControlRow(parent, "G + RUEDA  ·  ESC / P", "MAPA / ZOOM / ARRASTRAR / PAUSA", -372f);
+            CreateControlRow(parent, "W / S  ·  A / D", "STICK IZQ.: VUELO", -112f);
+            CreateControlRow(parent, "Q / E  ·  SHIFT / CTRL", "HOMBROS / GATILLOS", -164f);
+            CreateControlRow(parent, "R  ·  K", "A: FLAPS  /  B: TREN", -216f);
+            CreateControlRow(parent, "ESPACIO  ·  RMB / MMB", "X / STICKS: CÁMARA", -268f);
+            CreateControlRow(parent, "M  ·  U / J", "DPAD ABAJO / ARRIBA-DER.", -320f);
+            CreateControlRow(parent, "G + RUEDA  ·  ESC / P", "MENÚ: STICK IZQ. + A", -372f);
         }
 
         private void EnsureOptionsRuntimeLayout(Transform canvasRoot)
@@ -680,7 +701,7 @@ namespace AeroByte.Menu
             if (controlsCard == null) return;
             string[] keys = { "W / S", "A / D", "Q / E", "SHIFT / CTRL", "R", "ESPACIO / L" };
             string[] updatedKeys = { "W / S  ·  A / D", "Q / E  ·  SHIFT / CTRL", "R  ·  K", "ESPACIO  ·  RMB / MMB", "M  ·  U / J", "G + RUEDA  ·  ESC / P" };
-            string[] actions = { "INCLINACIÓN / ALABEO", "GUIÑADA / ACELERADOR", "FLAPS / TREN DE ATERRIZAJE", "CÁMARA / VISTA / REINICIAR", "BOMBA / RADIO / SIGUIENTE", "MAPA / ZOOM / ARRASTRAR / PAUSA" };
+            string[] actions = { "STICK IZQ.: VUELO", "HOMBROS / GATILLOS", "A: FLAPS  /  B: TREN", "X / STICKS: CÁMARA", "DPAD ABAJO / ARRIBA-DER.", "MENÚ: STICK IZQ. + A" };
             for (int i = 0; i < keys.Length; i++)
             {
                 var keyText = FindDescendant(controlsCard, $"{keys[i]} Key Text")?.GetComponent<Text>();
@@ -710,6 +731,7 @@ namespace AeroByte.Menu
             hitArea.color = Color.clear;
             hitArea.raycastTarget = true;
             slider.interactable = true;
+            if (slider.GetComponent<MenuSliderFocus>() == null) slider.gameObject.AddComponent<MenuSliderFocus>();
 
             foreach (var image in slider.GetComponentsInChildren<Image>(true))
             {
@@ -752,7 +774,35 @@ namespace AeroByte.Menu
             HidePanelUnlessTarget(_exitPanel, panel, useImmediate);
             HidePanelUnlessTarget(_profileEditorPanel, panel, useImmediate);
             SetPanelVisible(panel, true, useImmediate);
+            if (Application.isPlaying) StartCoroutine(SelectFirstButtonWhenReady(panel));
             _panelsInitialized = true;
+        }
+
+        private static IEnumerator SelectWhenInputReady(GameObject target)
+        {
+            yield return null;
+            if (target != null && target.activeInHierarchy && EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(target);
+            }
+        }
+
+        private static IEnumerator SelectFirstButtonWhenReady(GameObject panel)
+        {
+            yield return null;
+            SelectFirstButton(panel);
+        }
+
+        private static void SelectFirstButton(GameObject panel)
+        {
+            if (!Application.isPlaying || EventSystem.current == null || panel == null) return;
+
+            foreach (var button in panel.GetComponentsInChildren<Button>(true))
+            {
+                if (!button.isActiveAndEnabled || !button.interactable) continue;
+                EventSystem.current.SetSelectedGameObject(button.gameObject);
+                return;
+            }
         }
 
         private void SetInitialPanelState()

@@ -1,8 +1,10 @@
 using System;
+using System.Collections;
 using AeroByte.Menu.Audio;
 using AeroByte.Menu.Profile;
 using AeroByte.Menu.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace AeroByte.Menu.LevelSelection
@@ -111,6 +113,7 @@ namespace AeroByte.Menu.LevelSelection
             BindDetailButton("Color Modal Close Button", () => ShowColorCustomizer(false));
             BindDetailButton("Reset Original Color Button", () => ResetToDefaultPlaneColor());
             BindDetailButton("Color Modal Apply Button", () => ShowColorCustomizer(false));
+            ConfigureMissionDetailNavigation();
         }
 
         private void Build()
@@ -152,6 +155,23 @@ namespace AeroByte.Menu.LevelSelection
             if (_detailPage != null) _detailPage.SetActive(false);
             if (_colorCustomizationPanel != null) _colorCustomizationPanel.SetActive(false);
             _selectedScene = null;
+            StartCoroutine(SelectButtonWhenReady("COSTA Level Card", true));
+        }
+
+        public void HandleCancel()
+        {
+            if (_colorCustomizationPanel != null && _colorCustomizationPanel.activeSelf)
+            {
+                ShowColorCustomizer(false);
+            }
+            else if (_detailPage != null && _detailPage.activeSelf)
+            {
+                ShowSelection();
+            }
+            else
+            {
+                _onBack?.Invoke();
+            }
         }
 
         private void ShowMissionDetail(string sceneName)
@@ -181,6 +201,46 @@ namespace AeroByte.Menu.LevelSelection
             if (_detailPage != null) _detailPage.SetActive(true);
             EnsureColorCustomizerUIExists();
             UpdateCustomColorStatusDisplay();
+            StartCoroutine(SelectButtonWhenReady("Mission Detail Start Button", false));
+        }
+
+        private IEnumerator SelectButtonWhenReady(string buttonName, bool selectionPage)
+        {
+            yield return null;
+            if ((selectionPage && (_selectionPage == null || !_selectionPage.activeInHierarchy)) ||
+                (!selectionPage && (_detailPage == null || !_detailPage.activeInHierarchy)) ||
+                EventSystem.current == null) yield break;
+
+            var button = FindDescendant(transform, buttonName)?.GetComponent<Button>();
+            if (button != null && button.isActiveAndEnabled && button.interactable)
+            {
+                EventSystem.current.SetSelectedGameObject(button.gameObject);
+            }
+        }
+
+        private void ConfigureMissionDetailNavigation()
+        {
+            var customize = FindDescendant(transform, "Mission Detail Customize Color Button")?.GetComponent<Button>();
+            var start = FindDescendant(transform, "Mission Detail Start Button")?.GetComponent<Button>();
+            var back = FindDescendant(transform, "Mission Detail Back Button")?.GetComponent<Button>();
+            if (customize == null || start == null || back == null) return;
+
+            SetNavigation(customize, back, start, start, back);
+            SetNavigation(start, customize, null, back, back);
+            SetNavigation(back, customize, null, start, start);
+        }
+
+        private static void SetNavigation(Selectable selectable, Selectable up, Selectable down, Selectable left, Selectable right)
+        {
+            var navigation = new Navigation
+            {
+                mode = Navigation.Mode.Explicit,
+                selectOnUp = up,
+                selectOnDown = down,
+                selectOnLeft = left,
+                selectOnRight = right
+            };
+            selectable.navigation = navigation;
         }
 
         private static void ApplyCover(RawImage image, Texture2D texture)
@@ -329,8 +389,21 @@ namespace AeroByte.Menu.LevelSelection
             background.SetStyle(primary ? new Color(0.05f, 0.62f, 0.94f, 1f) : new Color(0.03f, 0.13f, 0.20f, 0.98f), primary ? new Color(0.015f, 0.31f, 0.55f, 1f) : new Color(0.01f, 0.06f, 0.10f, 1f), 14f, new Color(0.30f, 0.82f, 1f, 0.62f), 2f);
             var button = buttonObject.GetComponent<Button>();
             button.targetGraphic = background;
-            button.transition = Selectable.Transition.ColorTint;
-            CreateText(buttonObject.transform, $"{objectName} Label", label, 26, FontStyle.Bold, TextAnchor.MiddleCenter, Vector2.zero, size, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Color.white).raycastTarget = false;
+            button.transition = Selectable.Transition.None;
+            var buttonLabel = CreateText(buttonObject.transform, $"{objectName} Label", label, 26, FontStyle.Bold, TextAnchor.MiddleCenter, Vector2.zero, size, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Color.white);
+            buttonLabel.raycastTarget = false;
+            buttonObject.AddComponent<MenuButtonMotion>().Configure(
+                background,
+                null,
+                null,
+                buttonLabel,
+                primary ? new Color(0.05f, 0.62f, 0.94f, 1f) : new Color(0.03f, 0.13f, 0.20f, 0.98f),
+                primary ? new Color(0.015f, 0.31f, 0.55f, 1f) : new Color(0.01f, 0.06f, 0.10f, 1f),
+                primary ? new Color(0.16f, 0.78f, 1f, 1f) : new Color(0.07f, 0.32f, 0.46f, 1f),
+                primary ? new Color(0.04f, 0.46f, 0.82f, 1f) : new Color(0.02f, 0.17f, 0.28f, 1f),
+                new Color(0.84f, 0.93f, 0.98f, 1f),
+                Color.white,
+                0f);
         }
 
         private static MenuIconGraphic CreateMissionIcon(Transform parent, string objectName, MenuIconType type, Vector2 position, Vector2 size, Vector2 anchor, Vector2 pivot, Color color)

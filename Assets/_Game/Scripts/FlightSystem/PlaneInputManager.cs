@@ -10,12 +10,14 @@ public class PlaneInputManager : MonoBehaviour
     private PlaneController avion;
     private CameraController cameraController;
     private AvionControles controles;
+    private InputAction nextMusicTrackAction;
 
     private void Awake()
     {
         avion = GetComponent<PlaneController>();
         
         controles = new AvionControles();
+        nextMusicTrackAction = controles.asset.FindAction("Vuelo/NextMusicTrack");
 
         if (cameraController == null)
         {
@@ -34,6 +36,7 @@ public class PlaneInputManager : MonoBehaviour
         controles.Vuelo.ToggleLandingGear.performed += OnLandingGearInput;
         controles.Vuelo.ToggleMusic.performed += OnToggleMusicInput;
         controles.Vuelo.DropCargo.performed += OnDropCargoInput;
+        if (nextMusicTrackAction != null) nextMusicTrackAction.performed += OnNextMusicTrackInput;
         
         var resetAction = controles.asset.FindAction("Vuelo/ResetCamera");
         if (resetAction != null) {
@@ -49,6 +52,7 @@ public class PlaneInputManager : MonoBehaviour
         controles.Vuelo.ToggleLandingGear.performed -= OnLandingGearInput;
         controles.Vuelo.ToggleMusic.performed -= OnToggleMusicInput;
         controles.Vuelo.DropCargo.performed -= OnDropCargoInput;
+        if (nextMusicTrackAction != null) nextMusicTrackAction.performed -= OnNextMusicTrackInput;
         
         var resetAction = controles.asset.FindAction("Vuelo/ResetCamera");
         if (resetAction != null) {
@@ -122,6 +126,12 @@ public class PlaneInputManager : MonoBehaviour
     {
         if (context.phase != InputActionPhase.Performed) return;
         GetComponent<PlaneDeliveryController>()?.TryDropCargo();
+    }
+
+    public void OnNextMusicTrackInput(InputAction.CallbackContext context)
+    {
+        if (context.phase != InputActionPhase.Performed) return;
+        GetComponent<RadioManager>()?.NextTrack();
     }
     
     public void OnResetCamera(InputAction.CallbackContext context) {

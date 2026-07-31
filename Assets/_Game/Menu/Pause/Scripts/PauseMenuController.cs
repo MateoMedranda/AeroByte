@@ -50,12 +50,18 @@ namespace AeroByte.Menu.Pause
         private bool _previousAudioPause;
         private bool _previousCursorVisible;
         private CursorLockMode _previousCursorLockMode;
+        private AvionControles _controls;
+        private InputAction _pauseAction;
 
         private void Awake()
         {
             _displayFont = MenuFontProvider.DisplayFont;
             _bodyFont = MenuFontProvider.BodyFont;
             MenuSettingsService.Load();
+            _controls = new AvionControles();
+            _pauseAction = _controls.asset.FindAction("Vuelo/Pause");
+            _controls.Enable();
+            if (_pauseAction != null) _pauseAction.performed += OnPauseInput;
             BuildUi();
             if (SceneManager.GetActiveScene().name != MainMenuSceneName) EnsureEventSystem();
             _overlay.SetActive(false);
@@ -69,13 +75,11 @@ namespace AeroByte.Menu.Pause
                 _overlayGroup.alpha = Mathf.MoveTowards(_overlayGroup.alpha, 1f, Time.unscaledDeltaTime * 6f);
             }
 
-            if (_closing || SceneManager.GetActiveScene().name == MainMenuSceneName) return;
+        }
 
-            Keyboard keyboard = Keyboard.current;
-            bool pausePressed = keyboard != null &&
-                                (keyboard.escapeKey.wasPressedThisFrame || keyboard.pKey.wasPressedThisFrame);
-            if (!pausePressed) return;
-
+        private void OnPauseInput(InputAction.CallbackContext context)
+        {
+            if (context.phase != InputActionPhase.Performed || _closing || SceneManager.GetActiveScene().name == MainMenuSceneName) return;
             if (!_paused)
             {
                 Open();
@@ -97,6 +101,8 @@ namespace AeroByte.Menu.Pause
         private void OnDestroy()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
+            if (_pauseAction != null) _pauseAction.performed -= OnPauseInput;
+            _controls?.Dispose();
             if (_paused) RestoreGameplayState();
         }
 
@@ -436,6 +442,7 @@ namespace AeroByte.Menu.Pause
             slider.minValue = 0f;
             slider.maxValue = 1f;
             slider.interactable = true;
+            root.AddComponent<MenuSliderFocus>();
             return slider;
         }
 

@@ -183,6 +183,24 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
+                    ""name"": ""NextMusicTrack"",
+                    ""type"": ""Button"",
+                    ""id"": ""0d94f1f5-8c9d-4bea-b978-287565ba0087"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Pause"",
+                    ""type"": ""Button"",
+                    ""id"": ""5be2aa65-a3f7-44b0-9ec4-2a1e9c97440f"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""LookEnable"",
                     ""type"": ""Button"",
                     ""id"": ""3e9b1dcc-dc6d-4754-8d4a-f0d76fa34061"",
@@ -237,6 +255,39 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": ""1D Axis"",
+                    ""id"": ""f640b950-46c4-400a-a1e7-e0d4932d96f2"",
+                    ""path"": ""1DAxis"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Throttle"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""negative"",
+                    ""id"": ""a1281446-61b3-4b7e-999e-44ea7828be22"",
+                    ""path"": ""<Gamepad>/leftTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Throttle"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""positive"",
+                    ""id"": ""76fda18f-9904-40a9-8984-b93d7595fa0d"",
+                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Throttle"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""1D Axis"",
                     ""id"": ""71a09a59-c3d1-4263-bcc5-9b5bbea6a354"",
                     ""path"": ""1DAxis"",
                     ""interactions"": """",
@@ -269,9 +320,53 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": true
                 },
                 {
+                    ""name"": ""1D Axis"",
+                    ""id"": ""46301d6a-a85f-40e5-a7c0-09d985fa356a"",
+                    ""path"": ""1DAxis"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Yaw"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""negative"",
+                    ""id"": ""f15b97a9-ce3a-4cb0-993e-656d45e56816"",
+                    ""path"": ""<Gamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Yaw"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""positive"",
+                    ""id"": ""f608c9be-e3be-4a1a-ae53-0e6cec637f96"",
+                    ""path"": ""<Gamepad>/rightShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Yaw"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
                     ""name"": """",
                     ""id"": ""ac2c7b8e-6197-4ed3-a836-231231367af3"",
                     ""path"": ""<Mouse>/delta"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""MouseLook"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c54d51a5-b7fa-411b-9815-08e010522981"",
+                    ""path"": ""<Gamepad>/rightStick"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -336,8 +431,30 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""12d00f48-4ebb-459f-9649-d2f91ff44d5b"",
+                    ""path"": ""<Gamepad>/leftStick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""PitchRoll"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""d92db04e-e3a4-403b-bc15-3531e5d523ba"",
                     ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleFlaps"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b8c09008-1d63-462c-a3f6-46d5526ca330"",
+                    ""path"": ""<Gamepad>/buttonSouth"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -358,8 +475,30 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""910639e9-d7e7-4b64-980b-4057ba3ee254"",
+                    ""path"": ""<Gamepad>/buttonWest"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleCamera"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""e84f42aa-0a77-4694-a3fb-c2a6353cde67"",
                     ""path"": ""<Keyboard>/l"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleLights"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ae02148a-46de-4db3-a0a4-4ec92c80a4f9"",
+                    ""path"": ""<Gamepad>/buttonNorth"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -380,8 +519,30 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""a2481fbd-cff4-421d-9f55-f88a0bb711a4"",
+                    ""path"": ""<Gamepad>/buttonEast"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleLandingGear"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""9d45e12f-b3cb-4f81-a7b6-c9582d38e23f"",
                     ""path"": ""<Keyboard>/m"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""DropCargo"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""396d767a-f1ac-42fd-b8ca-607ec71ee346"",
+                    ""path"": ""<Gamepad>/dpad/down"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -402,6 +563,72 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""4a3dba28-1cdc-475f-b803-afe6efa2d546"",
+                    ""path"": ""<Gamepad>/dpad/up"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleMusic"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""eaa6c98a-3928-4bef-894f-5afb9e75fa01"",
+                    ""path"": ""<Keyboard>/j"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""NextMusicTrack"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f2342472-a784-4e89-a427-62ccf184a498"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Pause"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c6ca15c2-c2a1-4b91-9eb6-66a5f65602d6"",
+                    ""path"": ""<Keyboard>/p"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Pause"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a26fb120-d62e-4153-8f17-637a1f68ab22"",
+                    ""path"": ""<Gamepad>/start"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Pause"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""bcec10e9-33d0-41d1-8de6-d91e83b4c8cf"",
+                    ""path"": ""<Gamepad>/dpad/right"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""NextMusicTrack"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""e3a47527-4b0c-4f34-982e-3ae83d0e3bc3"",
                     ""path"": ""<Mouse>/rightButton"",
                     ""interactions"": """",
@@ -413,8 +640,74 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""bee0846e-a448-46c6-87bb-c0aee9930414"",
+                    ""path"": ""<Gamepad>/rightStickPress"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LookEnable"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9ba43606-87df-4141-8ab0-1cc00076f187"",
+                    ""path"": ""<Gamepad>/rightStick/up"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LookEnable"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9e7f2f0b-a9a2-43a1-958f-fec25c61ef77"",
+                    ""path"": ""<Gamepad>/rightStick/right"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LookEnable"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""548dab74-ff0c-4467-8fbc-625d1e3fceca"",
+                    ""path"": ""<Gamepad>/rightStick/left"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LookEnable"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7f6d5dd5-2436-451a-8fcf-020970fe3e2c"",
+                    ""path"": ""<Gamepad>/rightStick/down"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LookEnable"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""f5b67527-4b0c-4f34-982e-3ae83d0e3bc4"",
                     ""path"": ""<Mouse>/middleButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ResetCamera"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b02c65dc-d169-43da-a778-7be827b7949a"",
+                    ""path"": ""<Gamepad>/leftStickPress"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -439,6 +732,8 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         m_Vuelo_ToggleLandingGear = m_Vuelo.FindAction("ToggleLandingGear", throwIfNotFound: true);
         m_Vuelo_DropCargo = m_Vuelo.FindAction("DropCargo", throwIfNotFound: true);
         m_Vuelo_ToggleMusic = m_Vuelo.FindAction("ToggleMusic", throwIfNotFound: true);
+        m_Vuelo_NextMusicTrack = m_Vuelo.FindAction("NextMusicTrack", throwIfNotFound: true);
+        m_Vuelo_Pause = m_Vuelo.FindAction("Pause", throwIfNotFound: true);
         m_Vuelo_LookEnable = m_Vuelo.FindAction("LookEnable", throwIfNotFound: true);
         m_Vuelo_ResetCamera = m_Vuelo.FindAction("ResetCamera", throwIfNotFound: true);
     }
@@ -531,6 +826,8 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
     private readonly InputAction m_Vuelo_ToggleLandingGear;
     private readonly InputAction m_Vuelo_DropCargo;
     private readonly InputAction m_Vuelo_ToggleMusic;
+    private readonly InputAction m_Vuelo_NextMusicTrack;
+    private readonly InputAction m_Vuelo_Pause;
     private readonly InputAction m_Vuelo_LookEnable;
     private readonly InputAction m_Vuelo_ResetCamera;
     /// <summary>
@@ -584,6 +881,14 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Vuelo/ToggleMusic".
         /// </summary>
         public InputAction @ToggleMusic => m_Wrapper.m_Vuelo_ToggleMusic;
+        /// <summary>
+        /// Provides access to the underlying input action "Vuelo/NextMusicTrack".
+        /// </summary>
+        public InputAction @NextMusicTrack => m_Wrapper.m_Vuelo_NextMusicTrack;
+        /// <summary>
+        /// Provides access to the underlying input action "Vuelo/Pause".
+        /// </summary>
+        public InputAction @Pause => m_Wrapper.m_Vuelo_Pause;
         /// <summary>
         /// Provides access to the underlying input action "Vuelo/LookEnable".
         /// </summary>
@@ -648,6 +953,12 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
             @ToggleMusic.started += instance.OnToggleMusic;
             @ToggleMusic.performed += instance.OnToggleMusic;
             @ToggleMusic.canceled += instance.OnToggleMusic;
+            @NextMusicTrack.started += instance.OnNextMusicTrack;
+            @NextMusicTrack.performed += instance.OnNextMusicTrack;
+            @NextMusicTrack.canceled += instance.OnNextMusicTrack;
+            @Pause.started += instance.OnPause;
+            @Pause.performed += instance.OnPause;
+            @Pause.canceled += instance.OnPause;
             @LookEnable.started += instance.OnLookEnable;
             @LookEnable.performed += instance.OnLookEnable;
             @LookEnable.canceled += instance.OnLookEnable;
@@ -695,6 +1006,12 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
             @ToggleMusic.started -= instance.OnToggleMusic;
             @ToggleMusic.performed -= instance.OnToggleMusic;
             @ToggleMusic.canceled -= instance.OnToggleMusic;
+            @NextMusicTrack.started -= instance.OnNextMusicTrack;
+            @NextMusicTrack.performed -= instance.OnNextMusicTrack;
+            @NextMusicTrack.canceled -= instance.OnNextMusicTrack;
+            @Pause.started -= instance.OnPause;
+            @Pause.performed -= instance.OnPause;
+            @Pause.canceled -= instance.OnPause;
             @LookEnable.started -= instance.OnLookEnable;
             @LookEnable.performed -= instance.OnLookEnable;
             @LookEnable.canceled -= instance.OnLookEnable;
@@ -811,6 +1128,20 @@ public partial class @AvionControles: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleMusic(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "NextMusicTrack" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnNextMusicTrack(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Pause" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPause(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "LookEnable" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>

@@ -1,9 +1,7 @@
 using System.Collections;
 using System.Text;
-using AeroByte.FlightSystem.Framework.Audio;
 using FlightSystem.Adapters;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -67,7 +65,9 @@ namespace AeroByte.UI_System
         private GameObject _resultOverlay;
         private Text _resultTitle;
         private Text _resultDetail;
+        private CanvasGroup _resultGroup;
         private bool _resultShown;
+        private bool _gameOverPending;
 
         private static Sprite _panelSprite;
         private static Texture2D _panelTexture;
@@ -118,11 +118,6 @@ namespace AeroByte.UI_System
             if (_cameraController == null)
             {
                 _cameraController = Object.FindFirstObjectByType<CameraController>();
-            }
-
-            if (Keyboard.current != null && Keyboard.current.jKey.wasPressedThisFrame)
-            {
-                NextRadioTrack();
             }
 
             UpdateHud();
@@ -360,7 +355,7 @@ namespace AeroByte.UI_System
 
         private void BuildResultOverlay(Font font)
         {
-            var overlay = new GameObject("Mission Result Overlay", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var overlay = new GameObject("Mission Result Overlay", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(CanvasGroup));
             overlay.transform.SetParent(transform, false);
             var canvas = overlay.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -377,6 +372,7 @@ namespace AeroByte.UI_System
             _resultDetail = CreateText(panel.transform, "Result Detail", font, 21, TextAnchor.MiddleCenter, new Vector2(60f, 42f), new Vector2(-60f, -82f), new Color(0.75f, 0.88f, 0.95f, 1f));
             CreateButton(panel.transform, "Return To Main Menu", "VOLVER AL MENU PRINCIPAL", new Vector2(0f, -112f), new Vector2(360f, 64f), ReturnToMainMenu, new Color(0.04f, 0.48f, 0.84f, 1f));
             _resultOverlay = overlay;
+            _resultGroup = overlay.GetComponent<CanvasGroup>();
             _resultOverlay.SetActive(false);
         }
 
@@ -401,11 +397,6 @@ namespace AeroByte.UI_System
             text.raycastTarget = false;
         }
 
-        private void NextRadioTrack()
-        {
-            Object.FindFirstObjectByType<RadioManager>()?.NextTrack();
-        }
-
         private void ReturnToMainMenu()
         {
             Time.timeScale = 1f;
@@ -421,12 +412,14 @@ namespace AeroByte.UI_System
             _plane = null;
             _cameraController = null;
             _resultShown = false;
+            _gameOverPending = false;
             if (_canvas != null) _canvas.enabled = true;
             if (_flightPanelGo != null) _flightPanelGo.SetActive(true);
             if (_resultOverlay != null) _resultOverlay.SetActive(false);
+            if (_resultGroup != null) _resultGroup.alpha = 1f;
         }
 
-        private void ShowResult(string title, string detail, Color titleColor)
+        private void ShowResult(string title, string detail, Color titleColor, bool immediate)
         {
             if (_resultShown || _resultOverlay == null) return;
 
@@ -435,20 +428,35 @@ namespace AeroByte.UI_System
             _resultTitle.color = titleColor;
             _resultDetail.text = detail;
             if (_canvas != null) _canvas.enabled = false;
+            _resultGroup.alpha = immediate ? 1f : 0f;
             _resultOverlay.SetActive(true);
+        }
+
+        private void ShowResult(string title, string detail, Color titleColor)
+        {
+            ShowResult(title, detail, titleColor, true);
         }
 
         private void ShowGameOver(string detail)
         {
-            if (_resultShown) return;
+            if (_resultShown || _gameOverPending) return;
 
-            ShowResult("GAME OVER", detail + "\nREGRESANDO AL MENU PRINCIPAL...", new Color(1f, 0.28f, 0.20f, 1f));
-            StartCoroutine(ReturnToMainMenuAfterDelay());
+            _gameOverPending = true;
+            StartCoroutine(ShowGameOverAfterExplosion(detail));
         }
 
-        private IEnumerator ReturnToMainMenuAfterDelay()
+        private IEnumerator ShowGameOverAfterExplosion(string detail)
         {
-            yield return new WaitForSecondsRealtime(3f);
+            yield return new WaitForSecondsRealtime(1.5f);
+            ShowResult("GAME OVER", detail + "\nREGRESANDO AL MENU PRINCIPAL...", new Color(1f, 0.28f, 0.20f, 1f), false);
+
+            while (_resultGroup.alpha < 0.999f)
+            {
+                _resultGroup.alpha = Mathf.MoveTowards(_resultGroup.alpha, 1f, Time.unscaledDeltaTime / 0.55f);
+                yield return null;
+            }
+
+            yield return new WaitForSecondsRealtime(2.5f);
             ReturnToMainMenu();
         }
 
